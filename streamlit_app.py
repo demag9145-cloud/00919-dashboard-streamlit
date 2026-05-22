@@ -3,7 +3,6 @@ from __future__ import annotations
 import csv
 import io
 import json
-import shutil
 import subprocess
 import sys
 from datetime import date, datetime
@@ -12,7 +11,6 @@ from pathlib import Path
 import altair as alt
 import pandas as pd
 import streamlit as st
-import streamlit.components.v1 as components
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -253,59 +251,6 @@ def run_update() -> tuple[bool, str]:
     return result.returncode == 0, output or "更新完成"
 
 
-def sync_static_files() -> None:
-    STATIC_DIR.mkdir(exist_ok=True)
-    static_assets = STATIC_DIR / "assets"
-    static_data = STATIC_DIR / "data"
-
-    if not (STATIC_DIR / "index.html").exists() and (BASE_DIR / "index.html").exists():
-        shutil.copy2(BASE_DIR / "index.html", STATIC_DIR / "index.html")
-
-    if not static_assets.exists() and (BASE_DIR / "assets").exists():
-        shutil.copytree(BASE_DIR / "assets", static_assets)
-
-    static_data.mkdir(exist_ok=True)
-    for source in DATA_DIR.glob("*.json"):
-        shutil.copy2(source, static_data / source.name)
-
-
-def render_embedded_html_ui() -> None:
-    sync_static_files()
-    st.markdown(
-        """
-        <div class="status-box">
-          <strong>雲端測試版</strong>
-          <div class="small-note">
-            下方嵌入的是本機端同一套 HTML 儀表板。雲端更新請按這裡的「更新資料」，
-            儀表板內原本的更新按鈕在 Streamlit Cloud 上只會重新讀取資料檔。
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    left, right = st.columns([1, 5])
-    with left:
-        if st.button("更新資料", type="primary", use_container_width=True):
-            with st.spinner("正在抓取價格、月規模、配息 54C 與前十大持股..."):
-                ok, message = run_update()
-                if ok:
-                    sync_static_files()
-                    st.success("資料更新完成")
-                    st.rerun()
-                st.error("資料更新失敗")
-                st.code(message[-2000:])
-    with right:
-        fetched = load_dashboard().get("fetched_at", "--")
-        st.caption(f"目前資料抓取時間：{fetched}")
-
-    cache_bust = datetime.now().strftime("%Y%m%d%H%M%S")
-    components.iframe(
-        f"/app/static/index.html?streamlit={cache_bust}#home",
-        height=1400,
-        scrolling=True,
-    )
-
-
 def render_home(data: dict, trades: list[dict]) -> None:
     latest = data.get("latest_daily", {})
     dividend = data.get("latest_dividend", {})
@@ -508,7 +453,33 @@ def render_manual() -> None:
 
 def main() -> None:
     optional_password_gate()
-    render_embedded_html_ui()
+    data = load_dashboard()
+    trades = [normalize_trade(row) for row in load_trades()]
+    pages = [
+        "每日總覽",
+        "交易紀錄",
+        "每月健康檢查",
+        "每季配息與 54C",
+        "持股",
+        "每年",
+        "使用說明",
+    ]
+    selected = st.radio("頁面", pages, horizontal=True, label_visibility="collapsed")
+
+    if selected == "每日總覽":
+        render_home(data, trades)
+    elif selected == "交易紀錄":
+        render_trades(trades, data)
+    elif selected == "每月健康檢查":
+        render_monthly(data, trades)
+    elif selected == "每季配息與 54C":
+        render_quarterly(data, trades)
+    elif selected == "持股":
+        render_holdings(data)
+    elif selected == "每年":
+        render_yearly(data, trades)
+    else:
+        render_manual()
 
 
 if __name__ == "__main__":
