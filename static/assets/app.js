@@ -320,7 +320,18 @@ function bindInputs() {
   $("refreshButton").addEventListener("click", () => refreshDashboardData());
   $("homeRefreshButton")?.addEventListener("click", () => refreshDashboardData());
   $("rangeSelect").addEventListener("change", () => render());
+  window.addEventListener("resize", debounce(() => {
+    if (state.data) drawChart(state.data.daily || [], $("rangeSelect").value);
+  }, 150));
   bindTradeForm();
+}
+
+function debounce(callback, wait) {
+  let timer = null;
+  return (...args) => {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(() => callback(...args), wait);
+  };
 }
 
 async function refreshDashboardData() {
@@ -1048,9 +1059,12 @@ function drawChart(allRows, range = "month") {
     return;
   }
 
-  const width = 1120;
-  const height = 420;
-  const pad = { top: 28, right: 54, bottom: 72, left: 48 };
+  const isMobile = window.matchMedia("(max-width: 760px)").matches;
+  const width = isMobile ? 390 : 1120;
+  const height = isMobile ? 280 : 420;
+  const pad = isMobile
+    ? { top: 24, right: 34, bottom: 46, left: 38 }
+    : { top: 28, right: 54, bottom: 72, left: 48 };
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
   const prices = rows.flatMap((row) => [Number(row.market_price), Number(row.nav)]);
@@ -1087,8 +1101,8 @@ function drawChart(allRows, range = "month") {
   });
 
   const bars = rows.map((row, index) => {
-    const barW = Math.min(58, Math.max(8, plotW / rows.length - 6));
-    const barH = scale(Number(row.volume_lots || 0), 0, volumeMax, 0, plotH * 0.18);
+    const barW = Math.min(isMobile ? 18 : 58, Math.max(isMobile ? 3 : 8, plotW / rows.length - (isMobile ? 2 : 6)));
+    const barH = scale(Number(row.volume_lots || 0), 0, volumeMax, 0, plotH * (isMobile ? 0.15 : 0.18));
     const xx = x(row, index) - barW / 2;
     return `<rect x="${xx.toFixed(2)}" y="${(barBase - barH).toFixed(2)}" width="${barW.toFixed(2)}" height="${barH.toFixed(2)}" fill="#c8d1d5" opacity="0.82" />`;
   });
@@ -1105,15 +1119,15 @@ function drawChart(allRows, range = "month") {
     .map((row, index) => {
       const xx = x(row, index);
       return `
-        <circle class="chart-point" cx="${xx}" cy="${yPrice(Number(row.market_price))}" r="3.5" fill="#1f5fbf" />
-        <circle class="chart-point" cx="${xx}" cy="${yPrice(Number(row.nav))}" r="3.5" fill="#d65a3a" />
-        <circle class="chart-point" cx="${xx}" cy="${yDiscount(Number(row.premium_discount_pct || 0))}" r="3.5" fill="#7457c8" />
+        <circle class="chart-point" cx="${xx}" cy="${yPrice(Number(row.market_price))}" r="${isMobile ? 2.2 : 3.5}" fill="#1f5fbf" />
+        <circle class="chart-point" cx="${xx}" cy="${yPrice(Number(row.nav))}" r="${isMobile ? 2.2 : 3.5}" fill="#d65a3a" />
+        <circle class="chart-point" cx="${xx}" cy="${yDiscount(Number(row.premium_discount_pct || 0))}" r="${isMobile ? 2.2 : 3.5}" fill="#7457c8" />
       `;
     })
     .join("");
 
   const labels = rows
-    .filter((_, index) => index === 0 || index === rows.length - 1 || index % 6 === 0)
+    .filter((_, index) => index === 0 || index === rows.length - 1 || index % (isMobile ? 9 : 6) === 0)
     .map((row, index) => {
       const realIndex = rows.indexOf(row);
       return `<text class="axis-text" text-anchor="middle" x="${x(row, realIndex)}" y="${height - 30}">${row.date.slice(5)}</text>`;
@@ -1125,9 +1139,9 @@ function drawChart(allRows, range = "month") {
       ${rightAxis.join("")}
       ${bars.join("")}
       <line id="hoverGuide" class="hover-guide" x1="${pad.left}" x2="${pad.left}" y1="${pad.top}" y2="${barBase}" />
-      <path d="${marketPath}" fill="none" stroke="#1f5fbf" stroke-width="3" />
-      <path d="${navPath}" fill="none" stroke="#d65a3a" stroke-width="3" />
-      <path d="${discountPath}" fill="none" stroke="#7457c8" stroke-width="2.5" stroke-dasharray="6 5" />
+      <path d="${marketPath}" fill="none" stroke="#1f5fbf" stroke-width="${isMobile ? 2.2 : 3}" />
+      <path d="${navPath}" fill="none" stroke="#d65a3a" stroke-width="${isMobile ? 2.2 : 3}" />
+      <path d="${discountPath}" fill="none" stroke="#7457c8" stroke-width="${isMobile ? 1.8 : 2.5}" stroke-dasharray="6 5" />
       ${points}
       <line x1="${pad.left}" x2="${width - pad.right}" y1="${barBase}" y2="${barBase}" stroke="#bdc8cd" />
       ${labels.join("")}

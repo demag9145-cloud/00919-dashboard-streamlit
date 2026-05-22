@@ -1763,8 +1763,27 @@ select {
 }
 
 @media (max-width: 760px) {
+  body {
+    background: #f4f7f6;
+    font-size: 15px;
+    overflow-x: hidden;
+  }
+
+  .app-shell {
+    display: block;
+    min-height: 0;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
   .content {
-    padding: 18px;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 10px 12px 24px;
+    gap: 12px;
   }
 
   .nav a:not([href="#home"]) {
@@ -1781,14 +1800,233 @@ select {
     display: none;
   }
 
+  .content > section,
+  .page-header {
+    scroll-margin-top: 10px;
+  }
+
+  .page-header {
+    padding: 4px 2px 0;
+    align-items: flex-start;
+  }
+
+  .page-header h2 {
+    max-width: 290px;
+    font-size: 30px;
+    line-height: 1.18;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+  }
+
+  .icon-button {
+    width: 44px;
+    height: 44px;
+    font-size: 22px;
+  }
+
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .position-panel,
+  .status-panel,
+  .chart-section,
+  .home-focus-section,
+  .data-freshness-section {
+    border-radius: 8px;
+    box-shadow: none;
+  }
+
+  .position-panel,
+  .status-panel,
+  .home-focus-section,
+  .data-freshness-section,
+  .chart-section {
+    padding: 14px;
+  }
+
+  .panel-title,
+  .section-head,
+  .section-head.compact {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .panel-title small,
+  .section-head small {
+    font-size: 13px;
+  }
+
   .inputs,
-  .position-summary,
-  .metric-grid,
   .snapshot,
   .dividend-layout,
   .dividend-summary-grid,
   .manual-hero,
   .manual-grid {
     grid-template-columns: 1fr;
+  }
+
+  .position-summary,
+  .metric-grid,
+  .home-focus-grid,
+  .freshness-grid,
+  .hero-grid .freshness-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .position-summary {
+    margin-top: 10px;
+  }
+
+  .position-summary div,
+  .position-summary a,
+  .metric,
+  .focus-card,
+  .freshness-card,
+  .hero-grid .freshness-card,
+  .snapshot div {
+    min-height: 74px;
+    padding: 10px 11px;
+    align-content: center;
+    gap: 5px;
+  }
+
+  .position-summary span,
+  .metric span,
+  .snapshot span,
+  .focus-card span,
+  .freshness-card span {
+    font-size: 13px;
+    line-height: 1.3;
+  }
+
+  .position-summary strong,
+  .metric strong,
+  .snapshot strong,
+  .focus-card strong {
+    font-size: 22px;
+    line-height: 1.08;
+    overflow-wrap: anywhere;
+  }
+
+  .freshness-card strong,
+  .hero-grid .freshness-card strong {
+    font-size: 20px;
+    line-height: 1.05;
+  }
+
+  .focus-card small,
+  .freshness-card small,
+  .hero-grid .freshness-card small {
+    font-size: 12px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  .status-panel {
+    order: 2;
+  }
+
+  .position-panel {
+    order: 1;
+  }
+
+  .data-freshness-section {
+    order: 3;
+  }
+
+  .home-focus-section {
+    order: 4;
+  }
+
+  .chart-section {
+    order: 5;
+  }
+
+  .signal-wrap {
+    margin-top: 12px;
+    gap: 10px;
+  }
+
+  .signal-light {
+    width: 48px;
+    height: 48px;
+  }
+
+  .signal-wrap strong {
+    font-size: 22px;
+  }
+
+  .signal-wrap p {
+    font-size: 13px;
+  }
+
+  .snapshot {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 12px;
+    gap: 8px;
+  }
+
+  .refresh-action {
+    width: 100%;
+    height: 44px;
+    font-size: 18px;
+  }
+
+  .chart-section .section-head {
+    align-items: stretch;
+  }
+
+  .chart-section .section-head h3 {
+    font-size: 24px;
+    line-height: 1.25;
+  }
+
+  .chart-tools {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    justify-content: stretch;
+  }
+
+  .range-label {
+    width: 100%;
+    font-size: 13px;
+  }
+
+  select {
+    height: 42px;
+    font-size: 16px;
+  }
+
+  .legend {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 10px;
+    font-size: 13px;
+  }
+
+  .chart {
+    margin-top: 12px;
+    min-height: 280px;
+    height: 280px;
+    border-radius: 8px;
+  }
+
+  .chart svg {
+    height: 280px;
+  }
+
+  .axis-text {
+    font-size: 11px;
+  }
+
+  .chart-note {
+    font-size: 12px;
   }
 }

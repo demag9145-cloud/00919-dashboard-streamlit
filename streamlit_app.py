@@ -51,7 +51,12 @@ st.markdown(
       .signal-red { color: #b42318; font-weight: 800; }
       .small-note { color: #66736f; font-size: 0.92rem; }
       @media (max-width: 760px) {
-        .main .block-container { padding-left: 0.8rem; padding-right: 0.8rem; }
+        .main .block-container {
+          padding: 0.35rem 0.25rem 0.8rem;
+          max-width: 100%;
+        }
+        .status-box { display: none; }
+        div[data-testid="stHorizontalBlock"] { gap: 0.35rem; }
       }
     </style>
     """,
