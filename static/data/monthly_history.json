@@ -1,0 +1,806 @@
+[
+  {
+    "month": "2022-10",
+    "avg_market_price": 14.9562,
+    "end_market_price": 14.88,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2022-10-31",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2022-11",
+    "avg_market_price": 16.1114,
+    "end_market_price": 16.83,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2022-11-30",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2022-12",
+    "avg_market_price": 16.5305,
+    "end_market_price": 16.37,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2022-12-30",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2023-01",
+    "avg_market_price": 16.7985,
+    "end_market_price": 17.22,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2023-01-31",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2023-02",
+    "avg_market_price": 17.8428,
+    "end_market_price": 18.43,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2023-02-24",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2023-03",
+    "avg_market_price": 18.8143,
+    "end_market_price": 18.91,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2023-03-31",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2023-04",
+    "avg_market_price": 18.8194,
+    "end_market_price": 18.41,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2023-04-28",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2023-05",
+    "avg_market_price": 18.5518,
+    "end_market_price": 19.11,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2023-05-31",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2023-06",
+    "avg_market_price": 19.54,
+    "end_market_price": 19.35,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2023-06-30",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2023-07",
+    "avg_market_price": 20.23,
+    "end_market_price": 20.83,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2023-07-31",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2023-08",
+    "avg_market_price": 20.3259,
+    "end_market_price": 20.61,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2023-08-31",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2023-09",
+    "avg_market_price": 20.985,
+    "end_market_price": 20.69,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2023-09-28",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2023-10",
+    "avg_market_price": 20.539,
+    "end_market_price": 20.19,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2023-10-31",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2023-11",
+    "avg_market_price": 21.2159,
+    "end_market_price": 21.65,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2023-11-30",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2023-12",
+    "avg_market_price": 22.2338,
+    "end_market_price": 22.26,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2023-12-29",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2024-01",
+    "avg_market_price": 22.0641,
+    "end_market_price": 22.22,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2024-01-31",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2024-02",
+    "avg_market_price": 23.0208,
+    "end_market_price": 24.03,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2024-02-29",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2024-03",
+    "avg_market_price": 25.5881,
+    "end_market_price": 25.35,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2024-03-29",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2024-04",
+    "avg_market_price": 24.7645,
+    "end_market_price": 24.72,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2024-04-30",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2024-05",
+    "avg_market_price": 25.2173,
+    "end_market_price": 25.74,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2024-05-31",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2024-06",
+    "avg_market_price": 26.1721,
+    "end_market_price": 25.85,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2024-06-28",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2024-07",
+    "avg_market_price": 25.4486,
+    "end_market_price": 24.36,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2024-07-31",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2024-08",
+    "avg_market_price": 24.2591,
+    "end_market_price": 24.9,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2024-08-30",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2024-09",
+    "avg_market_price": 24.065,
+    "end_market_price": 23.68,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2024-09-30",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2024-10",
+    "avg_market_price": 23.5537,
+    "end_market_price": 23.26,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2024-10-30",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2024-11",
+    "avg_market_price": 23.2571,
+    "end_market_price": 23.06,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2024-11-29",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2024-12",
+    "avg_market_price": 23.6373,
+    "end_market_price": 23.38,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2024-12-31",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2025-01",
+    "avg_market_price": 23.1393,
+    "end_market_price": 23.18,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2025-01-22",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2025-02",
+    "avg_market_price": 23.4679,
+    "end_market_price": 23.99,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2025-02-27",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2025-03",
+    "avg_market_price": 23.4471,
+    "end_market_price": 22.25,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2025-03-31",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2025-04",
+    "avg_market_price": 20.8255,
+    "end_market_price": 21.06,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2025-04-30",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2025-05",
+    "avg_market_price": 22.0775,
+    "end_market_price": 22.18,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2025-05-29",
+    "aum_100m_twd": 3633.391,
+    "aum_million_twd": 363339.1,
+    "beneficiary_count": 1226024,
+    "beneficiary_change_pct": 0.64,
+    "sources": [
+      "MoneyDJ",
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2025-06",
+    "avg_market_price": 21.8862,
+    "end_market_price": 21.46,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2025-06-30",
+    "aum_100m_twd": 4024.839,
+    "aum_million_twd": 402483.9,
+    "beneficiary_count": 1314782,
+    "beneficiary_change_pct": 7.24,
+    "sources": [
+      "MoneyDJ",
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2025-07",
+    "avg_market_price": 21.5517,
+    "end_market_price": 21.3,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2025-07-31",
+    "aum_100m_twd": 4032.07,
+    "aum_million_twd": 403207.0,
+    "beneficiary_count": 1323396,
+    "beneficiary_change_pct": 0.66,
+    "sources": [
+      "MoneyDJ",
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2025-08",
+    "avg_market_price": 21.4914,
+    "end_market_price": 21.33,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2025-08-29",
+    "aum_100m_twd": 4054.097,
+    "aum_million_twd": 405409.7,
+    "beneficiary_count": 1326625,
+    "beneficiary_change_pct": 0.24,
+    "sources": [
+      "MoneyDJ",
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2025-09",
+    "avg_market_price": 21.4252,
+    "end_market_price": 21.28,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2025-09-30",
+    "aum_100m_twd": 4180.172,
+    "aum_million_twd": 418017.2,
+    "beneficiary_count": 1329964,
+    "beneficiary_change_pct": 0.25,
+    "sources": [
+      "MoneyDJ",
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2025-10",
+    "avg_market_price": 21.359,
+    "end_market_price": 21.57,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2025-10-31",
+    "aum_100m_twd": 4107.918,
+    "aum_million_twd": 410791.8,
+    "beneficiary_count": 1293282,
+    "beneficiary_change_pct": -2.76,
+    "sources": [
+      "MoneyDJ",
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2025-11",
+    "avg_market_price": 21.443,
+    "end_market_price": 21.47,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2025-11-28",
+    "aum_100m_twd": 4026.728,
+    "aum_million_twd": 402672.8,
+    "beneficiary_count": 1281715,
+    "beneficiary_change_pct": -0.89,
+    "sources": [
+      "MoneyDJ",
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2025-12",
+    "avg_market_price": 22.0936,
+    "end_market_price": 22.4,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2025-12-31",
+    "aum_100m_twd": 4152.734,
+    "aum_million_twd": 415273.4,
+    "beneficiary_count": 1269689,
+    "beneficiary_change_pct": -0.94,
+    "sources": [
+      "MoneyDJ",
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2026-01",
+    "avg_market_price": 23.4124,
+    "end_market_price": 23.44,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2026-01-30",
+    "aum_100m_twd": 4072.635,
+    "aum_million_twd": 407263.5,
+    "beneficiary_count": 1214372,
+    "beneficiary_change_pct": -4.36,
+    "sources": [
+      "MoneyDJ",
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2026-02",
+    "avg_market_price": 23.7092,
+    "end_market_price": 24.6,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2026-02-26",
+    "aum_100m_twd": 4168.805,
+    "aum_million_twd": 416880.5,
+    "beneficiary_count": 1199381,
+    "beneficiary_change_pct": -1.23,
+    "sources": [
+      "MoneyDJ",
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2026-03",
+    "avg_market_price": 23.21,
+    "end_market_price": 22.02,
+    "avg_nav": null,
+    "end_nav": null,
+    "avg_premium_discount_pct": null,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2026-03-31",
+    "aum_100m_twd": 4232.944,
+    "aum_million_twd": 423294.4,
+    "beneficiary_count": 1328370,
+    "beneficiary_change_pct": 10.75,
+    "sources": [
+      "MoneyDJ",
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2026-04",
+    "avg_market_price": 23.198,
+    "end_market_price": 23.65,
+    "avg_nav": 23.5164,
+    "end_nav": 23.67,
+    "avg_premium_discount_pct": -0.4279,
+    "end_premium_discount_pct": -0.08,
+    "month_end_date": "2026-04-30",
+    "aum_100m_twd": 4469.344,
+    "aum_million_twd": 446934.4,
+    "beneficiary_count": 1317373,
+    "beneficiary_change_pct": -0.83,
+    "sources": [
+      "MoneyDJ",
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  },
+  {
+    "month": "2026-05",
+    "avg_market_price": 25.5527,
+    "end_market_price": 26.73,
+    "avg_nav": 25.5736,
+    "end_nav": null,
+    "avg_premium_discount_pct": -0.4114,
+    "end_premium_discount_pct": null,
+    "month_end_date": "2026-05-22",
+    "aum_100m_twd": null,
+    "aum_million_twd": null,
+    "beneficiary_count": null,
+    "beneficiary_change_pct": null,
+    "sources": [
+      "Yahoo"
+    ],
+    "updated_at": "2026-05-22T14:04:08"
+  }
+]
