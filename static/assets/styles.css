@@ -2016,10 +2016,15 @@ select {
     min-height: 280px;
     height: 280px;
     border-radius: 8px;
+    touch-action: pan-y;
   }
 
   .chart svg {
     height: 280px;
+  }
+
+  .hover-zone {
+    pointer-events: none;
   }
 
   .axis-text {

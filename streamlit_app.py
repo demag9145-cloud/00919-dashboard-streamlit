@@ -327,6 +327,30 @@ def build_embedded_dashboard_html() -> str:
         inline_script,
         html,
     )
+    resize_script = """
+    <script>
+      function sendStreamlitFrameHeight() {
+        const body = document.body;
+        const doc = document.documentElement;
+        const height = Math.max(
+          body ? body.scrollHeight : 0,
+          body ? body.offsetHeight : 0,
+          doc ? doc.scrollHeight : 0,
+          doc ? doc.offsetHeight : 0
+        );
+        window.parent.postMessage(
+          { isStreamlitMessage: true, type: "streamlit:setFrameHeight", height: Math.ceil(height + 24) },
+          "*"
+        );
+      }
+      window.addEventListener("load", sendStreamlitFrameHeight);
+      window.addEventListener("resize", sendStreamlitFrameHeight);
+      window.setTimeout(sendStreamlitFrameHeight, 250);
+      window.setTimeout(sendStreamlitFrameHeight, 1000);
+      window.setTimeout(sendStreamlitFrameHeight, 2500);
+    </script>
+    """
+    html = html.replace("</body>", f"{resize_script}</body>", 1)
     return html
 
 
@@ -359,7 +383,7 @@ def render_embedded_html_ui() -> None:
         fetched = load_dashboard().get("fetched_at", "--")
         st.caption(f"目前資料抓取時間：{fetched}")
 
-    components.html(build_embedded_dashboard_html(), height=1500, scrolling=True)
+    components.html(build_embedded_dashboard_html(), height=2600, scrolling=False)
 
 
 def render_home(data: dict, trades: list[dict]) -> None:
