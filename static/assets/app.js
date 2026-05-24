@@ -421,7 +421,7 @@ function render() {
   const estimated54c = shares * Number(dividend.estimated_54c_per_share || 0);
   const healthPremium = estimated54c >= HEALTH_PREMIUM_THRESHOLD ? estimated54c * HEALTH_PREMIUM_RATE : 0;
 
-  setText("fetchedAt", `抓取時間 ${state.data.fetched_at || "--"}`);
+  setText("fetchedAt", `抓取時間 ${formatFetchedAt(state.data.fetched_at)}`);
   setText("latestDate", latest.date || "--");
   setText("holdingShares", `${fmt.money(shares)} 股`);
   setText("avgCost", fmt.money(avgCost, 2));
@@ -469,13 +469,33 @@ function render() {
   drawMobileChart(state.data.daily || [], $("mobileRangeSelect")?.value || "month");
 }
 
-function daysSince(dateText) {
+function parseDateOnly(dateText) {
   if (!dateText) return null;
   const date = new Date(`${String(dateText).slice(0, 10)}T00:00:00`);
-  if (Number.isNaN(date.getTime())) return null;
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function daysSince(dateText) {
+  const date = parseDateOnly(dateText);
+  if (!date) return null;
   const today = new Date();
   const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   return Math.max(0, Math.floor((todayMidnight - date) / 86400000));
+}
+
+function businessDaysSince(dateText) {
+  const date = parseDateOnly(dateText);
+  if (!date) return null;
+  const today = new Date();
+  const cursor = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
+  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  let days = 0;
+  while (cursor <= todayMidnight) {
+    const day = cursor.getDay();
+    if (day !== 0 && day !== 6) days += 1;
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return Math.max(0, days);
 }
 
 function freshnessLabel(days, okDays, staleDays) {
@@ -483,6 +503,23 @@ function freshnessLabel(days, okDays, staleDays) {
   if (days <= okDays) return { label: "正常", className: "green", note: `${days} 天前` };
   if (days <= staleDays) return { label: "建議更新", className: "yellow", note: `${days} 天前` };
   return { label: "已過期", className: "red", note: `${days} 天前` };
+}
+
+function marketFreshnessLabel(dateText) {
+  const tradingDays = businessDaysSince(dateText);
+  const calendarDays = daysSince(dateText);
+  if (tradingDays === null) return { label: "待確認", className: "unknown", note: "尚無日期" };
+  const note = tradingDays <= 1
+    ? "最近交易日"
+    : `${tradingDays} 交易日前`;
+  if (tradingDays <= 1) return { label: "正常", className: "green", note };
+  if (tradingDays <= 3) return { label: "建議更新", className: "yellow", note };
+  return { label: "已過期", className: "red", note: `${calendarDays} 天前` };
+}
+
+function formatFetchedAt(value) {
+  if (!value) return "--";
+  return String(value).replace("T", " ").slice(0, 19);
 }
 
 function setFreshness(idPrefix, status) {
@@ -501,7 +538,7 @@ function getFreshnessModel(latest, dividend) {
   const holdings = state.data.holdings || {};
   const fetchedAt = String(state.data.fetched_at || "").slice(0, 10);
 
-  const daily = freshnessLabel(daysSince(latest.date), 2, 5);
+  const daily = marketFreshnessLabel(latest.date);
   const monthly = freshnessLabel(daysSince(latestMonthly.month ? `${latestMonthly.month}-28` : ""), 45, 75);
   const dividendStatus = freshnessLabel(daysSince(dividend.ex_date), 120, 180);
   const holdingsStatus = freshnessLabel(daysSince(holdings.data_date), 14, 30);
@@ -518,6 +555,7 @@ function getFreshnessModel(latest, dividend) {
     latestMonthly,
     holdingsData: holdings,
     fetchedAt,
+    fetchedAtDisplay: formatFetchedAt(state.data.fetched_at),
   };
 }
 
@@ -531,7 +569,7 @@ function renderDataFreshness(latest, dividend, model = getFreshnessModel(latest,
   setFreshness("freshHoldings", model.holdings);
   setText("freshHoldingsDate", model.holdingsData.data_date ? `${model.holdingsData.data_date} / ${model.holdings.note}` : "--");
   setFreshness("freshFetched", model.fetched);
-  setText("freshFetchedAt", model.fetchedAt ? `${model.fetchedAt} / ${model.fetched.note}` : "--");
+  setText("freshFetchedAt", model.fetchedAt ? `${model.fetchedAtDisplay} / ${model.fetched.note}` : "--");
   setFreshness("freshIntegrity", model.integrity.status);
   setText("freshIntegrityNote", model.integrity.status.note);
 }
@@ -589,7 +627,7 @@ function renderMobileHero({ latest, signals, freshnessModel }) {
   if (orb) orb.className = `hero-status-orb ${level}`;
   setText("mobileSignalLabel", signalText(level));
   setText("mobileSignalReason", level === "green" ? "所有數據正常" : "請檢查資料");
-  setText("mobileFetchedAt", `目前資料抓取時間 ${state.data.fetched_at || "--"}`);
+  setText("mobileFetchedAt", `目前資料抓取時間 ${formatFetchedAt(state.data.fetched_at)}`);
   setText("mobileHeroPremium", `折溢價 ${fmt.pct(asNumber(latest.premium_discount_pct))}`);
   const chip = $("mobileFetchedAt");
   if (chip) chip.className = `ui-status-chip hero-time-chip ui-status-chip--${freshnessModel.fetched.className}`;

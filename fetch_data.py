@@ -7,6 +7,7 @@ import urllib.request
 from datetime import datetime
 from html import unescape
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 
 ROOT = Path(__file__).resolve().parent
@@ -544,7 +545,7 @@ def calc_signals(latest_daily, latest_dividend):
 
 def main():
     DATA_DIR.mkdir(exist_ok=True)
-    fetched_at = datetime.now().isoformat(timespec="seconds")
+    fetched_at = datetime.now(ZoneInfo("Asia/Taipei")).replace(tzinfo=None).isoformat(timespec="seconds")
 
     yahoo_rows = fetch_yahoo_history_rows()
     daily_rows = merge_daily_rows(fetch_moneydj_nav_rows(), yahoo_rows)
