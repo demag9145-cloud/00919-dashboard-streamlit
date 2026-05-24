@@ -44,6 +44,169 @@
           </div>
         </header>
 
+        <section class="mobile-home" aria-label="00919 手機首頁">
+          <section class="mobile-home__hero hero-banner">
+            <div class="hero-banner__glow"></div>
+            <div class="hero-status-orb" id="mobileSignalOrb">
+              <span id="mobileSignalLabel">綠燈</span>
+              <small id="mobileSignalReason">所有數據正常</small>
+            </div>
+            <div class="hero-meta">
+              <p>CAPITAL HIGH DIVIDEND ETF</p>
+              <h2>00919 群益台灣精選高息</h2>
+              <span class="ui-status-chip hero-time-chip" id="mobileFetchedAt">目前資料抓取時間 --</span>
+              <span class="ui-status-chip hero-premium-chip" id="mobileHeroPremium">折溢價 --</span>
+            </div>
+            <div class="hero-actions">
+              <button class="hero-action-button" id="mobileRefreshButton" type="button">↻ 更新資料</button>
+              <button class="hero-more-button" type="button" aria-label="更多">•••</button>
+            </div>
+          </section>
+
+          <section class="core-status-card">
+            <div class="mobile-section-head">
+              <div class="mobile-section-title">
+                <span class="mobile-section-icon teal">▰</span>
+                <h3>核心數據與更新狀態</h3>
+              </div>
+              <span class="ui-status-chip ui-status-chip--green" id="mobileCoreUpdateCount">-- 已更新</span>
+            </div>
+            <div class="core-status-grid">
+              <article class="core-metric-tile" data-status="green">
+                <span class="metric-icon green">▱</span>
+                <span class="metric-label">目前股數</span>
+                <strong id="mobileShares">--</strong>
+                <small class="metric-status-line" id="mobileSharesStatus">● 正常　--</small>
+              </article>
+              <article class="core-metric-tile" data-status="green">
+                <span class="metric-icon cyan">$</span>
+                <span class="metric-label">平均成本</span>
+                <strong id="mobileAvgCost">--</strong>
+                <small class="metric-status-line" id="mobileAvgCostStatus">● 正常　--</small>
+              </article>
+              <article class="core-metric-tile" data-status="green">
+                <span class="metric-icon purple">□</span>
+                <span class="metric-label">最早買進日</span>
+                <strong id="mobileFirstTradeDate">--</strong>
+                <small class="metric-status-line" id="mobileFirstTradeStatus">● 正常　--</small>
+              </article>
+              <article class="core-metric-tile" data-status="green">
+                <span class="metric-icon green">↗</span>
+                <span class="metric-label">目前市值</span>
+                <strong id="mobileMarketValue">--</strong>
+                <small class="metric-status-line" id="mobileMarketValueStatus">● 正常　--</small>
+              </article>
+              <article class="core-metric-tile" data-status="green">
+                <span class="metric-icon blue">▣</span>
+                <span class="metric-label">投入本金</span>
+                <strong id="mobileTotalCost">--</strong>
+                <small class="metric-status-line" id="mobileTotalCostStatus">● 正常　--</small>
+              </article>
+              <article class="core-metric-tile" data-status="green">
+                <span class="metric-icon orange">◔</span>
+                <span class="metric-label">未實現損益</span>
+                <strong id="mobileUnrealizedPnl">--</strong>
+                <small class="metric-status-line" id="mobileUnrealizedPnlStatus">● 正常　--</small>
+              </article>
+              <article class="core-metric-tile" data-status="green">
+                <span class="metric-icon amber">◎</span>
+                <span class="metric-label">預估年配息</span>
+                <strong id="mobileAnnualDividend">--</strong>
+                <small class="metric-status-line" id="mobileAnnualDividendStatus">● 正常　--</small>
+              </article>
+              <article class="core-metric-tile" data-status="green">
+                <span class="metric-icon pink">⌁</span>
+                <span class="metric-label">含息損益估算</span>
+                <strong id="mobileTotalReturn">--</strong>
+                <small class="metric-status-line" id="mobileTotalReturnStatus">● 正常　--</small>
+              </article>
+              <article class="core-metric-tile" data-status="green">
+                <span class="metric-icon violet">▤</span>
+                <span class="metric-label">累積配息估算</span>
+                <strong id="mobileCumulativeDividend">--</strong>
+                <small class="metric-status-line" id="mobileCumulativeDividendStatus">● 正常　--</small>
+              </article>
+            </div>
+          </section>
+
+          <section class="home-focus-card">
+            <div class="mobile-section-head">
+              <div class="mobile-section-title">
+                <span class="mobile-section-icon green">★</span>
+                <h3>首頁重點總覽</h3>
+              </div>
+            </div>
+            <div class="mobile-focus-grid">
+              <article class="mobile-focus-tile focus-return">
+                <span>含息報酬</span>
+                <strong id="mobileFocusTotalReturn">--</strong>
+                <small id="mobileFocusTotalReturnRate">--</small>
+              </article>
+              <article class="mobile-focus-tile focus-dividend">
+                <span>最新配息</span>
+                <strong id="mobileFocusDividend">--</strong>
+                <small id="mobileFocusDividendNote">--</small>
+              </article>
+              <article class="mobile-focus-tile focus-people">
+                <span>受益人數</span>
+                <strong id="mobileFocusBeneficiaries">--</strong>
+                <small id="mobileFocusBeneficiariesNote">--</small>
+              </article>
+              <article class="mobile-focus-tile focus-aum">
+                <span>AUM 規模</span>
+                <strong id="mobileFocusAum">--</strong>
+                <small id="mobileFocusAumNote">--</small>
+              </article>
+              <article class="mobile-focus-tile focus-top10">
+                <span>前十大集中度</span>
+                <strong id="mobileFocusTop10">--</strong>
+                <small id="mobileFocusTop10Note">--</small>
+              </article>
+              <article class="mobile-focus-tile focus-holding">
+                <span>第一大持股</span>
+                <strong id="mobileFocusTopHolding">--</strong>
+                <small id="mobileFocusTopHoldingNote">--</small>
+              </article>
+            </div>
+          </section>
+
+          <section class="trend-card">
+            <div class="trend-card__head">
+              <div class="mobile-section-title">
+                <span class="mobile-section-icon teal">▧</span>
+                <div>
+                  <h3>走勢總覽</h3>
+                  <p>市價、淨值、折溢價與成交量</p>
+                </div>
+              </div>
+              <div class="trend-actions">
+                <select id="mobileRangeSelect" aria-label="手機圖表顯示區間">
+                  <option value="week">近 1 週</option>
+                  <option value="month" selected>近 1 月</option>
+                  <option value="year">近 1 年</option>
+                  <option value="all">全部</option>
+                </select>
+                <button class="trend-expand-button" type="button" aria-label="展開圖表">↗</button>
+              </div>
+            </div>
+            <div class="mobile-chart-legend">
+              <span><i class="dot price"></i>市價</span>
+              <span><i class="dot navline"></i>淨值</span>
+              <span><i class="dot discount"></i>折溢價 %</span>
+              <span><i class="dot volume"></i>成交量</span>
+            </div>
+            <div id="mobileMainChart" class="mobile-chart"></div>
+          </section>
+
+          <nav class="mobile-bottom-nav" aria-label="手機底部導覽">
+            <a class="active" href="#home"><span>⌂</span>首頁</a>
+            <a href="#home"><span>▣</span>持倉資訊</a>
+            <a href="#home"><span>●</span>燈號監控</a>
+            <a href="#home"><span>◎</span>配息紀錄</a>
+            <a href="#home"><span>◉</span>我的</a>
+          </nav>
+        </section>
+
         <section class="hero-grid">
           <div class="position-panel">
             <div class="panel-title">

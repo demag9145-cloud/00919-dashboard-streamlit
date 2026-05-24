@@ -319,9 +319,14 @@ function normalizeTradeDate(value) {
 function bindInputs() {
   $("refreshButton").addEventListener("click", () => refreshDashboardData());
   $("homeRefreshButton")?.addEventListener("click", () => refreshDashboardData());
+  $("mobileRefreshButton")?.addEventListener("click", () => refreshDashboardData());
   $("rangeSelect").addEventListener("change", () => render());
+  $("mobileRangeSelect")?.addEventListener("change", () => render());
   window.addEventListener("resize", debounce(() => {
-    if (state.data) drawChart(state.data.daily || [], $("rangeSelect").value);
+    if (state.data) {
+      drawChart(state.data.daily || [], $("rangeSelect").value);
+      drawMobileChart(state.data.daily || [], $("mobileRangeSelect")?.value || "month");
+    }
   }, 150));
   bindTradeForm();
 }
@@ -335,7 +340,7 @@ function debounce(callback, wait) {
 }
 
 async function refreshDashboardData() {
-  const buttons = [$("refreshButton"), $("homeRefreshButton")].filter(Boolean);
+  const buttons = [$("refreshButton"), $("homeRefreshButton"), $("mobileRefreshButton")].filter(Boolean);
   buttons.forEach((button) => {
     button.disabled = true;
     button.classList.add("is-loading");
@@ -439,12 +444,29 @@ function render() {
   setText("latestNav", fmt.money(asNumber(latest.nav), 2));
   setText("latestDiscount", fmt.pct(asNumber(latest.premium_discount_pct)));
   setText("latestVolume", fmt.lots(asNumber(latest.volume_lots)));
-  renderDataFreshness(latest, dividend);
+  const freshnessModel = getFreshnessModel(latest, dividend);
+  renderDataFreshness(latest, dividend, freshnessModel);
   renderHomeFocus(position, latest, dividend, totalReturn, totalCost);
+  renderMobileHome({
+    latest,
+    dividend,
+    signals,
+    position,
+    shares,
+    avgCost,
+    marketValue,
+    totalCost,
+    unrealizedPnl,
+    estimatedAnnualDividend,
+    cumulativeDividend,
+    totalReturn,
+    freshnessModel,
+  });
 
   renderTradeTable(position, latest);
   renderQuarterlyDividends(state.data.dividends || [], state.trades || []);
   drawChart(state.data.daily || [], $("rangeSelect").value);
+  drawMobileChart(state.data.daily || [], $("mobileRangeSelect")?.value || "month");
 }
 
 function daysSince(dateText) {
@@ -471,7 +493,7 @@ function setFreshness(idPrefix, status) {
   }
 }
 
-function renderDataFreshness(latest, dividend) {
+function getFreshnessModel(latest, dividend) {
   const monthlyRows = (state.data.monthly_history || state.data.monthly_size || [])
     .filter((row) => row.month && (row.aum_million_twd != null || row.aum_100m_twd != null || row.beneficiary_count != null))
     .sort((a, b) => String(a.month).localeCompare(String(b.month)));
@@ -486,18 +508,147 @@ function renderDataFreshness(latest, dividend) {
   const fetched = freshnessLabel(daysSince(fetchedAt), 2, 7);
   const integrity = calcDataIntegrityStatus(latest, dividend, latestMonthly, holdings);
 
-  setFreshness("freshDaily", daily);
-  setText("freshDailyDate", latest.date ? `${latest.date} / ${daily.note}` : "--");
-  setFreshness("freshMonthly", monthly);
-  setText("freshMonthlyDate", latestMonthly.month ? `${latestMonthly.month} / ${monthly.note}` : "--");
-  setFreshness("freshDividend", dividendStatus);
-  setText("freshDividendDate", dividend.ex_date ? `${dividend.ex_date} / ${dividendStatus.note}` : "--");
-  setFreshness("freshHoldings", holdingsStatus);
-  setText("freshHoldingsDate", holdings.data_date ? `${holdings.data_date} / ${holdingsStatus.note}` : "--");
-  setFreshness("freshFetched", fetched);
-  setText("freshFetchedAt", fetchedAt ? `${fetchedAt} / ${fetched.note}` : "--");
-  setFreshness("freshIntegrity", integrity.status);
-  setText("freshIntegrityNote", integrity.status.note);
+  return {
+    daily,
+    monthly,
+    dividend: dividendStatus,
+    holdings: holdingsStatus,
+    fetched,
+    integrity,
+    latestMonthly,
+    holdingsData: holdings,
+    fetchedAt,
+  };
+}
+
+function renderDataFreshness(latest, dividend, model = getFreshnessModel(latest, dividend)) {
+  setFreshness("freshDaily", model.daily);
+  setText("freshDailyDate", latest.date ? `${latest.date} / ${model.daily.note}` : "--");
+  setFreshness("freshMonthly", model.monthly);
+  setText("freshMonthlyDate", model.latestMonthly.month ? `${model.latestMonthly.month} / ${model.monthly.note}` : "--");
+  setFreshness("freshDividend", model.dividend);
+  setText("freshDividendDate", dividend.ex_date ? `${dividend.ex_date} / ${model.dividend.note}` : "--");
+  setFreshness("freshHoldings", model.holdings);
+  setText("freshHoldingsDate", model.holdingsData.data_date ? `${model.holdingsData.data_date} / ${model.holdings.note}` : "--");
+  setFreshness("freshFetched", model.fetched);
+  setText("freshFetchedAt", model.fetchedAt ? `${model.fetchedAt} / ${model.fetched.note}` : "--");
+  setFreshness("freshIntegrity", model.integrity.status);
+  setText("freshIntegrityNote", model.integrity.status.note);
+}
+
+function statusRank(status) {
+  return { red: 3, yellow: 2, unknown: 1, green: 0 }[status?.className] ?? 1;
+}
+
+function pickWorstStatus(...statuses) {
+  return statuses.filter(Boolean).sort((a, b) => statusRank(b) - statusRank(a))[0] || {
+    label: "未知",
+    className: "unknown",
+    note: "尚無資料",
+  };
+}
+
+function tradeStatus(position) {
+  if (!position || position.holdingShares <= 0 || !position.firstTradeDate) {
+    return { label: "未知", className: "unknown", note: "待輸入交易" };
+  }
+  return { label: "正常", className: "green", note: "已同步" };
+}
+
+function statusLine(status) {
+  return `● ${status.label}　${status.note}`;
+}
+
+function setMobileMetric(id, valueId, statusId, value, status) {
+  const tile = document.querySelector(`[data-mobile-metric="${id}"]`) || $(valueId)?.closest(".core-metric-tile");
+  if (tile) tile.dataset.status = status.className || "unknown";
+  setText(valueId, value);
+  setText(statusId, statusLine(status));
+}
+
+function buildMobileMetricStatusMap(freshnessModel, position) {
+  const trade = tradeStatus(position);
+  const dailyTrade = pickWorstStatus(freshnessModel.daily, trade);
+  const dividendTrade = pickWorstStatus(freshnessModel.dividend, trade);
+  return {
+    shares: trade,
+    avgCost: trade,
+    firstTrade: trade,
+    marketValue: dailyTrade,
+    totalCost: trade,
+    unrealizedPnl: dailyTrade,
+    annualDividend: dividendTrade,
+    totalReturn: pickWorstStatus(freshnessModel.daily, freshnessModel.dividend, trade),
+    cumulativeDividend: dividendTrade,
+  };
+}
+
+function renderMobileHero({ latest, signals, freshnessModel }) {
+  const orb = $("mobileSignalOrb");
+  const level = signals.level || "yellow";
+  if (orb) orb.className = `hero-status-orb ${level}`;
+  setText("mobileSignalLabel", signalText(level));
+  setText("mobileSignalReason", level === "green" ? "所有數據正常" : "請檢查資料");
+  setText("mobileFetchedAt", `目前資料抓取時間 ${state.data.fetched_at || "--"}`);
+  setText("mobileHeroPremium", `折溢價 ${fmt.pct(asNumber(latest.premium_discount_pct))}`);
+  const chip = $("mobileFetchedAt");
+  if (chip) chip.className = `ui-status-chip hero-time-chip ui-status-chip--${freshnessModel.fetched.className}`;
+}
+
+function renderMobileCoreMetrics(model) {
+  const statuses = buildMobileMetricStatusMap(model.freshnessModel, model.position);
+  setMobileMetric("shares", "mobileShares", "mobileSharesStatus", `${fmt.money(model.shares)} 股`, statuses.shares);
+  setMobileMetric("avgCost", "mobileAvgCost", "mobileAvgCostStatus", fmt.money(model.avgCost, 2), statuses.avgCost);
+  setMobileMetric("firstTrade", "mobileFirstTradeDate", "mobileFirstTradeStatus", model.position.firstTradeDate || "--", statuses.firstTrade);
+  setMobileMetric("marketValue", "mobileMarketValue", "mobileMarketValueStatus", `$${fmt.money(model.marketValue)}`, statuses.marketValue);
+  setMobileMetric("totalCost", "mobileTotalCost", "mobileTotalCostStatus", `$${fmt.money(model.totalCost)}`, statuses.totalCost);
+  setMobileMetric("unrealizedPnl", "mobileUnrealizedPnl", "mobileUnrealizedPnlStatus", `$${fmt.money(model.unrealizedPnl)}`, statuses.unrealizedPnl);
+  setMobileMetric("annualDividend", "mobileAnnualDividend", "mobileAnnualDividendStatus", `$${fmt.money(model.estimatedAnnualDividend)}`, statuses.annualDividend);
+  setMobileMetric("totalReturn", "mobileTotalReturn", "mobileTotalReturnStatus", `$${fmt.money(model.totalReturn)}`, statuses.totalReturn);
+  setMobileMetric("cumulativeDividend", "mobileCumulativeDividend", "mobileCumulativeDividendStatus", `$${fmt.money(model.cumulativeDividend)}`, statuses.cumulativeDividend);
+
+  const statusList = Object.values(statuses);
+  const greenCount = statusList.filter((status) => status.className === "green").length;
+  const counter = $("mobileCoreUpdateCount");
+  if (counter) {
+    const worst = pickWorstStatus(...statusList);
+    counter.textContent = `${greenCount}/9 ${greenCount === 9 ? "已更新" : "需檢查"}`;
+    counter.className = `ui-status-chip ui-status-chip--${worst.className}`;
+  }
+}
+
+function renderMobileFocusCards({ position, dividend, totalReturn, totalCost, freshnessModel }) {
+  const totalReturnRate = totalCost ? (totalReturn / totalCost) * 100 : 0;
+  setText("mobileFocusTotalReturn", `$${fmt.money(totalReturn)}`);
+  setText("mobileFocusTotalReturnRate", fmt.pct(totalReturnRate));
+
+  const dividendPerShare = Number(dividend.dividend_per_share || 0);
+  const dividendShares = dividend.ex_date ? calcSharesOnDate(state.trades || [], dividend.ex_date) : position.holdingShares;
+  const estimatedDividendCash = dividendShares * dividendPerShare;
+  setText("mobileFocusDividend", dividendPerShare ? `${fmt.money(dividendPerShare, 2)} 元` : "--");
+  setText("mobileFocusDividendNote", dividend.ex_date ? `除息 ${dividend.ex_date} / 估 $${fmt.money(estimatedDividendCash)}` : "--");
+
+  const latestSize = freshnessModel.latestMonthly || {};
+  const aumMillion = Number(latestSize.aum_million_twd || Number(latestSize.aum_100m_twd) * 100);
+  setText("mobileFocusBeneficiaries", Number.isFinite(Number(latestSize.beneficiary_count)) ? `${fmt.money(Number(latestSize.beneficiary_count))} 人` : "--");
+  setText("mobileFocusBeneficiariesNote", Number.isFinite(Number(latestSize.beneficiary_change_pct)) ? `月變化 ${fmt.pct(Number(latestSize.beneficiary_change_pct))}` : "--");
+  setText("mobileFocusAum", Number.isFinite(aumMillion) ? `${fmt.money(aumMillion / 100)} 億` : "--");
+  setText("mobileFocusAumNote", latestSize.month || "--");
+
+  const holdings = freshnessModel.holdingsData || {};
+  const top10 = holdings.top10 || [];
+  const top10Total = top10.reduce((sum, row) => sum + Number(row.weight_pct || 0), 0);
+  setText("mobileFocusTop10", top10.length ? fmt.pct(top10Total) : "--");
+  setText("mobileFocusTop10Note", holdings.data_date ? `資料日 ${holdings.data_date}` : "--");
+  setText("mobileFocusTopHolding", top10[0] ? `${top10[0].name} ${top10[0].code || ""}` : "--");
+  setText("mobileFocusTopHoldingNote", top10[0] ? fmt.pct(Number(top10[0].weight_pct || 0)) : "--");
+}
+
+function renderMobileHome(model) {
+  if (!$("mobileMainChart")) return;
+  renderMobileHero(model);
+  renderMobileCoreMetrics(model);
+  renderMobileFocusCards(model);
 }
 
 function renderHomeFocus(position, latest, dividend, totalReturn, totalCost) {
@@ -1153,6 +1304,81 @@ function drawChart(allRows, range = "month") {
   `;
 
   bindChartTooltip(chart);
+}
+
+function drawMobileChart(allRows, range = "month") {
+  const chart = $("mobileMainChart");
+  if (!chart) return;
+  const rows = allRows ? filterRowsByRange(allRows, range) : [];
+  if (!rows.length) {
+    chart.innerHTML = "<div class='empty'>尚無每日資料</div>";
+    return;
+  }
+
+  const width = 390;
+  const height = 226;
+  const pad = { top: 18, right: 34, bottom: 38, left: 38 };
+  const plotW = width - pad.left - pad.right;
+  const plotH = height - pad.top - pad.bottom;
+  const prices = rows.flatMap((row) => [Number(row.market_price), Number(row.nav)]);
+  const priceMin = Math.min(...prices) - 0.15;
+  const priceMax = Math.max(...prices) + 0.15;
+  const discountValues = rows.map((row) => Number(row.premium_discount_pct || 0));
+  const discountMin = Math.min(-1.2, ...discountValues) - 0.1;
+  const discountMax = Math.max(1.2, ...discountValues) + 0.1;
+  const volumeMax = Math.max(...rows.map((row) => Number(row.volume_lots || 0)), 1);
+  const barBase = pad.top + plotH;
+  const x = (_, index) => pad.left + (index / Math.max(rows.length - 1, 1)) * plotW;
+  const yPrice = (value) => scale(value, priceMin, priceMax, pad.top + plotH, pad.top);
+  const yDiscount = (value) => scale(value, discountMin, discountMax, pad.top + plotH, pad.top);
+  const marketPath = pathFor(rows, (row) => x(row, rows.indexOf(row)), (row) => yPrice(Number(row.market_price)));
+  const navPath = pathFor(rows, (row) => x(row, rows.indexOf(row)), (row) => yPrice(Number(row.nav)));
+  const discountPath = pathFor(
+    rows,
+    (row) => x(row, rows.indexOf(row)),
+    (row) => yDiscount(Number(row.premium_discount_pct || 0))
+  );
+
+  const grid = [0, 1, 2, 3].map((i) => {
+    const yy = pad.top + (plotH / 3) * i;
+    const value = priceMax - ((priceMax - priceMin) / 3) * i;
+    return `
+      <line class="grid-line" x1="${pad.left}" x2="${width - pad.right}" y1="${yy}" y2="${yy}" />
+      <text class="axis-text" x="8" y="${yy + 4}">${value.toFixed(2)}</text>
+    `;
+  });
+
+  const rightAxis = [discountMin, 0, discountMax].map((value) => {
+    const yy = yDiscount(value);
+    return `<text class="axis-text" x="${width - pad.right + 8}" y="${yy + 4}">${value.toFixed(1)}%</text>`;
+  });
+
+  const bars = rows.map((row, index) => {
+    const barW = Math.min(12, Math.max(3, plotW / rows.length - 2));
+    const barH = scale(Number(row.volume_lots || 0), 0, volumeMax, 0, plotH * 0.2);
+    const xx = x(row, index) - barW / 2;
+    return `<rect x="${xx.toFixed(2)}" y="${(barBase - barH).toFixed(2)}" width="${barW.toFixed(2)}" height="${barH.toFixed(2)}" fill="#cbd5e1" opacity="0.82" />`;
+  });
+
+  const labels = rows
+    .filter((_, index) => index === 0 || index === rows.length - 1 || index % 8 === 0)
+    .map((row) => {
+      const realIndex = rows.indexOf(row);
+      return `<text class="axis-text" text-anchor="middle" x="${x(row, realIndex)}" y="${height - 14}">${row.date.slice(5)}</text>`;
+    });
+
+  chart.innerHTML = `
+    <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="00919 手機走勢圖">
+      ${grid.join("")}
+      ${rightAxis.join("")}
+      ${bars.join("")}
+      <path d="${marketPath}" fill="none" stroke="#10b981" stroke-width="2.5" />
+      <path d="${navPath}" fill="none" stroke="#0ea5e9" stroke-width="2.5" />
+      <path d="${discountPath}" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-dasharray="5 5" />
+      <line x1="${pad.left}" x2="${width - pad.right}" y1="${barBase}" y2="${barBase}" stroke="#cbd5e1" />
+      ${labels.join("")}
+    </svg>
+  `;
 }
 
 bindInputs();
