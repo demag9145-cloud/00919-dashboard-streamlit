@@ -74,7 +74,7 @@ st.markdown(
         iframe[title="st.iframe"],
         iframe.stIFrame,
         iframe {
-          height: 1320px !important;
+          height: 1624px !important;
           min-height: 0 !important;
         }
         .status-box { display: none; }
