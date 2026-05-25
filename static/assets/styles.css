@@ -478,12 +478,52 @@ input {
 .freshness-card > .icon-box svg {
   width: 19px;
   height: 19px;
+  display: block;
+  color: inherit;
+  stroke: currentColor;
+  opacity: 1;
 }
 
 .metric > span,
 .focus-card > span,
 .freshness-card > span {
   padding-right: 42px;
+}
+
+.metric > .icon-box.icon-box--green,
+.focus-card > .icon-box.icon-box--green,
+.freshness-card > .icon-box.icon-box--green {
+  color: #059669;
+}
+
+.metric > .icon-box.icon-box--blue,
+.focus-card > .icon-box.icon-box--blue,
+.freshness-card > .icon-box.icon-box--blue {
+  color: #0284c7;
+}
+
+.metric > .icon-box.icon-box--orange,
+.focus-card > .icon-box.icon-box--orange,
+.freshness-card > .icon-box.icon-box--orange {
+  color: #d97706;
+}
+
+.metric > .icon-box.icon-box--purple,
+.focus-card > .icon-box.icon-box--purple,
+.freshness-card > .icon-box.icon-box--purple {
+  color: #7c3aed;
+}
+
+.metric > .icon-box.icon-box--pink,
+.focus-card > .icon-box.icon-box--pink,
+.freshness-card > .icon-box.icon-box--pink {
+  color: #db2777;
+}
+
+.metric > .icon-box.icon-box--cyan,
+.focus-card > .icon-box.icon-box--cyan,
+.freshness-card > .icon-box.icon-box--cyan {
+  color: #0891b2;
 }
 
 .focus-card.primary {
