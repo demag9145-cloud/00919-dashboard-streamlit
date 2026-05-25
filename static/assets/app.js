@@ -30,6 +30,93 @@ function $(id) {
   return document.getElementById(id);
 }
 
+const ICONS = {
+  activity: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12h-4l-3 8-6-16-3 8H2"/></svg>`,
+  barChart: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 16v-5"/><path d="M12 16V7"/><path d="M17 16v-3"/></svg>`,
+  briefcase: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 6V5a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v1"/><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M3 12h18"/><path d="M10 12v2h4v-2"/></svg>`,
+  building: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18"/><path d="M6 12H4a2 2 0 0 0-2 2v8"/><path d="M18 9h2a2 2 0 0 1 2 2v11"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>`,
+  calculator: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M8 6h8"/><path d="M8 10h.01"/><path d="M12 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>`,
+  calendarDays: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/></svg>`,
+  circleDollar: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 6v12"/><path d="M15 9.5c-.7-.8-1.7-1.2-3-1.2-1.7 0-3 .8-3 2.2 0 3.1 6 1.5 6 4.5 0 1.4-1.3 2.2-3 2.2-1.4 0-2.5-.4-3.3-1.3"/></svg>`,
+  coins: `<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="8" cy="6" rx="5" ry="3"/><path d="M3 6v5c0 1.7 2.2 3 5 3s5-1.3 5-3V6"/><path d="M3 11v5c0 1.7 2.2 3 5 3 1.6 0 3-.4 3.9-1.1"/><path d="M16 10c2.8 0 5 1.3 5 3s-2.2 3-5 3-5-1.3-5-3 2.2-3 5-3Z"/><path d="M11 13v4c0 1.7 2.2 3 5 3s5-1.3 5-3v-4"/></svg>`,
+  cpu: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M9 1v4"/><path d="M15 1v4"/><path d="M9 19v4"/><path d="M15 19v4"/><path d="M1 9h4"/><path d="M1 15h4"/><path d="M19 9h4"/><path d="M19 15h4"/></svg>`,
+  database: `<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>`,
+  home: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>`,
+  layers: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>`,
+  lineChart: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-7"/></svg>`,
+  pieChart: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v9h9"/><path d="M20.5 15A9 9 0 1 1 9 3.5"/><path d="M12 3a9 9 0 0 1 9 9"/></svg>`,
+  star: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"/></svg>`,
+  trendingUp: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 17 6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>`,
+  trafficCone: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l5 17H4L9 3Z"/><path d="M8 10h8"/><path d="M6.5 15h11"/><path d="M3 20h18"/></svg>`,
+  user: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>`,
+  users: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/><path d="M16 3.1a4 4 0 0 1 0 7.8"/></svg>`,
+  wallet: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1Z"/><path d="M16 12h.01"/><path d="M3 7h17"/></svg>`,
+};
+
+function renderIcon(name, colorClass = "green") {
+  const icon = ICONS[name] || "";
+  return `<span class="icon-box icon-box--${colorClass}">${icon}</span>`;
+}
+
+function hydrateInlineIcons(root = document) {
+  root.querySelectorAll("[data-icon]").forEach((node) => {
+    const iconName = node.dataset.icon;
+    const colorClass = node.dataset.iconColor || "green";
+    node.outerHTML = renderIcon(iconName, colorClass);
+  });
+}
+
+function prependDesktopIcon(selector, iconName, colorClass = "green") {
+  const node = document.querySelector(selector);
+  if (!node || node.querySelector(":scope > .icon-box")) return;
+  node.classList.add("desktop-icon-target");
+  node.insertAdjacentHTML("afterbegin", renderIcon(iconName, colorClass));
+}
+
+function hydrateDesktopIcons() {
+  const iconTargets = [
+    [".position-panel .panel-title > span", "briefcase", "green"],
+    [".status-panel .panel-title > span", "activity", "green"],
+    [".data-freshness-section .section-head h3", "database", "blue"],
+    [".home-focus-section .section-head h3", "star", "green"],
+    [".chart-section .section-head h3", "barChart", "cyan"],
+    [".trade-section .section-head h3", "briefcase", "blue"],
+    [".monthly-section .section-head h3", "trendingUp", "green"],
+    [".quarterly-section .section-head h3", "coins", "orange"],
+    [".holdings-section .section-head h3", "pieChart", "purple"],
+    [".yearly-section .section-head h3", "calculator", "pink"],
+    [".settings-section .section-head h3", "activity", "blue"],
+  ];
+  iconTargets.forEach(([selector, iconName, colorClass]) => prependDesktopIcon(selector, iconName, colorClass));
+
+  [
+    ["marketValue", "trendingUp", "green"],
+    ["totalCost", "wallet", "blue"],
+    ["unrealizedPnl", "pieChart", "orange"],
+    ["annualDividend", "coins", "orange"],
+    ["cumulativeDividend", "calculator", "purple"],
+    ["totalReturn", "lineChart", "pink"],
+    ["homeTotalReturn", "trendingUp", "green"],
+    ["homeLatestDividend", "coins", "orange"],
+    ["homeLatest54c", "circleDollar", "blue"],
+    ["homePremiumWatch", "activity", "orange"],
+    ["homeAum", "building", "purple"],
+    ["homeBeneficiaries", "users", "blue"],
+    ["homeTop10Total", "pieChart", "cyan"],
+    ["homeTopHolding", "cpu", "pink"],
+    ["freshDailyStatus", "barChart", "green"],
+    ["freshMonthlyStatus", "building", "blue"],
+    ["freshDividendStatus", "coins", "orange"],
+    ["freshHoldingsStatus", "pieChart", "purple"],
+    ["freshFetchedStatus", "database", "cyan"],
+    ["freshIntegrityStatus", "activity", "pink"],
+  ].forEach(([valueId, iconName, colorClass]) => {
+    const card = $(valueId)?.closest(".metric, .focus-card, .freshness-card");
+    if (!card || card.querySelector(":scope > .icon-box")) return;
+    card.insertAdjacentHTML("afterbegin", renderIcon(iconName, colorClass));
+  });
+}
+
 function signalText(level) {
   return {
     green: "綠燈",
@@ -131,6 +218,10 @@ function asNumber(value) {
   return isFiniteValue(value) ? Number(value) : NaN;
 }
 
+function getLatestMarketRow(rows = state.data?.daily || []) {
+  return [...rows].reverse().find((row) => isFiniteValue(row.market_price)) || {};
+}
+
 function collectDataIntegrityWarnings(latest = {}, dividend = {}, latestMonthly = {}, holdings = {}) {
   const warnings = [];
   const add = (level, label, impact) => warnings.push({ level, label, impact });
@@ -145,6 +236,15 @@ function collectDataIntegrityWarnings(latest = {}, dividend = {}, latestMonthly 
   if (!isFiniteValue(latest.nav)) add("yellow", "淨值", "折溢價與淨值線會失真");
   if (!isFiniteValue(latest.premium_discount_pct)) add("yellow", "折溢價", "每日燈號與折溢價警示會失真");
   if (!isFiniteValue(latest.volume_lots)) add("yellow", "成交量", "成交量觀察會缺資料");
+
+  const latestMarket = getLatestMarketRow(dailyRows);
+  if (latestMarket.date && latest.date && latestMarket.date > latest.date) {
+    add(
+      "yellow",
+      "淨值/折溢價更新落後",
+      `市價已到 ${latestMarket.date}，但淨值與折溢價只到 ${latest.date}，折溢價圖會停在完整資料日`
+    );
+  }
 
   if (!monthlyRows.length) add("yellow", "每月規模歷史", "AUM、受益人數與月度健康檢查無法判斷趨勢");
   if (!latestMonthly.month) add("yellow", "最新月資料", "無法判斷月規模資料是否過期");
@@ -320,11 +420,15 @@ function bindInputs() {
   $("refreshButton").addEventListener("click", () => refreshDashboardData());
   $("homeRefreshButton")?.addEventListener("click", () => refreshDashboardData());
   $("mobileRefreshButton")?.addEventListener("click", () => refreshDashboardData());
+  $("desktopRefreshButton")?.addEventListener("click", () => refreshDashboardData());
+  $("desktopStatusRefreshButton")?.addEventListener("click", () => refreshDashboardData());
   $("rangeSelect").addEventListener("change", () => render());
   $("mobileRangeSelect")?.addEventListener("change", () => render());
+  $("desktopRangeSelect")?.addEventListener("change", () => render());
   window.addEventListener("resize", debounce(() => {
     if (state.data) {
       drawChart(state.data.daily || [], $("rangeSelect").value);
+      drawDesktopTrendChart(state.data.daily || [], $("desktopRangeSelect")?.value || "month");
       drawMobileChart(state.data.daily || [], $("mobileRangeSelect")?.value || "month");
       notifyDashboardRendered();
     }
@@ -341,7 +445,13 @@ function debounce(callback, wait) {
 }
 
 async function refreshDashboardData() {
-  const buttons = [$("refreshButton"), $("homeRefreshButton"), $("mobileRefreshButton")].filter(Boolean);
+  const buttons = [
+    $("refreshButton"),
+    $("homeRefreshButton"),
+    $("mobileRefreshButton"),
+    $("desktopRefreshButton"),
+    $("desktopStatusRefreshButton"),
+  ].filter(Boolean);
   buttons.forEach((button) => {
     button.disabled = true;
     button.classList.add("is-loading");
@@ -407,12 +517,14 @@ function render() {
   if (!state.data) return;
 
   const latest = state.data.latest_daily || {};
+  const latestMarket = getLatestMarketRow();
+  const latestForPrice = latestMarket.date ? { ...latest, ...latestMarket } : latest;
   const dividend = state.data.latest_dividend || {};
   const signals = calcDashboardSignal(latest);
   const position = calcPosition(state.trades || [], state.data.dividends || []);
   const shares = position.holdingShares;
   const avgCost = position.avgCost;
-  const marketPrice = asNumber(latest.market_price);
+  const marketPrice = asNumber(latestForPrice.market_price);
   const totalCost = position.totalCost;
   const marketValue = shares * marketPrice;
   const unrealizedPnl = marketValue - totalCost;
@@ -423,7 +535,7 @@ function render() {
   const healthPremium = estimated54c >= HEALTH_PREMIUM_THRESHOLD ? estimated54c * HEALTH_PREMIUM_RATE : 0;
 
   setText("fetchedAt", `抓取時間 ${formatFetchedAt(state.data.fetched_at)}`);
-  setText("latestDate", latest.date || "--");
+  setText("latestDate", latestForPrice.date === latest.date ? latest.date || "--" : `市價 ${latestForPrice.date} / 淨值 ${latest.date || "--"}`);
   setText("holdingShares", `${fmt.money(shares)} 股`);
   setText("avgCost", fmt.money(avgCost, 2));
   setText("firstTradeDate", position.firstTradeDate || "--");
@@ -441,15 +553,16 @@ function render() {
   setText("signalLabel", signalText(signals.level));
   setText("signalReason", signals.reason || "--");
 
-  setText("latestPrice", fmt.money(asNumber(latest.market_price), 2));
+  setText("latestPrice", fmt.money(asNumber(latestForPrice.market_price), 2));
   setText("latestNav", fmt.money(asNumber(latest.nav), 2));
   setText("latestDiscount", fmt.pct(asNumber(latest.premium_discount_pct)));
-  setText("latestVolume", fmt.lots(asNumber(latest.volume_lots)));
-  const freshnessModel = getFreshnessModel(latest, dividend);
+  setText("latestVolume", fmt.lots(asNumber(latestForPrice.volume_lots)));
+  const freshnessModel = getFreshnessModel(latest, dividend, latestForPrice);
   renderDataFreshness(latest, dividend, freshnessModel);
-  renderHomeFocus(position, latest, dividend, totalReturn, totalCost);
-  renderMobileHome({
+  renderHomeFocus(position, latestForPrice, dividend, totalReturn, totalCost);
+  const renderModel = {
     latest,
+    latestForPrice,
     dividend,
     signals,
     position,
@@ -461,12 +574,18 @@ function render() {
     estimatedAnnualDividend,
     cumulativeDividend,
     totalReturn,
+    totalReturnRate: totalCost ? (totalReturn / totalCost) * 100 : 0,
+    estimated54c,
+    healthPremium,
     freshnessModel,
-  });
+  };
+  renderDesktopHome(renderModel);
+  renderMobileHome(renderModel);
 
-  renderTradeTable(position, latest);
+  renderTradeTable(position, latestForPrice);
   renderQuarterlyDividends(state.data.dividends || [], state.trades || []);
   drawChart(state.data.daily || [], $("rangeSelect").value);
+  drawDesktopTrendChart(state.data.daily || [], $("desktopRangeSelect")?.value || "month");
   drawMobileChart(state.data.daily || [], $("mobileRangeSelect")?.value || "month");
   notifyDashboardRendered();
 }
@@ -536,7 +655,8 @@ function setFreshness(idPrefix, status) {
   }
 }
 
-function getFreshnessModel(latest, dividend) {
+function getFreshnessModel(latestComplete, dividend, latestMarket = getLatestMarketRow()) {
+  const latest = latestComplete || {};
   const monthlyRows = (state.data.monthly_history || state.data.monthly_size || [])
     .filter((row) => row.month && (row.aum_million_twd != null || row.aum_100m_twd != null || row.beneficiary_count != null))
     .sort((a, b) => String(a.month).localeCompare(String(b.month)));
@@ -544,7 +664,7 @@ function getFreshnessModel(latest, dividend) {
   const holdings = state.data.holdings || {};
   const fetchedAt = String(state.data.fetched_at || "").slice(0, 10);
 
-  const daily = marketFreshnessLabel(latest.date);
+  const daily = marketFreshnessLabel(latestMarket.date || latest.date);
   const monthly = freshnessLabel(daysSince(latestMonthly.month ? `${latestMonthly.month}-28` : ""), 45, 75);
   const dividendStatus = freshnessLabel(daysSince(dividend.ex_date), 120, 180);
   const holdingsStatus = freshnessLabel(daysSince(holdings.data_date), 14, 30);
@@ -560,6 +680,7 @@ function getFreshnessModel(latest, dividend) {
     integrity,
     latestMonthly,
     holdingsData: holdings,
+    latestMarket,
     fetchedAt,
     fetchedAtDisplay: formatFetchedAt(state.data.fetched_at),
   };
@@ -567,7 +688,11 @@ function getFreshnessModel(latest, dividend) {
 
 function renderDataFreshness(latest, dividend, model = getFreshnessModel(latest, dividend)) {
   setFreshness("freshDaily", model.daily);
-  setText("freshDailyDate", latest.date ? `${latest.date} / ${model.daily.note}` : "--");
+  const marketDate = model.latestMarket?.date || latest.date;
+  const navNote = model.latestMarket?.date && latest.date && model.latestMarket.date > latest.date
+    ? `市價 ${model.latestMarket.date}；淨值 ${latest.date}`
+    : model.daily.note;
+  setText("freshDailyDate", marketDate ? `${marketDate} / ${navNote}` : "--");
   setFreshness("freshMonthly", model.monthly);
   setText("freshMonthlyDate", model.latestMonthly.month ? `${model.latestMonthly.month} / ${model.monthly.note}` : "--");
   setFreshness("freshDividend", model.dividend);
@@ -610,6 +735,13 @@ function setMobileMetric(id, valueId, statusId, value, status) {
   setText(statusId, statusLine(status));
 }
 
+function setDesktopMetric(id, valueId, statusId, value, status) {
+  const tile = document.querySelector(`[data-desktop-metric="${id}"]`) || $(valueId)?.closest(".core-metric-tile");
+  if (tile) tile.dataset.status = status.className || "unknown";
+  setText(valueId, value);
+  setText(statusId, statusLine(status));
+}
+
 function buildMobileMetricStatusMap(freshnessModel, position) {
   const trade = tradeStatus(position);
   const dailyTrade = pickWorstStatus(freshnessModel.daily, trade);
@@ -630,9 +762,11 @@ function buildMobileMetricStatusMap(freshnessModel, position) {
 function renderMobileHero({ latest, signals, freshnessModel }) {
   const orb = $("mobileSignalOrb");
   const level = signals.level || "yellow";
+  const firstWarning = freshnessModel.integrity?.warnings?.[0];
+  const warningLabel = firstWarning ? firstWarning.label : "";
   if (orb) orb.className = `hero-status-orb ${level}`;
   setText("mobileSignalLabel", signalText(level));
-  setText("mobileSignalReason", level === "green" ? "所有數據正常" : "請檢查資料");
+  setText("mobileSignalReason", level === "green" ? "所有數據正常" : warningLabel || "請檢查資料");
   setText("mobileFetchedAt", `目前資料抓取時間 ${formatFetchedAt(state.data.fetched_at)}`);
   setText("mobileHeroPremium", `折溢價 ${fmt.pct(asNumber(latest.premium_discount_pct))}`);
   const chip = $("mobileFetchedAt");
@@ -655,8 +789,11 @@ function renderMobileCoreMetrics(model) {
   const greenCount = statusList.filter((status) => status.className === "green").length;
   const counter = $("mobileCoreUpdateCount");
   if (counter) {
-    const worst = pickWorstStatus(...statusList);
-    counter.textContent = `${greenCount}/9 ${greenCount === 9 ? "已更新" : "需檢查"}`;
+    const integrityWarnings = model.freshnessModel.integrity?.warnings || [];
+    const worst = pickWorstStatus(...statusList, model.freshnessModel.integrity?.status);
+    counter.textContent = integrityWarnings.length
+      ? `${integrityWarnings.length} 項需檢查`
+      : `${greenCount}/9 ${greenCount === 9 ? "已更新" : "需檢查"}`;
     counter.className = `ui-status-chip ui-status-chip--${worst.className}`;
   }
 }
@@ -693,6 +830,155 @@ function renderMobileHome(model) {
   renderMobileHero(model);
   renderMobileCoreMetrics(model);
   renderMobileFocusCards(model);
+}
+
+function renderDesktopHome(model) {
+  if (!$("desktopMainChart")) return;
+  renderDesktopHero(model);
+  renderDesktopCoreMetrics(model);
+  renderDesktopFocusCards(model);
+  renderDesktopModuleCards(model);
+  renderDesktopDataStatusCompact(model.latest, model.dividend, model.freshnessModel);
+}
+
+function renderDesktopHero({ signals, freshnessModel, shares, totalReturn, totalReturnRate }) {
+  const level = signals.level || "yellow";
+  const orb = $("desktopSignalOrb");
+  const sidebarDot = document.querySelector(".sidebar-signal__dot");
+  if (orb) orb.className = `desktop-hero__orb ${level}`;
+  if (sidebarDot) sidebarDot.dataset.status = level;
+  setText("desktopSignalLabel", signalText(level));
+  setText("desktopSignalReason", level === "green" ? "所有數據正常" : signals.reason || "請檢查資料");
+  setText("sidebarSignalLabel", signalText(level));
+  setText("sidebarSignalReason", level === "green" ? "所有數據正常" : signals.reason || "請檢查資料");
+  setText("desktopFetchedAt", `資料更新時間 ${formatFetchedAt(state.data.fetched_at)}`);
+  const chip = $("desktopFetchedAt");
+  if (chip) chip.className = `ui-status-chip hero-time-chip ui-status-chip--${freshnessModel.fetched.className}`;
+
+  const statuses = buildMobileMetricStatusMap(freshnessModel, { holdingShares: shares, firstTradeDate: true });
+  setText("desktopHeroShares", `${fmt.money(shares)} 股`);
+  setText("desktopHeroSharesStatus", statusLine(statuses.shares));
+  setText("desktopHeroTotalReturn", `$${fmt.money(totalReturn)}`);
+  setText("desktopHeroTotalReturnRate", fmt.pct(totalReturnRate));
+  $("desktopHeroTotalReturn")?.classList.toggle("negative", totalReturn < 0);
+  $("desktopHeroTotalReturn")?.classList.toggle("positive", totalReturn >= 0);
+}
+
+function renderDesktopCoreMetrics(model) {
+  const statuses = buildMobileMetricStatusMap(model.freshnessModel, model.position);
+  setDesktopMetric("shares", "desktopShares", "desktopSharesStatus", `${fmt.money(model.shares)} 股`, statuses.shares);
+  setDesktopMetric("avgCost", "desktopAvgCost", "desktopAvgCostStatus", fmt.money(model.avgCost, 2), statuses.avgCost);
+  setDesktopMetric("firstTrade", "desktopFirstTradeDate", "desktopFirstTradeStatus", model.position.firstTradeDate || "--", statuses.firstTrade);
+  setDesktopMetric("marketValue", "desktopMarketValue", "desktopMarketValueStatus", `$${fmt.money(model.marketValue)}`, statuses.marketValue);
+  setDesktopMetric("totalCost", "desktopTotalCost", "desktopTotalCostStatus", `$${fmt.money(model.totalCost)}`, statuses.totalCost);
+  setDesktopMetric("unrealizedPnl", "desktopUnrealizedPnl", "desktopUnrealizedPnlStatus", `$${fmt.money(model.unrealizedPnl)}`, statuses.unrealizedPnl);
+  setDesktopMetric("annualDividend", "desktopAnnualDividend", "desktopAnnualDividendStatus", `$${fmt.money(model.estimatedAnnualDividend)}`, statuses.annualDividend);
+  setDesktopMetric("totalReturn", "desktopTotalReturn", "desktopTotalReturnStatus", `$${fmt.money(model.totalReturn)}`, statuses.totalReturn);
+  setDesktopMetric("cumulativeDividend", "desktopCumulativeDividend", "desktopCumulativeDividendStatus", `$${fmt.money(model.cumulativeDividend)}`, statuses.cumulativeDividend);
+  $("desktopUnrealizedPnl")?.classList.toggle("negative", model.unrealizedPnl < 0);
+  $("desktopUnrealizedPnl")?.classList.toggle("positive", model.unrealizedPnl >= 0);
+  $("desktopTotalReturn")?.classList.toggle("negative", model.totalReturn < 0);
+  $("desktopTotalReturn")?.classList.toggle("positive", model.totalReturn >= 0);
+
+  const statusList = Object.values(statuses);
+  const greenCount = statusList.filter((status) => status.className === "green").length;
+  const counter = $("desktopCoreUpdateCount");
+  if (counter) {
+    const worst = pickWorstStatus(...statusList);
+    counter.textContent = `${greenCount}/9 ${greenCount === 9 ? "已更新" : "需檢查"}`;
+    counter.className = `ui-status-chip ui-status-chip--${worst.className}`;
+  }
+}
+
+function renderDesktopFocusCards({ position, dividend, totalReturn, totalCost, freshnessModel }) {
+  const totalReturnRate = totalCost ? (totalReturn / totalCost) * 100 : 0;
+  setText("desktopFocusTotalReturn", `$${fmt.money(totalReturn)}`);
+  setText("desktopFocusTotalReturnRate", fmt.pct(totalReturnRate));
+
+  const dividendPerShare = Number(dividend.dividend_per_share || 0);
+  const dividendShares = dividend.ex_date ? calcSharesOnDate(state.trades || [], dividend.ex_date) : position.holdingShares;
+  const estimatedDividendCash = dividendShares * dividendPerShare;
+  setText("desktopFocusDividend", dividendPerShare ? `${fmt.money(dividendPerShare, 2)} 元` : "--");
+  setText("desktopFocusDividendNote", dividend.ex_date ? `除息 ${dividend.ex_date} / 估 $${fmt.money(estimatedDividendCash)}` : "--");
+
+  const latestSize = freshnessModel.latestMonthly || {};
+  const aumMillion = Number(latestSize.aum_million_twd || Number(latestSize.aum_100m_twd) * 100);
+  setText("desktopFocusBeneficiaries", Number.isFinite(Number(latestSize.beneficiary_count)) ? `${fmt.money(Number(latestSize.beneficiary_count))} 人` : "--");
+  setText("desktopFocusBeneficiariesNote", Number.isFinite(Number(latestSize.beneficiary_change_pct)) ? `月變化 ${fmt.pct(Number(latestSize.beneficiary_change_pct))}` : "--");
+  setText("desktopFocusAum", Number.isFinite(aumMillion) ? `${fmt.money(aumMillion / 100)} 億` : "--");
+  setText("desktopFocusAumNote", latestSize.month || "--");
+
+  const holdings = freshnessModel.holdingsData || {};
+  const top10 = holdings.top10 || [];
+  const top10Total = top10.reduce((sum, row) => sum + Number(row.weight_pct || 0), 0);
+  setText("desktopFocusTop10", top10.length ? fmt.pct(top10Total) : "--");
+  setText("desktopFocusTop10Note", holdings.data_date ? `資料日 ${holdings.data_date}` : "--");
+  setText("desktopFocusTopHolding", top10[0] ? `${top10[0].name} ${top10[0].code || ""}` : "--");
+  setText("desktopFocusTopHoldingNote", top10[0] ? fmt.pct(Number(top10[0].weight_pct || 0)) : "--");
+}
+
+function calcEstimatedDividendCash(dividend, position) {
+  const dividendPerShare = Number(dividend.dividend_per_share || 0);
+  const dividendShares = dividend.ex_date ? calcSharesOnDate(state.trades || [], dividend.ex_date) : position.holdingShares;
+  return dividendShares * dividendPerShare;
+}
+
+function calcYearlyDividendTotal(year) {
+  return (state.data.dividends || []).reduce((sum, dividend) => {
+    const exDate = String(dividend.ex_date || "");
+    if (!exDate.startsWith(String(year))) return sum;
+    const shares = calcSharesOnDate(state.trades || [], exDate);
+    return sum + shares * Number(dividend.dividend_per_share || 0);
+  }, 0);
+}
+
+function calcYearly54cTotal(year) {
+  return (state.data.dividends || []).reduce((sum, dividend) => {
+    const exDate = String(dividend.ex_date || "");
+    if (!exDate.startsWith(String(year))) return sum;
+    const shares = calcSharesOnDate(state.trades || [], exDate);
+    return sum + shares * Number(dividend.estimated_54c_per_share || 0);
+  }, 0);
+}
+
+function renderDesktopModuleCards(model) {
+  const dividendPerShare = Number(model.dividend.dividend_per_share || 0);
+  const estimatedDividendCash = calcEstimatedDividendCash(model.dividend, model.position);
+  const holdings = model.freshnessModel.holdingsData || {};
+  const top10 = holdings.top10 || [];
+  const latestYear = String(model.latestForPrice?.date || model.latest?.date || new Date().getFullYear()).slice(0, 4);
+  const yearlyDividend = calcYearlyDividendTotal(latestYear);
+  const yearly54c = calcYearly54cTotal(latestYear);
+
+  setText("desktopModuleMonthly", "正常 12 項");
+  setText("desktopModuleDividend", dividendPerShare ? `最新配息 ${fmt.money(dividendPerShare, 2)} 元` : "最新配息 --");
+  setText("desktopModuleDividendCash", `本季配息估算 $${fmt.money(estimatedDividendCash)}`);
+  setText("desktopModuleHolding", top10[0] ? `第一大持股 ${top10[0].name} ${top10[0].code || ""}` : "第一大持股 --");
+  setText("desktopModuleHoldingWeight", top10[0] ? fmt.pct(Number(top10[0].weight_pct || 0)) : "--");
+  setText("desktopModuleYearly", `年度配息總額 $${fmt.money(yearlyDividend)}`);
+  setText("desktopModule54c", `年度 54C 估算 $${fmt.money(yearly54c)}`);
+  setText("desktopModuleSignal", `目前燈號 ${signalText(model.signals.level)}`);
+  setText("desktopModuleSignalReason", model.signals.level === "green" ? "所有數據正常" : model.signals.reason || "--");
+}
+
+function setDesktopStatusRow(prefix, status, detail) {
+  const row = $(`${prefix}Status`)?.closest(".desktop-status-row");
+  if (row) row.dataset.status = status.className || "unknown";
+  setText(`${prefix}Status`, status.label);
+  setText(`${prefix}Date`, detail || status.note || "--");
+}
+
+function renderDesktopDataStatusCompact(latest, dividend, model) {
+  const marketDate = model.latestMarket?.date || latest.date;
+  const dailyNote = model.latestMarket?.date && latest.date && model.latestMarket.date > latest.date
+    ? `市價 ${model.latestMarket.date}；淨值 ${latest.date}`
+    : `${marketDate || "--"} / ${model.daily.note}`;
+  setDesktopStatusRow("desktopFreshDaily", model.daily, dailyNote);
+  setDesktopStatusRow("desktopFreshMonthly", model.monthly, model.latestMonthly.month ? `${model.latestMonthly.month} / ${model.monthly.note}` : "--");
+  setDesktopStatusRow("desktopFreshDividend", model.dividend, dividend.ex_date ? `${dividend.ex_date} / ${model.dividend.note}` : "--");
+  setDesktopStatusRow("desktopFreshHoldings", model.holdings, model.holdingsData.data_date ? `${model.holdingsData.data_date} / ${model.holdings.note}` : "--");
+  setDesktopStatusRow("desktopFreshFetched", model.fetched, model.fetchedAt ? `${model.fetchedAtDisplay} / ${model.fetched.note}` : "--");
+  setDesktopStatusRow("desktopFreshIntegrity", model.integrity.status, model.integrity.status.note);
 }
 
 function renderHomeFocus(position, latest, dividend, totalReturn, totalCost) {
@@ -1243,23 +1529,30 @@ function getWeekKey(isoDate) {
   return `${date.getFullYear()}-W${String(weekNo).padStart(2, "0")}`;
 }
 
-function drawChart(allRows, range = "month") {
+function drawChart(allRows, range = "month", targetId = "mainChart") {
   const rows = allRows
     ? filterRowsByRange(allRows, range)
     : [];
 
-  const chart = $("mainChart");
+  const chart = $(targetId);
+  if (!chart) return;
   if (!rows.length) {
     chart.innerHTML = "<div class='empty'>尚無每日資料</div>";
     return;
   }
 
   const isMobile = window.matchMedia("(max-width: 760px)").matches;
+  const isDesktopHome = targetId === "desktopMainChart";
   const width = isMobile ? 390 : 1120;
-  const height = isMobile ? 280 : 420;
+  const height = isMobile ? 280 : isDesktopHome ? 352 : 420;
   const pad = isMobile
     ? { top: 24, right: 34, bottom: 46, left: 38 }
-    : { top: 28, right: 54, bottom: 72, left: 48 };
+    : isDesktopHome
+      ? { top: 22, right: 54, bottom: 46, left: 48 }
+      : { top: 28, right: 54, bottom: 72, left: 48 };
+  const priceColor = isDesktopHome ? "#10b981" : "#1f5fbf";
+  const navColor = isDesktopHome ? "#0ea5e9" : "#d65a3a";
+  const discountColor = "#8b5cf6";
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
   const prices = rows.flatMap((row) => [Number(row.market_price), Number(row.nav)]);
@@ -1314,9 +1607,9 @@ function drawChart(allRows, range = "month") {
     .map((row, index) => {
       const xx = x(row, index);
       return `
-        <circle class="chart-point" cx="${xx}" cy="${yPrice(Number(row.market_price))}" r="${isMobile ? 2.2 : 3.5}" fill="#1f5fbf" />
-        <circle class="chart-point" cx="${xx}" cy="${yPrice(Number(row.nav))}" r="${isMobile ? 2.2 : 3.5}" fill="#d65a3a" />
-        <circle class="chart-point" cx="${xx}" cy="${yDiscount(Number(row.premium_discount_pct || 0))}" r="${isMobile ? 2.2 : 3.5}" fill="#7457c8" />
+        <circle class="chart-point" cx="${xx}" cy="${yPrice(Number(row.market_price))}" r="${isMobile ? 2.2 : 3.5}" fill="${priceColor}" />
+        <circle class="chart-point" cx="${xx}" cy="${yPrice(Number(row.nav))}" r="${isMobile ? 2.2 : 3.5}" fill="${navColor}" />
+        <circle class="chart-point" cx="${xx}" cy="${yDiscount(Number(row.premium_discount_pct || 0))}" r="${isMobile ? 2.2 : 3.5}" fill="${discountColor}" />
       `;
     })
     .join("");
@@ -1334,9 +1627,9 @@ function drawChart(allRows, range = "month") {
       ${rightAxis.join("")}
       ${bars.join("")}
       <line id="hoverGuide" class="hover-guide" x1="${pad.left}" x2="${pad.left}" y1="${pad.top}" y2="${barBase}" />
-      <path d="${marketPath}" fill="none" stroke="#1f5fbf" stroke-width="${isMobile ? 2.2 : 3}" />
-      <path d="${navPath}" fill="none" stroke="#d65a3a" stroke-width="${isMobile ? 2.2 : 3}" />
-      <path d="${discountPath}" fill="none" stroke="#7457c8" stroke-width="${isMobile ? 1.8 : 2.5}" stroke-dasharray="6 5" />
+      <path d="${marketPath}" fill="none" stroke="${priceColor}" stroke-width="${isMobile ? 2.2 : 3}" />
+      <path d="${navPath}" fill="none" stroke="${navColor}" stroke-width="${isMobile ? 2.2 : 3}" />
+      <path d="${discountPath}" fill="none" stroke="${discountColor}" stroke-width="${isMobile ? 1.8 : 2.5}" stroke-dasharray="6 5" />
       ${points}
       <line x1="${pad.left}" x2="${width - pad.right}" y1="${barBase}" y2="${barBase}" stroke="#bdc8cd" />
       ${labels.join("")}
@@ -1348,6 +1641,10 @@ function drawChart(allRows, range = "month") {
   `;
 
   bindChartTooltip(chart);
+}
+
+function drawDesktopTrendChart(allRows, range = "month") {
+  drawChart(allRows, range, "desktopMainChart");
 }
 
 function drawMobileChart(allRows, range = "month") {
@@ -1425,6 +1722,8 @@ function drawMobileChart(allRows, range = "month") {
   `;
 }
 
+hydrateInlineIcons();
+hydrateDesktopIcons();
 bindInputs();
 loadData().catch((error) => {
   console.error(error);

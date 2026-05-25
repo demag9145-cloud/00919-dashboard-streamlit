@@ -38,6 +38,17 @@ st.markdown(
     <style>
       .main .block-container { padding-top: 1.3rem; padding-bottom: 2rem; }
       [data-testid="stSidebar"] { display: none; }
+      #MainMenu,
+      footer,
+      header,
+      [data-testid="stToolbar"],
+      [data-testid="stDecoration"],
+      [data-testid="stStatusWidget"],
+      .stDeployButton {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+      }
       [data-testid="stMetricValue"] { font-size: 1.45rem; }
       .status-box {
         border: 1px solid #d9e2df;
@@ -55,13 +66,45 @@ st.markdown(
           padding: 0 0.25rem 0.35rem !important;
           max-width: 100%;
         }
+        [data-testid="stMainBlockContainer"],
         [data-testid="stAppViewBlockContainer"] {
-          padding-top: 0 !important;
+          padding: 0 !important;
+          max-width: 100% !important;
+        }
+        iframe[title="st.iframe"],
+        iframe.stIFrame,
+        iframe {
+          height: 1624px !important;
+          min-height: 0 !important;
+        }
+        div[data-testid="stElementContainer"]:has(iframe[title="st.iframe"]),
+        div[data-testid="stElementContainer"]:has(iframe.stIFrame),
+        div[data-testid="stElementContainer"]:has(iframe) {
+          height: 1624px !important;
+          max-height: 1624px !important;
+          min-height: 0 !important;
+          flex: 0 0 1624px !important;
+          margin-bottom: 0 !important;
+          padding-bottom: 0 !important;
         }
         .status-box { display: none; }
         div[data-testid="stMarkdownContainer"]:has(.status-box) { display: none; }
         div[data-testid="stVerticalBlock"] { gap: 0.25rem !important; }
-        div[data-testid="stHorizontalBlock"] { gap: 0.35rem; margin-top: 0 !important; }
+        div[data-testid="stHorizontalBlock"] {
+          display: grid !important;
+          grid-template-columns: 1fr !important;
+          gap: 0 !important;
+          margin: 0 8px 6px !important;
+          padding: 0 !important;
+        }
+        div[data-testid="stHorizontalBlock"] > div:nth-child(2) {
+          display: none !important;
+        }
+        div[data-testid="stHorizontalBlock"] button {
+          min-height: 40px !important;
+          border-radius: 12px !important;
+          font-weight: 800 !important;
+        }
       }
     </style>
     """,
@@ -334,25 +377,41 @@ def build_embedded_dashboard_html() -> str:
     )
     resize_script = """
     <script>
-      function sendStreamlitFrameHeight() {
-        const body = document.body;
-        const doc = document.documentElement;
+      let frameHeightObserver = null;
+
+      function getDashboardHeightRoot() {
         const mobileHome = document.querySelector(".mobile-home");
         const mobileVisible = mobileHome && window.getComputedStyle(mobileHome).display !== "none";
-        const mobileHeight = mobileVisible
-          ? Math.ceil(mobileHome.getBoundingClientRect().bottom + window.scrollY + 8)
-          : 0;
-        const height = mobileHeight || Math.max(
-          body ? body.scrollHeight : 0,
-          doc ? doc.scrollHeight : 0
-        );
+        if (mobileVisible) return mobileHome;
+        return document.querySelector(".app-shell") || document.querySelector(".content") || document.body;
+      }
+
+      function sendStreamlitFrameHeight() {
+        const root = getDashboardHeightRoot();
+        const rect = root ? root.getBoundingClientRect() : { height: 0 };
+        const height = Math.ceil(rect.height) + 24;
         window.parent.postMessage(
-          { isStreamlitMessage: true, type: "streamlit:setFrameHeight", height: Math.ceil(height + 8) },
+          { isStreamlitMessage: true, type: "streamlit:setFrameHeight", height },
           "*"
         );
       }
+
+      function observeFrameHeightRoot() {
+        if (!("ResizeObserver" in window)) {
+          sendStreamlitFrameHeight();
+          return;
+        }
+        if (frameHeightObserver) frameHeightObserver.disconnect();
+        const root = getDashboardHeightRoot();
+        if (!root) return;
+        frameHeightObserver = new ResizeObserver(sendStreamlitFrameHeight);
+        frameHeightObserver.observe(root);
+        sendStreamlitFrameHeight();
+      }
+
       window.addEventListener("load", sendStreamlitFrameHeight);
-      window.addEventListener("resize", sendStreamlitFrameHeight);
+      window.addEventListener("load", observeFrameHeightRoot);
+      window.addEventListener("resize", observeFrameHeightRoot);
       window.addEventListener("dashboard:rendered", sendStreamlitFrameHeight);
       window.setTimeout(sendStreamlitFrameHeight, 250);
       window.setTimeout(sendStreamlitFrameHeight, 1000);
