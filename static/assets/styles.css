@@ -2113,24 +2113,57 @@ select {
     font-size: 12px;
   }
 
-  .mobile-section-icon,
-  .metric-icon {
-    display: inline-grid;
-    place-items: center;
-    flex: 0 0 auto;
-    border-radius: 12px;
-    font-weight: 900;
+  .icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #059669;
+    background: rgba(16, 185, 129, 0.12);
   }
 
-  .mobile-section-icon {
-    width: 34px;
-    height: 34px;
-    color: #fff;
-    box-shadow: inset 0 -8px 14px rgba(15, 23, 42, 0.08);
+  .icon-box svg {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 
-  .mobile-section-icon.teal { background: linear-gradient(135deg, #2dd4bf, #059669); }
-  .mobile-section-icon.green { background: linear-gradient(135deg, #34d399, #059669); }
+  .icon-box--green {
+    background: rgba(16, 185, 129, 0.12);
+    color: #059669;
+  }
+
+  .icon-box--blue {
+    background: rgba(14, 165, 233, 0.12);
+    color: #0284c7;
+  }
+
+  .icon-box--orange {
+    background: rgba(245, 158, 11, 0.14);
+    color: #d97706;
+  }
+
+  .icon-box--purple {
+    background: rgba(139, 92, 246, 0.12);
+    color: #7c3aed;
+  }
+
+  .icon-box--pink {
+    background: rgba(236, 72, 153, 0.12);
+    color: #db2777;
+  }
+
+  .icon-box--cyan {
+    background: rgba(6, 182, 212, 0.12);
+    color: #0891b2;
+  }
 
   .core-status-grid {
     margin-top: 14px;
@@ -2141,7 +2174,7 @@ select {
 
   .core-metric-tile {
     min-width: 0;
-    min-height: 126px;
+    min-height: 132px;
     display: grid;
     grid-template-rows: auto auto 1fr auto;
     gap: 6px;
@@ -2152,23 +2185,19 @@ select {
     box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
   }
 
-  .metric-icon {
-    width: 36px;
-    height: 36px;
-    font-size: 21px;
+  .core-metric-tile .icon-box {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
   }
 
-  .metric-icon.green { color: #16a34a; background: #dcfce7; }
-  .metric-icon.cyan { color: #0891b2; background: #e0f2fe; }
-  .metric-icon.purple { color: #7c3aed; background: #f3e8ff; }
-  .metric-icon.blue { color: #0284c7; background: #dbeafe; }
-  .metric-icon.orange { color: #f97316; background: #ffedd5; }
-  .metric-icon.amber { color: #d97706; background: #fef3c7; }
-  .metric-icon.pink { color: #ec4899; background: #fce7f3; }
-  .metric-icon.violet { color: #8b5cf6; background: #ede9fe; }
+  .core-metric-tile .icon-box svg {
+    width: 21px;
+    height: 21px;
+  }
 
   .metric-label,
-  .mobile-focus-tile span {
+  .mobile-focus-tile > span:not(.icon-box) {
     color: #475569;
     font-size: 12px;
     font-weight: 800;
@@ -2207,40 +2236,35 @@ select {
     position: relative;
     min-height: 112px;
     display: grid;
-    align-content: space-between;
-    gap: 6px;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    align-content: start;
+    gap: 6px 10px;
     padding: 14px;
     border: 1px solid rgba(226, 232, 240, 0.9);
     border-radius: 16px;
     overflow: hidden;
   }
 
-  .mobile-focus-tile::after {
-    content: "";
-    position: absolute;
-    right: -18px;
-    bottom: -18px;
-    width: 84px;
-    height: 84px;
-    border-radius: 24px;
-    opacity: 0.28;
-    transform: rotate(12deg);
+  .mobile-focus-tile .icon-box {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    align-self: start;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
   }
 
-  .mobile-focus-tile::before {
-    position: absolute;
-    right: 16px;
-    bottom: 14px;
-    z-index: 1;
-    width: 54px;
-    height: 54px;
-    display: grid;
-    place-items: center;
-    border-radius: 18px;
-    color: rgba(15, 23, 42, 0.24);
-    font-size: 30px;
-    font-weight: 900;
-    line-height: 1;
+  .mobile-focus-tile .icon-box svg {
+    width: 21px;
+    height: 21px;
+  }
+
+  .mobile-focus-tile > span:not(.icon-box),
+  .mobile-focus-tile strong,
+  .mobile-focus-tile small {
+    grid-column: 2;
+    min-width: 0;
   }
 
   .mobile-focus-tile small {
@@ -2251,28 +2275,16 @@ select {
 
   .focus-return { border-color: rgba(16, 185, 129, 0.25); background: linear-gradient(135deg, #ecfdf5, #ffffff); }
   .focus-return strong { color: #047857; }
-  .focus-return::before { content: "↗"; color: rgba(5, 150, 105, 0.32); }
-  .focus-return::after { background: linear-gradient(135deg, #22c55e, #10b981); }
   .focus-dividend { border-color: rgba(245, 158, 11, 0.24); background: linear-gradient(135deg, #fffbeb, #ffffff); }
   .focus-dividend span { color: #b45309; }
-  .focus-dividend::before { content: "$"; color: rgba(217, 119, 6, 0.30); }
-  .focus-dividend::after { background: linear-gradient(135deg, #f59e0b, #fbbf24); border-radius: 50%; }
   .focus-people { border-color: rgba(14, 165, 233, 0.22); background: linear-gradient(135deg, #eff6ff, #ffffff); }
   .focus-people span { color: #075985; }
-  .focus-people::before { content: "••"; color: rgba(2, 132, 199, 0.30); letter-spacing: -5px; }
-  .focus-people::after { background: linear-gradient(135deg, #0ea5e9, #60a5fa); }
   .focus-aum { border-color: rgba(139, 92, 246, 0.22); background: linear-gradient(135deg, #f5f3ff, #ffffff); }
   .focus-aum span { color: #6d28d9; }
-  .focus-aum::before { content: "▥"; color: rgba(124, 58, 237, 0.30); }
-  .focus-aum::after { background: linear-gradient(135deg, #8b5cf6, #c4b5fd); }
   .focus-top10 { border-color: rgba(14, 165, 233, 0.2); background: linear-gradient(135deg, #ecfeff, #ffffff); }
   .focus-top10 span { color: #0369a1; }
-  .focus-top10::before { content: "◔"; color: rgba(14, 116, 144, 0.32); }
-  .focus-top10::after { background: conic-gradient(#0ea5e9, #bae6fd, #0284c7); border-radius: 50%; }
   .focus-holding { border-color: rgba(236, 72, 153, 0.2); background: linear-gradient(135deg, #fdf2f8, #ffffff); }
   .focus-holding span { color: #a21caf; }
-  .focus-holding::before { content: "▣"; color: rgba(192, 38, 211, 0.30); }
-  .focus-holding::after { background: linear-gradient(135deg, #8b5cf6, #ec4899); }
 
   .trend-card__head {
     align-items: flex-start;

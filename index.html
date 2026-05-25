@@ -66,62 +66,62 @@
           <section class="core-status-card">
             <div class="mobile-section-head">
               <div class="mobile-section-title">
-                <span class="mobile-section-icon teal">▰</span>
+                <span data-icon="activity" data-icon-color="green"></span>
                 <h3>核心數據與更新狀態</h3>
               </div>
               <span class="ui-status-chip ui-status-chip--green" id="mobileCoreUpdateCount">-- 已更新</span>
             </div>
             <div class="core-status-grid">
               <article class="core-metric-tile" data-status="green">
-                <span class="metric-icon green">▱</span>
+                <span data-icon="layers" data-icon-color="green"></span>
                 <span class="metric-label">目前股數</span>
                 <strong id="mobileShares">--</strong>
                 <small class="metric-status-line" id="mobileSharesStatus">● 正常　--</small>
               </article>
               <article class="core-metric-tile" data-status="green">
-                <span class="metric-icon cyan">$</span>
+                <span data-icon="circleDollar" data-icon-color="blue"></span>
                 <span class="metric-label">平均成本</span>
                 <strong id="mobileAvgCost">--</strong>
                 <small class="metric-status-line" id="mobileAvgCostStatus">● 正常　--</small>
               </article>
               <article class="core-metric-tile" data-status="green">
-                <span class="metric-icon purple">□</span>
+                <span data-icon="calendarDays" data-icon-color="purple"></span>
                 <span class="metric-label">最早買進日</span>
                 <strong id="mobileFirstTradeDate">--</strong>
                 <small class="metric-status-line" id="mobileFirstTradeStatus">● 正常　--</small>
               </article>
               <article class="core-metric-tile" data-status="green">
-                <span class="metric-icon green">↗</span>
+                <span data-icon="trendingUp" data-icon-color="green"></span>
                 <span class="metric-label">目前市值</span>
                 <strong id="mobileMarketValue">--</strong>
                 <small class="metric-status-line" id="mobileMarketValueStatus">● 正常　--</small>
               </article>
               <article class="core-metric-tile" data-status="green">
-                <span class="metric-icon blue">▣</span>
+                <span data-icon="wallet" data-icon-color="blue"></span>
                 <span class="metric-label">投入本金</span>
                 <strong id="mobileTotalCost">--</strong>
                 <small class="metric-status-line" id="mobileTotalCostStatus">● 正常　--</small>
               </article>
               <article class="core-metric-tile" data-status="green">
-                <span class="metric-icon orange">◔</span>
+                <span data-icon="pieChart" data-icon-color="orange"></span>
                 <span class="metric-label">未實現損益</span>
                 <strong id="mobileUnrealizedPnl">--</strong>
                 <small class="metric-status-line" id="mobileUnrealizedPnlStatus">● 正常　--</small>
               </article>
               <article class="core-metric-tile" data-status="green">
-                <span class="metric-icon amber">◎</span>
+                <span data-icon="coins" data-icon-color="orange"></span>
                 <span class="metric-label">預估年配息</span>
                 <strong id="mobileAnnualDividend">--</strong>
                 <small class="metric-status-line" id="mobileAnnualDividendStatus">● 正常　--</small>
               </article>
               <article class="core-metric-tile" data-status="green">
-                <span class="metric-icon pink">⌁</span>
+                <span data-icon="lineChart" data-icon-color="pink"></span>
                 <span class="metric-label">含息損益估算</span>
                 <strong id="mobileTotalReturn">--</strong>
                 <small class="metric-status-line" id="mobileTotalReturnStatus">● 正常　--</small>
               </article>
               <article class="core-metric-tile" data-status="green">
-                <span class="metric-icon violet">▤</span>
+                <span data-icon="calculator" data-icon-color="purple"></span>
                 <span class="metric-label">累積配息估算</span>
                 <strong id="mobileCumulativeDividend">--</strong>
                 <small class="metric-status-line" id="mobileCumulativeDividendStatus">● 正常　--</small>
@@ -132,37 +132,43 @@
           <section class="home-focus-card">
             <div class="mobile-section-head">
               <div class="mobile-section-title">
-                <span class="mobile-section-icon green">★</span>
+                <span data-icon="star" data-icon-color="green"></span>
                 <h3>首頁重點總覽</h3>
               </div>
             </div>
             <div class="mobile-focus-grid">
               <article class="mobile-focus-tile focus-return">
+                <span data-icon="trendingUp" data-icon-color="green"></span>
                 <span>含息報酬</span>
                 <strong id="mobileFocusTotalReturn">--</strong>
                 <small id="mobileFocusTotalReturnRate">--</small>
               </article>
               <article class="mobile-focus-tile focus-dividend">
+                <span data-icon="coins" data-icon-color="orange"></span>
                 <span>最新配息</span>
                 <strong id="mobileFocusDividend">--</strong>
                 <small id="mobileFocusDividendNote">--</small>
               </article>
               <article class="mobile-focus-tile focus-people">
+                <span data-icon="users" data-icon-color="blue"></span>
                 <span>受益人數</span>
                 <strong id="mobileFocusBeneficiaries">--</strong>
                 <small id="mobileFocusBeneficiariesNote">--</small>
               </article>
               <article class="mobile-focus-tile focus-aum">
+                <span data-icon="building" data-icon-color="purple"></span>
                 <span>AUM 規模</span>
                 <strong id="mobileFocusAum">--</strong>
                 <small id="mobileFocusAumNote">--</small>
               </article>
               <article class="mobile-focus-tile focus-top10">
+                <span data-icon="pieChart" data-icon-color="cyan"></span>
                 <span>前十大集中度</span>
                 <strong id="mobileFocusTop10">--</strong>
                 <small id="mobileFocusTop10Note">--</small>
               </article>
               <article class="mobile-focus-tile focus-holding">
+                <span data-icon="cpu" data-icon-color="pink"></span>
                 <span>第一大持股</span>
                 <strong id="mobileFocusTopHolding">--</strong>
                 <small id="mobileFocusTopHoldingNote">--</small>
@@ -173,7 +179,7 @@
           <section class="trend-card">
             <div class="trend-card__head">
               <div class="mobile-section-title">
-                <span class="mobile-section-icon teal">▧</span>
+                <span data-icon="barChart" data-icon-color="cyan"></span>
                 <div>
                   <h3>走勢總覽</h3>
                   <p>市價、淨值、折溢價與成交量</p>
