@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import io
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -37,6 +38,17 @@ st.markdown(
     <style>
       .main .block-container { padding-top: 1.3rem; padding-bottom: 2rem; }
       [data-testid="stSidebar"] { display: none; }
+      #MainMenu,
+      footer,
+      header,
+      [data-testid="stToolbar"],
+      [data-testid="stDecoration"],
+      [data-testid="stStatusWidget"],
+      .stDeployButton {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+      }
       [data-testid="stMetricValue"] { font-size: 1.45rem; }
       .status-box {
         border: 1px solid #d9e2df;
@@ -49,8 +61,32 @@ st.markdown(
       .signal-yellow { color: #c78300; font-weight: 800; }
       .signal-red { color: #b42318; font-weight: 800; }
       .small-note { color: #66736f; font-size: 0.92rem; }
-      @media (max-width: 760px) {
-        .main .block-container { padding-left: 0.8rem; padding-right: 0.8rem; }
+      @media (max-width: 760px), (max-height: 520px) and (orientation: landscape), (hover: none) and (pointer: coarse) {
+        .main .block-container {
+          padding: 0 0.25rem 0.35rem !important;
+          max-width: 100%;
+        }
+        [data-testid="stMainBlockContainer"],
+        [data-testid="stAppViewBlockContainer"] {
+          padding: 0 !important;
+          max-width: 100% !important;
+        }
+        iframe[title="st.iframe"],
+        iframe.stIFrame,
+        iframe {
+          height: 1680px !important;
+          min-height: 0 !important;
+        }
+        .status-box { display: none; }
+        div[data-testid="stMarkdownContainer"]:has(.status-box) { display: none; }
+        div[data-testid="stVerticalBlock"] > div:not(:has(iframe)) {
+          display: none !important;
+        }
+        div[data-testid="stVerticalBlock"] > div:has(iframe) {
+          display: block !important;
+        }
+        div[data-testid="stVerticalBlock"] { gap: 0.25rem !important; }
+        div[data-testid="stHorizontalBlock"] { gap: 0.35rem; margin-top: 0 !important; }
       }
     </style>
     """,
@@ -269,6 +305,105 @@ def sync_static_files() -> None:
         shutil.copy2(source, static_data / source.name)
 
 
+def build_embedded_dashboard_html() -> str:
+    index_path = STATIC_DIR / "index.html"
+    if not index_path.exists():
+        return "<h2>找不到 static/index.html</h2>"
+
+    html = index_path.read_text(encoding="utf-8")
+    dashboard_json = json.dumps(load_dashboard(), ensure_ascii=False)
+    trades_json = json.dumps(load_trades(), ensure_ascii=False)
+
+    bootstrap = f"""
+    <script>
+      window.__00919_DASHBOARD_DATA = {dashboard_json};
+      window.__00919_TRADES_DATA = {trades_json};
+    </script>
+    """
+    html = html.replace("</head>", f"{bootstrap}</head>", 1)
+
+    def inline_stylesheet(match: re.Match) -> str:
+        href = match.group("href").split("?", 1)[0]
+        path = STATIC_DIR / href
+        if not path.exists():
+            return match.group(0)
+        css = path.read_text(encoding="utf-8")
+        return f"<style>\n{css}\n</style>"
+
+    def inline_script(match: re.Match) -> str:
+        src = match.group("src").split("?", 1)[0]
+        path = STATIC_DIR / src
+        if not path.exists():
+            return match.group(0)
+        script = path.read_text(encoding="utf-8")
+        if src == "assets/app.js":
+            script = script.replace(
+                "fetch(`data/dashboard_data.json?ts=${Date.now()}`)",
+                "Promise.resolve(new Response(JSON.stringify(window.__00919_DASHBOARD_DATA || {}), {status: 200, headers: {'Content-Type': 'application/json'}}))",
+            )
+            script = script.replace(
+                "fetch(`data/trades.json?ts=${Date.now()}`)",
+                "Promise.resolve(new Response(JSON.stringify(window.__00919_TRADES_DATA || []), {status: 200, headers: {'Content-Type': 'application/json'}}))",
+            )
+        return f"<script>\n{script}\n</script>"
+
+    html = re.sub(
+        r'<link\s+rel="stylesheet"\s+href="(?P<href>assets/[^"]+)"\s*/?>',
+        inline_stylesheet,
+        html,
+    )
+    html = re.sub(
+        r'<script\s+src="(?P<src>assets/[^"]+)"></script>',
+        inline_script,
+        html,
+    )
+    resize_script = """
+    <script>
+      let frameHeightObserver = null;
+
+      function getDashboardHeightRoot() {
+        const mobileHome = document.querySelector(".mobile-home");
+        const mobileVisible = mobileHome && window.getComputedStyle(mobileHome).display !== "none";
+        if (mobileVisible) return mobileHome;
+        return document.querySelector(".app-shell") || document.querySelector(".content") || document.body;
+      }
+
+      function sendStreamlitFrameHeight() {
+        const root = getDashboardHeightRoot();
+        const rect = root ? root.getBoundingClientRect() : { height: 0 };
+        const height = Math.ceil(rect.height) + 24;
+        window.parent.postMessage(
+          { isStreamlitMessage: true, type: "streamlit:setFrameHeight", height },
+          "*"
+        );
+      }
+
+      function observeFrameHeightRoot() {
+        if (!("ResizeObserver" in window)) {
+          sendStreamlitFrameHeight();
+          return;
+        }
+        if (frameHeightObserver) frameHeightObserver.disconnect();
+        const root = getDashboardHeightRoot();
+        if (!root) return;
+        frameHeightObserver = new ResizeObserver(sendStreamlitFrameHeight);
+        frameHeightObserver.observe(root);
+        sendStreamlitFrameHeight();
+      }
+
+      window.addEventListener("load", sendStreamlitFrameHeight);
+      window.addEventListener("load", observeFrameHeightRoot);
+      window.addEventListener("resize", observeFrameHeightRoot);
+      window.addEventListener("dashboard:rendered", sendStreamlitFrameHeight);
+      window.setTimeout(sendStreamlitFrameHeight, 250);
+      window.setTimeout(sendStreamlitFrameHeight, 1000);
+      window.setTimeout(sendStreamlitFrameHeight, 2500);
+    </script>
+    """
+    html = html.replace("</body>", f"{resize_script}</body>", 1)
+    return html
+
+
 def render_embedded_html_ui() -> None:
     sync_static_files()
     st.markdown(
@@ -298,12 +433,7 @@ def render_embedded_html_ui() -> None:
         fetched = load_dashboard().get("fetched_at", "--")
         st.caption(f"目前資料抓取時間：{fetched}")
 
-    cache_bust = datetime.now().strftime("%Y%m%d%H%M%S")
-    components.iframe(
-        f"/app/static/index.html?streamlit={cache_bust}#home",
-        height=1400,
-        scrolling=True,
-    )
+    components.html(build_embedded_dashboard_html(), height=2600, scrolling=False)
 
 
 def render_home(data: dict, trades: list[dict]) -> None:
