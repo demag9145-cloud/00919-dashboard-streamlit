@@ -66,6 +66,57 @@ function hydrateInlineIcons(root = document) {
   });
 }
 
+function prependDesktopIcon(selector, iconName, colorClass = "green") {
+  const node = document.querySelector(selector);
+  if (!node || node.querySelector(":scope > .icon-box")) return;
+  node.classList.add("desktop-icon-target");
+  node.insertAdjacentHTML("afterbegin", renderIcon(iconName, colorClass));
+}
+
+function hydrateDesktopIcons() {
+  const iconTargets = [
+    [".position-panel .panel-title > span", "briefcase", "green"],
+    [".status-panel .panel-title > span", "activity", "green"],
+    [".data-freshness-section .section-head h3", "database", "blue"],
+    [".home-focus-section .section-head h3", "star", "green"],
+    [".chart-section .section-head h3", "barChart", "cyan"],
+    [".trade-section .section-head h3", "briefcase", "blue"],
+    [".monthly-section .section-head h3", "trendingUp", "green"],
+    [".quarterly-section .section-head h3", "coins", "orange"],
+    [".holdings-section .section-head h3", "pieChart", "purple"],
+    [".yearly-section .section-head h3", "calculator", "pink"],
+    [".settings-section .section-head h3", "activity", "blue"],
+  ];
+  iconTargets.forEach(([selector, iconName, colorClass]) => prependDesktopIcon(selector, iconName, colorClass));
+
+  [
+    ["marketValue", "trendingUp", "green"],
+    ["totalCost", "wallet", "blue"],
+    ["unrealizedPnl", "pieChart", "orange"],
+    ["annualDividend", "coins", "orange"],
+    ["cumulativeDividend", "calculator", "purple"],
+    ["totalReturn", "lineChart", "pink"],
+    ["homeTotalReturn", "trendingUp", "green"],
+    ["homeLatestDividend", "coins", "orange"],
+    ["homeLatest54c", "circleDollar", "blue"],
+    ["homePremiumWatch", "activity", "orange"],
+    ["homeAum", "building", "purple"],
+    ["homeBeneficiaries", "users", "blue"],
+    ["homeTop10Total", "pieChart", "cyan"],
+    ["homeTopHolding", "cpu", "pink"],
+    ["freshDailyStatus", "barChart", "green"],
+    ["freshMonthlyStatus", "building", "blue"],
+    ["freshDividendStatus", "coins", "orange"],
+    ["freshHoldingsStatus", "pieChart", "purple"],
+    ["freshFetchedStatus", "database", "cyan"],
+    ["freshIntegrityStatus", "activity", "pink"],
+  ].forEach(([valueId, iconName, colorClass]) => {
+    const card = $(valueId)?.closest(".metric, .focus-card, .freshness-card");
+    if (!card || card.querySelector(":scope > .icon-box")) return;
+    card.insertAdjacentHTML("afterbegin", renderIcon(iconName, colorClass));
+  });
+}
+
 function signalText(level) {
   return {
     green: "綠燈",
@@ -1488,6 +1539,7 @@ function drawMobileChart(allRows, range = "month") {
 }
 
 hydrateInlineIcons();
+hydrateDesktopIcons();
 bindInputs();
 loadData().catch((error) => {
   console.error(error);

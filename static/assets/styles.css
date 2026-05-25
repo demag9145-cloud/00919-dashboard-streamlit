@@ -249,6 +249,73 @@ input {
   background: #fbfcfc;
 }
 
+.icon-box {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.icon-box svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon-box--green {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+}
+
+.icon-box--blue {
+  background: rgba(14, 165, 233, 0.12);
+  color: #0284c7;
+}
+
+.icon-box--orange {
+  background: rgba(245, 158, 11, 0.14);
+  color: #d97706;
+}
+
+.icon-box--purple {
+  background: rgba(139, 92, 246, 0.12);
+  color: #7c3aed;
+}
+
+.icon-box--pink {
+  background: rgba(236, 72, 153, 0.12);
+  color: #db2777;
+}
+
+.icon-box--cyan {
+  background: rgba(6, 182, 212, 0.12);
+  color: #0891b2;
+}
+
+.desktop-icon-target {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.desktop-icon-target .icon-box {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+}
+
+.desktop-icon-target .icon-box svg {
+  width: 19px;
+  height: 19px;
+}
+
 .metric-grid {
   margin-top: 12px;
   display: grid;
@@ -259,6 +326,7 @@ input {
 .metric,
 .snapshot div,
 .dividend-layout div {
+  position: relative;
   min-height: 78px;
   padding: 12px 14px;
   border: 1px solid var(--line);
@@ -379,6 +447,7 @@ input {
 
 .focus-card,
 .freshness-card {
+  position: relative;
   min-height: 92px;
   padding: 14px 16px;
   border: 1px solid var(--line);
@@ -391,6 +460,30 @@ input {
 .hero-grid .freshness-card {
   min-height: 70px;
   padding: 10px 12px;
+}
+
+.metric > .icon-box,
+.focus-card > .icon-box,
+.freshness-card > .icon-box {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+}
+
+.metric > .icon-box svg,
+.focus-card > .icon-box svg,
+.freshness-card > .icon-box svg {
+  width: 19px;
+  height: 19px;
+}
+
+.metric > span,
+.focus-card > span,
+.freshness-card > span {
+  padding-right: 42px;
 }
 
 .focus-card.primary {
