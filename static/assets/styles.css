@@ -2051,6 +2051,10 @@ select {
     gap: 10px;
   }
 
+  .mobile-home .hero-actions {
+    display: none !important;
+  }
+
   .hero-action-button,
   .hero-more-button,
   .trend-expand-button {

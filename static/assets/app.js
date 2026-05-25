@@ -167,6 +167,10 @@ function asNumber(value) {
   return isFiniteValue(value) ? Number(value) : NaN;
 }
 
+function getLatestMarketRow(rows = state.data?.daily || []) {
+  return [...rows].reverse().find((row) => isFiniteValue(row.market_price)) || {};
+}
+
 function collectDataIntegrityWarnings(latest = {}, dividend = {}, latestMonthly = {}, holdings = {}) {
   const warnings = [];
   const add = (level, label, impact) => warnings.push({ level, label, impact });
@@ -181,6 +185,15 @@ function collectDataIntegrityWarnings(latest = {}, dividend = {}, latestMonthly 
   if (!isFiniteValue(latest.nav)) add("yellow", "淨值", "折溢價與淨值線會失真");
   if (!isFiniteValue(latest.premium_discount_pct)) add("yellow", "折溢價", "每日燈號與折溢價警示會失真");
   if (!isFiniteValue(latest.volume_lots)) add("yellow", "成交量", "成交量觀察會缺資料");
+
+  const latestMarket = getLatestMarketRow(dailyRows);
+  if (latestMarket.date && latest.date && latestMarket.date > latest.date) {
+    add(
+      "yellow",
+      "淨值/折溢價更新落後",
+      `市價已到 ${latestMarket.date}，但淨值與折溢價只到 ${latest.date}，折溢價圖會停在完整資料日`
+    );
+  }
 
   if (!monthlyRows.length) add("yellow", "每月規模歷史", "AUM、受益人數與月度健康檢查無法判斷趨勢");
   if (!latestMonthly.month) add("yellow", "最新月資料", "無法判斷月規模資料是否過期");
@@ -443,12 +456,14 @@ function render() {
   if (!state.data) return;
 
   const latest = state.data.latest_daily || {};
+  const latestMarket = getLatestMarketRow();
+  const latestForPrice = latestMarket.date ? { ...latest, ...latestMarket } : latest;
   const dividend = state.data.latest_dividend || {};
   const signals = calcDashboardSignal(latest);
   const position = calcPosition(state.trades || [], state.data.dividends || []);
   const shares = position.holdingShares;
   const avgCost = position.avgCost;
-  const marketPrice = asNumber(latest.market_price);
+  const marketPrice = asNumber(latestForPrice.market_price);
   const totalCost = position.totalCost;
   const marketValue = shares * marketPrice;
   const unrealizedPnl = marketValue - totalCost;
@@ -459,7 +474,7 @@ function render() {
   const healthPremium = estimated54c >= HEALTH_PREMIUM_THRESHOLD ? estimated54c * HEALTH_PREMIUM_RATE : 0;
 
   setText("fetchedAt", `抓取時間 ${formatFetchedAt(state.data.fetched_at)}`);
-  setText("latestDate", latest.date || "--");
+  setText("latestDate", latestForPrice.date === latest.date ? latest.date || "--" : `市價 ${latestForPrice.date} / 淨值 ${latest.date || "--"}`);
   setText("holdingShares", `${fmt.money(shares)} 股`);
   setText("avgCost", fmt.money(avgCost, 2));
   setText("firstTradeDate", position.firstTradeDate || "--");
@@ -477,13 +492,13 @@ function render() {
   setText("signalLabel", signalText(signals.level));
   setText("signalReason", signals.reason || "--");
 
-  setText("latestPrice", fmt.money(asNumber(latest.market_price), 2));
+  setText("latestPrice", fmt.money(asNumber(latestForPrice.market_price), 2));
   setText("latestNav", fmt.money(asNumber(latest.nav), 2));
   setText("latestDiscount", fmt.pct(asNumber(latest.premium_discount_pct)));
-  setText("latestVolume", fmt.lots(asNumber(latest.volume_lots)));
-  const freshnessModel = getFreshnessModel(latest, dividend);
+  setText("latestVolume", fmt.lots(asNumber(latestForPrice.volume_lots)));
+  const freshnessModel = getFreshnessModel(latest, dividend, latestForPrice);
   renderDataFreshness(latest, dividend, freshnessModel);
-  renderHomeFocus(position, latest, dividend, totalReturn, totalCost);
+  renderHomeFocus(position, latestForPrice, dividend, totalReturn, totalCost);
   renderMobileHome({
     latest,
     dividend,
@@ -500,7 +515,7 @@ function render() {
     freshnessModel,
   });
 
-  renderTradeTable(position, latest);
+  renderTradeTable(position, latestForPrice);
   renderQuarterlyDividends(state.data.dividends || [], state.trades || []);
   drawChart(state.data.daily || [], $("rangeSelect").value);
   drawMobileChart(state.data.daily || [], $("mobileRangeSelect")?.value || "month");
@@ -572,7 +587,8 @@ function setFreshness(idPrefix, status) {
   }
 }
 
-function getFreshnessModel(latest, dividend) {
+function getFreshnessModel(latestComplete, dividend, latestMarket = getLatestMarketRow()) {
+  const latest = latestComplete || {};
   const monthlyRows = (state.data.monthly_history || state.data.monthly_size || [])
     .filter((row) => row.month && (row.aum_million_twd != null || row.aum_100m_twd != null || row.beneficiary_count != null))
     .sort((a, b) => String(a.month).localeCompare(String(b.month)));
@@ -580,7 +596,7 @@ function getFreshnessModel(latest, dividend) {
   const holdings = state.data.holdings || {};
   const fetchedAt = String(state.data.fetched_at || "").slice(0, 10);
 
-  const daily = marketFreshnessLabel(latest.date);
+  const daily = marketFreshnessLabel(latestMarket.date || latest.date);
   const monthly = freshnessLabel(daysSince(latestMonthly.month ? `${latestMonthly.month}-28` : ""), 45, 75);
   const dividendStatus = freshnessLabel(daysSince(dividend.ex_date), 120, 180);
   const holdingsStatus = freshnessLabel(daysSince(holdings.data_date), 14, 30);
@@ -596,6 +612,7 @@ function getFreshnessModel(latest, dividend) {
     integrity,
     latestMonthly,
     holdingsData: holdings,
+    latestMarket,
     fetchedAt,
     fetchedAtDisplay: formatFetchedAt(state.data.fetched_at),
   };
@@ -603,7 +620,11 @@ function getFreshnessModel(latest, dividend) {
 
 function renderDataFreshness(latest, dividend, model = getFreshnessModel(latest, dividend)) {
   setFreshness("freshDaily", model.daily);
-  setText("freshDailyDate", latest.date ? `${latest.date} / ${model.daily.note}` : "--");
+  const marketDate = model.latestMarket?.date || latest.date;
+  const navNote = model.latestMarket?.date && latest.date && model.latestMarket.date > latest.date
+    ? `市價 ${model.latestMarket.date}；淨值 ${latest.date}`
+    : model.daily.note;
+  setText("freshDailyDate", marketDate ? `${marketDate} / ${navNote}` : "--");
   setFreshness("freshMonthly", model.monthly);
   setText("freshMonthlyDate", model.latestMonthly.month ? `${model.latestMonthly.month} / ${model.monthly.note}` : "--");
   setFreshness("freshDividend", model.dividend);
