@@ -1,7 +1,7 @@
 {
   "symbol": "00919",
   "name": "群益台灣精選高息",
-  "fetched_at": "2026-05-22T14:04:08",
+  "fetched_at": "2026-05-25T13:48:13",
   "daily": [
     {
       "date": "2022-10-13",
@@ -406,7 +406,7 @@
     {
       "date": "2022-12-22",
       "market_price": 16.71,
-      "adjusted_close": 11.948,
+      "adjusted_close": 11.9479,
       "volume_shares": 3361680,
       "volume_lots": 3362,
       "source": "Yahoo"
@@ -1550,7 +1550,7 @@
     {
       "date": "2023-08-04",
       "market_price": 20.46,
-      "adjusted_close": 15.0287,
+      "adjusted_close": 15.0286,
       "volume_shares": 10604583,
       "volume_lots": 10605,
       "source": "Yahoo"
@@ -2078,7 +2078,7 @@
     {
       "date": "2023-11-09",
       "market_price": 21.0,
-      "adjusted_close": 15.8155,
+      "adjusted_close": 15.8154,
       "volume_shares": 20121982,
       "volume_lots": 20122,
       "source": "Yahoo"
@@ -3142,7 +3142,7 @@
     {
       "date": "2024-05-30",
       "market_price": 25.93,
-      "adjusted_close": 20.5346,
+      "adjusted_close": 20.5347,
       "volume_shares": 71571236,
       "volume_lots": 71571,
       "source": "Yahoo"
@@ -3494,7 +3494,7 @@
     {
       "date": "2024-08-05",
       "market_price": 22.26,
-      "adjusted_close": 18.0986,
+      "adjusted_close": 18.0985,
       "volume_shares": 273121837,
       "volume_lots": 273122,
       "source": "Yahoo"
@@ -3582,7 +3582,7 @@
     {
       "date": "2024-08-20",
       "market_price": 24.98,
-      "adjusted_close": 20.3101,
+      "adjusted_close": 20.31,
       "volume_shares": 44793594,
       "volume_lots": 44794,
       "source": "Yahoo"
@@ -3726,7 +3726,7 @@
     {
       "date": "2024-09-13",
       "market_price": 24.03,
-      "adjusted_close": 19.5377,
+      "adjusted_close": 19.5376,
       "volume_shares": 64048693,
       "volume_lots": 64049,
       "source": "Yahoo"
@@ -3774,7 +3774,7 @@
     {
       "date": "2024-09-24",
       "market_price": 23.74,
-      "adjusted_close": 19.8943,
+      "adjusted_close": 19.8942,
       "volume_shares": 53883391,
       "volume_lots": 53883,
       "source": "Yahoo"
@@ -3886,7 +3886,7 @@
     {
       "date": "2024-10-17",
       "market_price": 23.74,
-      "adjusted_close": 19.8943,
+      "adjusted_close": 19.8942,
       "volume_shares": 31552193,
       "volume_lots": 31552,
       "source": "Yahoo"
@@ -3934,7 +3934,7 @@
     {
       "date": "2024-10-25",
       "market_price": 23.74,
-      "adjusted_close": 19.8943,
+      "adjusted_close": 19.8942,
       "volume_shares": 21708751,
       "volume_lots": 21709,
       "source": "Yahoo"
@@ -4222,7 +4222,7 @@
     {
       "date": "2024-12-17",
       "market_price": 23.89,
-      "adjusted_close": 20.02,
+      "adjusted_close": 20.0199,
       "volume_shares": 73343513,
       "volume_lots": 73344,
       "source": "Yahoo"
@@ -4678,7 +4678,7 @@
     {
       "date": "2025-03-19",
       "market_price": 23.04,
-      "adjusted_close": 20.5282,
+      "adjusted_close": 20.5281,
       "volume_shares": 101100046,
       "volume_lots": 101100,
       "source": "Yahoo"
@@ -5718,7 +5718,7 @@
     {
       "date": "2025-09-23",
       "market_price": 21.44,
-      "adjusted_close": 20.2359,
+      "adjusted_close": 20.2358,
       "volume_shares": 81390945,
       "volume_lots": 81391,
       "source": "Yahoo"
@@ -5726,7 +5726,7 @@
     {
       "date": "2025-09-24",
       "market_price": 21.44,
-      "adjusted_close": 20.2359,
+      "adjusted_close": 20.2358,
       "volume_shares": 63739086,
       "volume_lots": 63739,
       "source": "Yahoo"
@@ -6150,7 +6150,7 @@
     {
       "date": "2025-12-12",
       "market_price": 22.17,
-      "adjusted_close": 20.9249,
+      "adjusted_close": 20.9248,
       "volume_shares": 138176513,
       "volume_lots": 138177,
       "source": "Yahoo"
@@ -6727,12 +6727,9 @@
       "date": "2026-04-09",
       "market_price": 22.86,
       "adjusted_close": 22.86,
-      "volume_shares": 66620214,
-      "volume_lots": 66620,
-      "source": "Yahoo + MoneyDJ + TWSE",
-      "nav": 22.97,
-      "premium_discount_pct": -0.48,
-      "premium_discount_amount": -0.11
+      "volume_shares": 65406640,
+      "volume_lots": 65407,
+      "source": "Yahoo"
     },
     {
       "date": "2026-04-10",
@@ -7051,8 +7048,19 @@
       "date": "2026-05-22",
       "market_price": 26.73,
       "adjusted_close": 26.73,
-      "volume_shares": 80546550,
-      "volume_lots": 80547,
+      "volume_shares": 80979889,
+      "volume_lots": 80980,
+      "source": "Yahoo + MoneyDJ + TWSE",
+      "nav": 26.84,
+      "premium_discount_pct": -0.41,
+      "premium_discount_amount": -0.11
+    },
+    {
+      "date": "2026-05-25",
+      "market_price": 27.46,
+      "adjusted_close": 27.46,
+      "volume_shares": 142903405,
+      "volume_lots": 142903,
       "source": "Yahoo"
     }
   ],
@@ -7389,7 +7397,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2022-11",
@@ -7407,7 +7415,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2022-12",
@@ -7425,7 +7433,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2023-01",
@@ -7443,7 +7451,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2023-02",
@@ -7461,7 +7469,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2023-03",
@@ -7479,7 +7487,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2023-04",
@@ -7497,7 +7505,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2023-05",
@@ -7515,7 +7523,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2023-06",
@@ -7533,7 +7541,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2023-07",
@@ -7551,7 +7559,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2023-08",
@@ -7569,7 +7577,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2023-09",
@@ -7587,7 +7595,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2023-10",
@@ -7605,7 +7613,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2023-11",
@@ -7623,7 +7631,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2023-12",
@@ -7641,7 +7649,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2024-01",
@@ -7659,7 +7667,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2024-02",
@@ -7677,7 +7685,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2024-03",
@@ -7695,7 +7703,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2024-04",
@@ -7713,7 +7721,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2024-05",
@@ -7731,7 +7739,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2024-06",
@@ -7749,7 +7757,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2024-07",
@@ -7767,7 +7775,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2024-08",
@@ -7785,7 +7793,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2024-09",
@@ -7803,7 +7811,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2024-10",
@@ -7821,7 +7829,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2024-11",
@@ -7839,7 +7847,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2024-12",
@@ -7857,7 +7865,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2025-01",
@@ -7875,7 +7883,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2025-02",
@@ -7893,7 +7901,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2025-03",
@@ -7911,7 +7919,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2025-04",
@@ -7929,7 +7937,7 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2025-05",
@@ -7948,7 +7956,7 @@
         "MoneyDJ",
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2025-06",
@@ -7967,7 +7975,7 @@
         "MoneyDJ",
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2025-07",
@@ -7986,7 +7994,7 @@
         "MoneyDJ",
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2025-08",
@@ -8005,7 +8013,7 @@
         "MoneyDJ",
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2025-09",
@@ -8024,7 +8032,7 @@
         "MoneyDJ",
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2025-10",
@@ -8043,7 +8051,7 @@
         "MoneyDJ",
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2025-11",
@@ -8062,7 +8070,7 @@
         "MoneyDJ",
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2025-12",
@@ -8081,7 +8089,7 @@
         "MoneyDJ",
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2026-01",
@@ -8100,7 +8108,7 @@
         "MoneyDJ",
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2026-02",
@@ -8119,7 +8127,7 @@
         "MoneyDJ",
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2026-03",
@@ -8138,15 +8146,15 @@
         "MoneyDJ",
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2026-04",
       "avg_market_price": 23.198,
       "end_market_price": 23.65,
-      "avg_nav": 23.5164,
+      "avg_nav": 23.5585,
       "end_nav": 23.67,
-      "avg_premium_discount_pct": -0.4279,
+      "avg_premium_discount_pct": -0.4238,
       "end_premium_discount_pct": -0.08,
       "month_end_date": "2026-04-30",
       "aum_100m_twd": 4469.344,
@@ -8157,17 +8165,17 @@
         "MoneyDJ",
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     },
     {
       "month": "2026-05",
-      "avg_market_price": 25.5527,
-      "end_market_price": 26.73,
-      "avg_nav": 25.5736,
+      "avg_market_price": 25.6719,
+      "end_market_price": 27.46,
+      "avg_nav": 25.658,
       "end_nav": null,
-      "avg_premium_discount_pct": -0.4114,
+      "avg_premium_discount_pct": -0.4113,
       "end_premium_discount_pct": null,
-      "month_end_date": "2026-05-22",
+      "month_end_date": "2026-05-25",
       "aum_100m_twd": null,
       "aum_million_twd": null,
       "beneficiary_count": null,
@@ -8175,81 +8183,81 @@
       "sources": [
         "Yahoo"
       ],
-      "updated_at": "2026-05-22T14:04:08"
+      "updated_at": "2026-05-25T13:48:13"
     }
   ],
   "holdings": {
-    "data_date": "2026-05-21",
+    "data_date": "2026-05-22",
     "industry_date": "2026-03-31",
     "holdings": [
       {
         "rank": 1,
         "name": "聯電",
         "code": "2303",
-        "weight_pct": 14.93,
+        "weight_pct": 14.58,
         "shares": 602462000.0
       },
       {
         "rank": 2,
         "name": "中信金",
         "code": "2891",
-        "weight_pct": 11.66,
+        "weight_pct": 11.61,
         "shares": 949277000.0
       },
       {
         "rank": 3,
         "name": "國泰金",
         "code": "2882",
-        "weight_pct": 11.08,
+        "weight_pct": 11.16,
         "shares": 659470000.0
       },
       {
         "rank": 4,
         "name": "富邦金",
         "code": "2881",
-        "weight_pct": 8.4,
+        "weight_pct": 8.26,
         "shares": 409170000.0
       },
       {
         "rank": 5,
         "name": "華碩",
         "code": "2357",
-        "weight_pct": 5.44,
+        "weight_pct": 5.62,
         "shares": 38810000.0
       },
       {
         "rank": 6,
         "name": "長榮",
         "code": "2603",
-        "weight_pct": 5.3,
+        "weight_pct": 5.45,
         "shares": 117153000.0
       },
       {
         "rank": 7,
         "name": "台新新光金",
         "code": "2887",
-        "weight_pct": 5.23,
+        "weight_pct": 5.19,
         "shares": 1026630000.0
       },
       {
         "rank": 8,
         "name": "聯詠",
         "code": "3034",
-        "weight_pct": 4.26,
+        "weight_pct": 4.25,
         "shares": 41195000.0
       },
       {
         "rank": 9,
         "name": "文曄",
         "code": "3036",
-        "weight_pct": 3.14,
+        "weight_pct": 3.1,
         "shares": 50460000.0
       },
       {
         "rank": 10,
         "name": "陽明",
         "code": "2609",
-        "weight_pct": 2.59,
+        "weight_pct": 2.67,
         "shares": 237710000.0
       }
     ],
@@ -8258,70 +8266,70 @@
         "rank": 1,
         "name": "聯電",
         "code": "2303",
-        "weight_pct": 14.93,
+        "weight_pct": 14.58,
         "shares": 602462000.0
       },
       {
         "rank": 2,
         "name": "中信金",
         "code": "2891",
-        "weight_pct": 11.66,
+        "weight_pct": 11.61,
         "shares": 949277000.0
       },
       {
         "rank": 3,
         "name": "國泰金",
         "code": "2882",
-        "weight_pct": 11.08,
+        "weight_pct": 11.16,
         "shares": 659470000.0
       },
       {
         "rank": 4,
         "name": "富邦金",
         "code": "2881",
-        "weight_pct": 8.4,
+        "weight_pct": 8.26,
         "shares": 409170000.0
       },
       {
         "rank": 5,
         "name": "華碩",
         "code": "2357",
-        "weight_pct": 5.44,
+        "weight_pct": 5.62,
         "shares": 38810000.0
       },
       {
         "rank": 6,
         "name": "長榮",
         "code": "2603",
-        "weight_pct": 5.3,
+        "weight_pct": 5.45,
         "shares": 117153000.0
       },
       {
         "rank": 7,
         "name": "台新新光金",
         "code": "2887",
-        "weight_pct": 5.23,
+        "weight_pct": 5.19,
         "shares": 1026630000.0
       },
       {
         "rank": 8,
         "name": "聯詠",
         "code": "3034",
-        "weight_pct": 4.26,
+        "weight_pct": 4.25,
         "shares": 41195000.0
       },
       {
         "rank": 9,
         "name": "文曄",
         "code": "3036",
-        "weight_pct": 3.14,
+        "weight_pct": 3.1,
         "shares": 50460000.0
       },
       {
         "rank": 10,
         "name": "陽明",
         "code": "2609",
-        "weight_pct": 2.59,
+        "weight_pct": 2.67,
         "shares": 237710000.0
       }
     ],
@@ -8858,18 +8866,245 @@
       ],
       "source": "MoneyDJ",
       "updated_at": "2026-05-22T14:04:08"
+    },
+    {
+      "data_date": "2026-05-22",
+      "industry_date": "2026-03-31",
+      "top10": [
+        {
+          "rank": 1,
+          "name": "聯電",
+          "code": "2303",
+          "weight_pct": 14.58,
+          "shares": 602462000.0
+        },
+        {
+          "rank": 2,
+          "name": "中信金",
+          "code": "2891",
+          "weight_pct": 11.61,
+          "shares": 949277000.0
+        },
+        {
+          "rank": 3,
+          "name": "國泰金",
+          "code": "2882",
+          "weight_pct": 11.16,
+          "shares": 659470000.0
+        },
+        {
+          "rank": 4,
+          "name": "富邦金",
+          "code": "2881",
+          "weight_pct": 8.26,
+          "shares": 409170000.0
+        },
+        {
+          "rank": 5,
+          "name": "華碩",
+          "code": "2357",
+          "weight_pct": 5.62,
+          "shares": 38810000.0
+        },
+        {
+          "rank": 6,
+          "name": "長榮",
+          "code": "2603",
+          "weight_pct": 5.45,
+          "shares": 117153000.0
+        },
+        {
+          "rank": 7,
+          "name": "台新新光金",
+          "code": "2887",
+          "weight_pct": 5.19,
+          "shares": 1026630000.0
+        },
+        {
+          "rank": 8,
+          "name": "聯詠",
+          "code": "3034",
+          "weight_pct": 4.25,
+          "shares": 41195000.0
+        },
+        {
+          "rank": 9,
+          "name": "文曄",
+          "code": "3036",
+          "weight_pct": 3.1,
+          "shares": 50460000.0
+        },
+        {
+          "rank": 10,
+          "name": "陽明",
+          "code": "2609",
+          "weight_pct": 2.67,
+          "shares": 237710000.0
+        }
+      ],
+      "holdings": [
+        {
+          "rank": 1,
+          "name": "聯電",
+          "code": "2303",
+          "weight_pct": 14.58,
+          "shares": 602462000.0
+        },
+        {
+          "rank": 2,
+          "name": "中信金",
+          "code": "2891",
+          "weight_pct": 11.61,
+          "shares": 949277000.0
+        },
+        {
+          "rank": 3,
+          "name": "國泰金",
+          "code": "2882",
+          "weight_pct": 11.16,
+          "shares": 659470000.0
+        },
+        {
+          "rank": 4,
+          "name": "富邦金",
+          "code": "2881",
+          "weight_pct": 8.26,
+          "shares": 409170000.0
+        },
+        {
+          "rank": 5,
+          "name": "華碩",
+          "code": "2357",
+          "weight_pct": 5.62,
+          "shares": 38810000.0
+        },
+        {
+          "rank": 6,
+          "name": "長榮",
+          "code": "2603",
+          "weight_pct": 5.45,
+          "shares": 117153000.0
+        },
+        {
+          "rank": 7,
+          "name": "台新新光金",
+          "code": "2887",
+          "weight_pct": 5.19,
+          "shares": 1026630000.0
+        },
+        {
+          "rank": 8,
+          "name": "聯詠",
+          "code": "3034",
+          "weight_pct": 4.25,
+          "shares": 41195000.0
+        },
+        {
+          "rank": 9,
+          "name": "文曄",
+          "code": "3036",
+          "weight_pct": 3.1,
+          "shares": 50460000.0
+        },
+        {
+          "rank": 10,
+          "name": "陽明",
+          "code": "2609",
+          "weight_pct": 2.67,
+          "shares": 237710000.0
+        }
+      ],
+      "industries": [
+        {
+          "industry": "金融業",
+          "amount_10k_twd": 18434471.6,
+          "weight_pct": 43.55
+        },
+        {
+          "industry": "半導體業",
+          "amount_10k_twd": 6789642.4,
+          "weight_pct": 16.04
+        },
+        {
+          "industry": "航運業",
+          "amount_10k_twd": 5490128.5,
+          "weight_pct": 12.97
+        },
+        {
+          "industry": "電腦及週邊",
+          "amount_10k_twd": 3335560.0,
+          "weight_pct": 7.88
+        },
+        {
+          "industry": "電子通路",
+          "amount_10k_twd": 2129170.9,
+          "weight_pct": 5.03
+        },
+        {
+          "industry": "其他電子",
+          "amount_10k_twd": 1477297.5,
+          "weight_pct": 3.49
+        },
+        {
+          "industry": "光電業",
+          "amount_10k_twd": 1316445.6,
+          "weight_pct": 3.11
+        },
+        {
+          "industry": "建材營造",
+          "amount_10k_twd": 931247.7,
+          "weight_pct": 2.2
+        },
+        {
+          "industry": "電子零組件",
+          "amount_10k_twd": 749231.1,
+          "weight_pct": 1.77
+        },
+        {
+          "industry": "鋼鐵工業",
+          "amount_10k_twd": 461390.9,
+          "weight_pct": 1.09
+        },
+        {
+          "industry": "紡織纖維",
+          "amount_10k_twd": 304772.0,
+          "weight_pct": 0.72
+        },
+        {
+          "industry": "食品工業",
+          "amount_10k_twd": 203181.3,
+          "weight_pct": 0.48
+        },
+        {
+          "industry": "運動休閒",
+          "amount_10k_twd": 194715.4,
+          "weight_pct": 0.46
+        },
+        {
+          "industry": "化學工業",
+          "amount_10k_twd": 173550.7,
+          "weight_pct": 0.41
+        },
+        {
+          "industry": "綠能環保",
+          "amount_10k_twd": 97357.7,
+          "weight_pct": 0.23
+        }
+      ],
+      "source": "MoneyDJ",
+      "updated_at": "2026-05-25T13:48:13"
     }
   ],
   "latest_daily": {
-    "date": "2026-05-21",
-    "market_price": 26.53,
-    "adjusted_close": 26.53,
-    "volume_shares": 126324326,
-    "volume_lots": 126324,
+    "date": "2026-05-22",
+    "market_price": 26.73,
+    "adjusted_close": 26.73,
+    "volume_shares": 80979889,
+    "volume_lots": 80980,
     "source": "Yahoo + MoneyDJ + TWSE",
-    "nav": 26.65,
-    "premium_discount_pct": -0.45,
-    "premium_discount_amount": -0.12
+    "nav": 26.84,
+    "premium_discount_pct": -0.41,
+    "premium_discount_amount": -0.11
   },
   "latest_dividend": {
     "ex_date": "2026-03-17",
