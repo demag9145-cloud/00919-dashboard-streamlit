@@ -326,6 +326,7 @@ function bindInputs() {
     if (state.data) {
       drawChart(state.data.daily || [], $("rangeSelect").value);
       drawMobileChart(state.data.daily || [], $("mobileRangeSelect")?.value || "month");
+      notifyDashboardRendered();
     }
   }, 150));
   bindTradeForm();
@@ -467,6 +468,11 @@ function render() {
   renderQuarterlyDividends(state.data.dividends || [], state.trades || []);
   drawChart(state.data.daily || [], $("rangeSelect").value);
   drawMobileChart(state.data.daily || [], $("mobileRangeSelect")?.value || "month");
+  notifyDashboardRendered();
+}
+
+function notifyDashboardRendered() {
+  window.dispatchEvent(new Event("dashboard:rendered"));
 }
 
 function parseDateOnly(dateText) {

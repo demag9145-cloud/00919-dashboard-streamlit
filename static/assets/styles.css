@@ -1806,7 +1806,7 @@ select {
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 760px), (max-height: 520px) and (orientation: landscape), (hover: none) and (pointer: coarse) {
   :root {
     --mobile-bg: #f8fafc;
     --mobile-text: #0f172a;
@@ -1840,7 +1840,7 @@ select {
     width: 100%;
     max-width: 520px;
     margin: 0 auto;
-    padding: 10px 8px 92px;
+    padding: 4px 8px 12px;
     gap: 0;
   }
 
@@ -1860,7 +1860,7 @@ select {
 
   .mobile-home {
     display: grid;
-    gap: 14px;
+    gap: 12px;
   }
 
   .content > section,
@@ -2317,50 +2317,6 @@ select {
   }
 
   .mobile-bottom-nav {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 20;
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 2px;
-    padding: 9px 10px calc(9px + env(safe-area-inset-bottom));
-    border-top: 1px solid rgba(226, 232, 240, 0.86);
-    background: rgba(255, 255, 255, 0.94);
-    box-shadow: 0 -12px 30px rgba(15, 23, 42, 0.08);
-    backdrop-filter: blur(16px);
-  }
-
-  .mobile-bottom-nav a {
-    min-width: 0;
-    display: grid;
-    justify-items: center;
-    gap: 3px;
-    color: #475569;
-    text-decoration: none;
-    font-size: 12px;
-    font-weight: 800;
-  }
-
-  .mobile-bottom-nav a span {
-    width: 30px;
-    height: 30px;
-    display: grid;
-    place-items: center;
-    border-radius: 12px;
-    color: #64748b;
-    background: #f1f5f9;
-    font-size: 18px;
-  }
-
-  .mobile-bottom-nav a.active {
-    color: #059669;
-  }
-
-  .mobile-bottom-nav a.active span {
-    color: #fff;
-    background: linear-gradient(135deg, #10b981, #059669);
-    box-shadow: 0 10px 18px rgba(16, 185, 129, 0.28);
+    display: none;
   }
 }

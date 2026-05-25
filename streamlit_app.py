@@ -50,13 +50,18 @@ st.markdown(
       .signal-yellow { color: #c78300; font-weight: 800; }
       .signal-red { color: #b42318; font-weight: 800; }
       .small-note { color: #66736f; font-size: 0.92rem; }
-      @media (max-width: 760px) {
+      @media (max-width: 760px), (max-height: 520px) and (orientation: landscape), (hover: none) and (pointer: coarse) {
         .main .block-container {
-          padding: 0.35rem 0.25rem 0.8rem;
+          padding: 0 0.25rem 0.35rem !important;
           max-width: 100%;
         }
+        [data-testid="stAppViewBlockContainer"] {
+          padding-top: 0 !important;
+        }
         .status-box { display: none; }
-        div[data-testid="stHorizontalBlock"] { gap: 0.35rem; }
+        div[data-testid="stMarkdownContainer"]:has(.status-box) { display: none; }
+        div[data-testid="stVerticalBlock"] { gap: 0.25rem !important; }
+        div[data-testid="stHorizontalBlock"] { gap: 0.35rem; margin-top: 0 !important; }
       }
     </style>
     """,
@@ -332,19 +337,23 @@ def build_embedded_dashboard_html() -> str:
       function sendStreamlitFrameHeight() {
         const body = document.body;
         const doc = document.documentElement;
-        const height = Math.max(
+        const mobileHome = document.querySelector(".mobile-home");
+        const mobileVisible = mobileHome && window.getComputedStyle(mobileHome).display !== "none";
+        const mobileHeight = mobileVisible
+          ? Math.ceil(mobileHome.getBoundingClientRect().bottom + window.scrollY + 8)
+          : 0;
+        const height = mobileHeight || Math.max(
           body ? body.scrollHeight : 0,
-          body ? body.offsetHeight : 0,
-          doc ? doc.scrollHeight : 0,
-          doc ? doc.offsetHeight : 0
+          doc ? doc.scrollHeight : 0
         );
         window.parent.postMessage(
-          { isStreamlitMessage: true, type: "streamlit:setFrameHeight", height: Math.ceil(height + 24) },
+          { isStreamlitMessage: true, type: "streamlit:setFrameHeight", height: Math.ceil(height + 8) },
           "*"
         );
       }
       window.addEventListener("load", sendStreamlitFrameHeight);
       window.addEventListener("resize", sendStreamlitFrameHeight);
+      window.addEventListener("dashboard:rendered", sendStreamlitFrameHeight);
       window.setTimeout(sendStreamlitFrameHeight, 250);
       window.setTimeout(sendStreamlitFrameHeight, 1000);
       window.setTimeout(sendStreamlitFrameHeight, 2500);
