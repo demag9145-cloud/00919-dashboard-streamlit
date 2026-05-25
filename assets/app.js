@@ -687,9 +687,11 @@ function buildMobileMetricStatusMap(freshnessModel, position) {
 function renderMobileHero({ latest, signals, freshnessModel }) {
   const orb = $("mobileSignalOrb");
   const level = signals.level || "yellow";
+  const firstWarning = freshnessModel.integrity?.warnings?.[0];
+  const warningLabel = firstWarning ? firstWarning.label : "";
   if (orb) orb.className = `hero-status-orb ${level}`;
   setText("mobileSignalLabel", signalText(level));
-  setText("mobileSignalReason", level === "green" ? "所有數據正常" : "請檢查資料");
+  setText("mobileSignalReason", level === "green" ? "所有數據正常" : warningLabel || "請檢查資料");
   setText("mobileFetchedAt", `目前資料抓取時間 ${formatFetchedAt(state.data.fetched_at)}`);
   setText("mobileHeroPremium", `折溢價 ${fmt.pct(asNumber(latest.premium_discount_pct))}`);
   const chip = $("mobileFetchedAt");
@@ -712,8 +714,11 @@ function renderMobileCoreMetrics(model) {
   const greenCount = statusList.filter((status) => status.className === "green").length;
   const counter = $("mobileCoreUpdateCount");
   if (counter) {
-    const worst = pickWorstStatus(...statusList);
-    counter.textContent = `${greenCount}/9 ${greenCount === 9 ? "已更新" : "需檢查"}`;
+    const integrityWarnings = model.freshnessModel.integrity?.warnings || [];
+    const worst = pickWorstStatus(...statusList, model.freshnessModel.integrity?.status);
+    counter.textContent = integrityWarnings.length
+      ? `${integrityWarnings.length} 項需檢查`
+      : `${greenCount}/9 ${greenCount === 9 ? "已更新" : "需檢查"}`;
     counter.className = `ui-status-chip ui-status-chip--${worst.className}`;
   }
 }

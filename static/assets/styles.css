@@ -1905,7 +1905,7 @@ select {
 
   .hero-banner {
     position: relative;
-    min-height: 278px;
+    min-height: 236px;
     padding: 18px;
     display: grid;
     grid-template-columns: 132px minmax(0, 1fr);
@@ -2003,8 +2003,8 @@ select {
     z-index: 1;
     display: grid;
     gap: 8px;
-    align-self: end;
-    padding-top: 58px;
+    align-self: center;
+    padding-top: 0;
   }
 
   .hero-meta p,
