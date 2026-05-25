@@ -74,19 +74,27 @@ st.markdown(
         iframe[title="st.iframe"],
         iframe.stIFrame,
         iframe {
-          height: 1680px !important;
+          height: 1320px !important;
           min-height: 0 !important;
         }
         .status-box { display: none; }
         div[data-testid="stMarkdownContainer"]:has(.status-box) { display: none; }
-        div[data-testid="stVerticalBlock"] > div:not(:has(iframe)) {
+        div[data-testid="stVerticalBlock"] { gap: 0.25rem !important; }
+        div[data-testid="stHorizontalBlock"] {
+          display: grid !important;
+          grid-template-columns: 1fr !important;
+          gap: 0 !important;
+          margin: 0 8px 6px !important;
+          padding: 0 !important;
+        }
+        div[data-testid="stHorizontalBlock"] > div:nth-child(2) {
           display: none !important;
         }
-        div[data-testid="stVerticalBlock"] > div:has(iframe) {
-          display: block !important;
+        div[data-testid="stHorizontalBlock"] button {
+          min-height: 40px !important;
+          border-radius: 12px !important;
+          font-weight: 800 !important;
         }
-        div[data-testid="stVerticalBlock"] { gap: 0.25rem !important; }
-        div[data-testid="stHorizontalBlock"] { gap: 0.35rem; margin-top: 0 !important; }
       }
     </style>
     """,
