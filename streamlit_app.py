@@ -77,6 +77,16 @@ st.markdown(
           height: 1624px !important;
           min-height: 0 !important;
         }
+        div[data-testid="stElementContainer"]:has(iframe[title="st.iframe"]),
+        div[data-testid="stElementContainer"]:has(iframe.stIFrame),
+        div[data-testid="stElementContainer"]:has(iframe) {
+          height: 1624px !important;
+          max-height: 1624px !important;
+          min-height: 0 !important;
+          flex: 0 0 1624px !important;
+          margin-bottom: 0 !important;
+          padding-bottom: 0 !important;
+        }
         .status-box { display: none; }
         div[data-testid="stMarkdownContainer"]:has(.status-box) { display: none; }
         div[data-testid="stVerticalBlock"] { gap: 0.25rem !important; }
