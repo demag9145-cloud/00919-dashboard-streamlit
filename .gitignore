@@ -7,5 +7,8 @@ Snap*.jpg
 *.docx
 *.bat
 .streamlit/secrets.toml
+*.json
+*service-account*.json
+*credentials*.json
 cloud_package_*/
 streamlit_cloud_package_*/
