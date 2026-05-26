@@ -422,6 +422,7 @@ function bindInputs() {
   $("mobileRefreshButton")?.addEventListener("click", () => refreshDashboardData());
   $("desktopRefreshButton")?.addEventListener("click", () => refreshDashboardData());
   $("desktopStatusRefreshButton")?.addEventListener("click", () => refreshDashboardData());
+  bindQuickModuleActions();
   $("rangeSelect").addEventListener("change", () => render());
   $("mobileRangeSelect")?.addEventListener("change", () => render());
   $("desktopRangeSelect")?.addEventListener("change", () => render());
@@ -434,6 +435,22 @@ function bindInputs() {
     }
   }, 150));
   bindTradeForm();
+}
+
+function bindQuickModuleActions() {
+  document.querySelectorAll(".desktop-home .desktop-action-button[href^='#']").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      const targetHash = button.getAttribute("href");
+      const target = targetHash ? document.querySelector(targetHash) : null;
+      if (!target) return;
+      event.preventDefault();
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      history.pushState(null, "", targetHash);
+      document.querySelectorAll(".nav a[href^='#']").forEach((link) => {
+        link.classList.toggle("active", link.getAttribute("href") === targetHash);
+      });
+    });
+  });
 }
 
 function debounce(callback, wait) {

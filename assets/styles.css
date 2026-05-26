@@ -2296,17 +2296,17 @@ select {
   }
 
   .desktop-home .icon-box {
-    width: 48px;
-    height: 48px;
-    min-width: 48px;
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
     border-radius: 16px;
     opacity: 1;
   }
 
   .desktop-home .icon-box svg {
-    width: 26px;
-    height: 26px;
-    stroke-width: 2.3;
+    width: 28px;
+    height: 28px;
+    stroke-width: 2.35;
     opacity: 1;
   }
 
@@ -2352,7 +2352,14 @@ select {
   .desktop-focus-card > .icon-box {
     width: 50px;
     height: 50px;
+    min-width: 50px;
     border-radius: 16px;
+  }
+
+  .desktop-core-grid .core-metric-tile > .icon-box svg {
+    width: 26px;
+    height: 26px;
+    stroke-width: 2.35;
   }
 
   .desktop-core-grid .core-metric-tile > .icon-box {
@@ -2363,7 +2370,7 @@ select {
     display: block;
     margin: 0;
     margin-bottom: 8px;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 600;
     line-height: 1.25;
   }
@@ -2377,7 +2384,7 @@ select {
 
   .desktop-core-grid .core-metric-tile strong {
     display: block;
-    font-size: 28px;
+    font-size: 30px;
     font-weight: 800;
     letter-spacing: 0;
   }
@@ -2410,6 +2417,40 @@ select {
 
   .desktop-focus-card {
     min-height: 134px;
+  }
+
+  .desktop-focus-card > .icon-box,
+  .desktop-home .focus-card .icon-box {
+    width: 60px;
+    height: 60px;
+    min-width: 60px;
+    border-radius: 18px;
+  }
+
+  .desktop-focus-card > .icon-box svg,
+  .desktop-home .focus-card .icon-box svg {
+    width: 32px;
+    height: 32px;
+    stroke-width: 2.4;
+  }
+
+  .desktop-focus-card > span:not(.icon-box),
+  .desktop-home .focus-card .focus-label {
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .desktop-focus-card strong,
+  .desktop-home .focus-card .focus-value {
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+
+  .desktop-focus-card small,
+  .desktop-home .focus-card .focus-note {
+    font-size: 14px;
+    color: #64748b;
   }
 
   .desktop-focus-card::after {
@@ -2517,15 +2558,29 @@ select {
     text-align: center;
   }
 
-  .desktop-module-card > .icon-box {
-    width: 50px;
-    height: 50px;
-    border-radius: 16px;
+  .desktop-module-card > .icon-box,
+  .desktop-home .module-card .icon-box,
+  .desktop-home .quick-module-card .icon-box {
+    width: 58px;
+    height: 58px;
+    min-width: 58px;
+    border-radius: 18px;
   }
 
-  .desktop-module-card h4 {
+  .desktop-module-card > .icon-box svg,
+  .desktop-home .module-card .icon-box svg,
+  .desktop-home .quick-module-card .icon-box svg {
+    width: 30px;
+    height: 30px;
+    stroke-width: 2.4;
+  }
+
+  .desktop-module-card h4,
+  .desktop-home .module-card-title,
+  .desktop-home .quick-module-card-title {
     color: var(--desktop-text);
-    font-size: 16px;
+    font-size: 17px;
+    font-weight: 700;
     line-height: 1.2;
   }
 
@@ -2536,10 +2591,19 @@ select {
     overflow-wrap: anywhere;
   }
 
-  .desktop-module-card strong {
+  .desktop-module-card strong,
+  .desktop-home .module-card-value,
+  .desktop-home .quick-module-card-value {
     color: var(--desktop-text);
-    font-size: 18px;
+    font-size: 24px;
+    font-weight: 800;
     line-height: 1.25;
+  }
+
+  .desktop-module-card p,
+  .desktop-home .module-card-note,
+  .desktop-home .quick-module-card-note {
+    font-size: 14px;
   }
 
   .desktop-action-button {
@@ -2557,8 +2621,18 @@ select {
 
   .desktop-mini-button {
     min-height: 36px;
-    padding: 0 12px;
-    background: #fff;
+    padding: 0 16px;
+    border: none;
+    background: #059669;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 800;
+  }
+
+  .desktop-mini-button:hover,
+  .desktop-mini-button.is-loading {
+    background: #047857;
+    color: #fff;
   }
 
   .desktop-status-list {
@@ -2610,6 +2684,36 @@ select {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .desktop-data-status-compact,
+  .desktop-status-row {
+    font-size: 14px;
+  }
+
+  .desktop-status-row span,
+  .desktop-home .data-status-compact .status-name,
+  .desktop-home .desktop-data-status-compact .status-name {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .desktop-status-row strong,
+  .desktop-home .data-status-compact .status-value,
+  .desktop-home .desktop-data-status-compact .status-value {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .nav a .icon-box {
+    width: 34px;
+    height: 34px;
+  }
+
+  .nav a .icon-box svg {
+    width: 19px;
+    height: 19px;
+    stroke-width: 2.25;
   }
 
   @media (max-width: 1300px) {
