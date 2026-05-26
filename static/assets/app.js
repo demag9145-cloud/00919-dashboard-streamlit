@@ -739,7 +739,7 @@ function setDesktopMetric(id, valueId, statusId, value, status) {
   const tile = document.querySelector(`[data-desktop-metric="${id}"]`) || $(valueId)?.closest(".core-metric-tile");
   if (tile) tile.dataset.status = status.className || "unknown";
   setText(valueId, value);
-  setText(statusId, statusLine(status));
+  setText(statusId, "");
 }
 
 function buildMobileMetricStatusMap(freshnessModel, position) {
@@ -949,36 +949,57 @@ function renderDesktopModuleCards(model) {
   const latestYear = String(model.latestForPrice?.date || model.latest?.date || new Date().getFullYear()).slice(0, 4);
   const yearlyDividend = calcYearlyDividendTotal(latestYear);
   const yearly54c = calcYearly54cTotal(latestYear);
+  const integrityWarnings = model.freshnessModel.integrity?.warnings || [];
+  const moduleCards = document.querySelectorAll(".desktop-module-card");
+  const moduleLabels = [
+    ["每月健康檢查", "主要：12 項", "前往檢視"],
+    ["季度配息 / 54C", dividendPerShare ? `主要：${fmt.money(dividendPerShare, 2)} 元` : "主要：--", "前往檢視"],
+    ["持股檢視", top10[0] ? `主要：${top10[0].name} ${top10[0].code || ""}` : "主要：--", "前往檢視"],
+    ["年度稅務總覽", `主要：$${fmt.money(yearlyDividend)}`, "前往檢視"],
+    ["燈號設定", `主要：${signalText(model.signals.level)}`, "前往設定"],
+  ];
+  moduleLabels.forEach(([title, note, button], index) => {
+    const card = moduleCards[index];
+    if (!card) return;
+    const heading = card.querySelector("h4");
+    const paragraph = card.querySelector("p");
+    const action = card.querySelector("a");
+    if (heading) heading.textContent = title;
+    if (paragraph) paragraph.textContent = note;
+    if (action) action.textContent = button;
+  });
 
   setText("desktopModuleMonthly", "正常 12 項");
-  setText("desktopModuleDividend", dividendPerShare ? `最新配息 ${fmt.money(dividendPerShare, 2)} 元` : "最新配息 --");
-  setText("desktopModuleDividendCash", `本季配息估算 $${fmt.money(estimatedDividendCash)}`);
-  setText("desktopModuleHolding", top10[0] ? `第一大持股 ${top10[0].name} ${top10[0].code || ""}` : "第一大持股 --");
+  setText("desktopModuleDividendCash", `本季估 $${fmt.money(estimatedDividendCash)}`);
   setText("desktopModuleHoldingWeight", top10[0] ? fmt.pct(Number(top10[0].weight_pct || 0)) : "--");
-  setText("desktopModuleYearly", `年度配息總額 $${fmt.money(yearlyDividend)}`);
-  setText("desktopModule54c", `年度 54C 估算 $${fmt.money(yearly54c)}`);
-  setText("desktopModuleSignal", `目前燈號 ${signalText(model.signals.level)}`);
-  setText("desktopModuleSignalReason", model.signals.level === "green" ? "所有數據正常" : model.signals.reason || "--");
+  setText("desktopModule54c", `54C 估算 $${fmt.money(yearly54c)}`);
+  setText("desktopModuleSignalReason", model.signals.level === "green" ? "所有數據正常" : `${Math.max(1, integrityWarnings.length)} 項需留意`);
+}
+
+function desktopCompactStatusLabel(status) {
+  const level = status?.className || "unknown";
+  if (level === "green") return "正常";
+  if (level === "yellow") return "需留意";
+  if (level === "red") return "異常";
+  return status?.label || "待確認";
 }
 
 function setDesktopStatusRow(prefix, status, detail) {
   const row = $(`${prefix}Status`)?.closest(".desktop-status-row");
   if (row) row.dataset.status = status.className || "unknown";
-  setText(`${prefix}Status`, status.label);
+  setText(`${prefix}Status`, desktopCompactStatusLabel(status));
   setText(`${prefix}Date`, detail || status.note || "--");
 }
 
 function renderDesktopDataStatusCompact(latest, dividend, model) {
   const marketDate = model.latestMarket?.date || latest.date;
-  const dailyNote = model.latestMarket?.date && latest.date && model.latestMarket.date > latest.date
-    ? `市價 ${model.latestMarket.date}；淨值 ${latest.date}`
-    : `${marketDate || "--"} / ${model.daily.note}`;
-  setDesktopStatusRow("desktopFreshDaily", model.daily, dailyNote);
-  setDesktopStatusRow("desktopFreshMonthly", model.monthly, model.latestMonthly.month ? `${model.latestMonthly.month} / ${model.monthly.note}` : "--");
-  setDesktopStatusRow("desktopFreshDividend", model.dividend, dividend.ex_date ? `${dividend.ex_date} / ${model.dividend.note}` : "--");
-  setDesktopStatusRow("desktopFreshHoldings", model.holdings, model.holdingsData.data_date ? `${model.holdingsData.data_date} / ${model.holdings.note}` : "--");
-  setDesktopStatusRow("desktopFreshFetched", model.fetched, model.fetchedAt ? `${model.fetchedAtDisplay} / ${model.fetched.note}` : "--");
-  setDesktopStatusRow("desktopFreshIntegrity", model.integrity.status, model.integrity.status.note);
+  const warningCount = model.integrity?.warnings?.length || 0;
+  setDesktopStatusRow("desktopFreshDaily", model.daily, marketDate || "--");
+  setDesktopStatusRow("desktopFreshMonthly", model.monthly, model.latestMonthly.month || "--");
+  setDesktopStatusRow("desktopFreshDividend", model.dividend, dividend.ex_date ? model.dividend.note : "--");
+  setDesktopStatusRow("desktopFreshHoldings", model.holdings, model.holdingsData.data_date || "--");
+  setDesktopStatusRow("desktopFreshFetched", model.fetched, model.fetchedAtDisplay || "--");
+  setDesktopStatusRow("desktopFreshIntegrity", model.integrity.status, warningCount ? `${warningCount} 項` : "關鍵欄位完整");
 }
 
 function renderHomeFocus(position, latest, dividend, totalReturn, totalCost) {
