@@ -67,9 +67,26 @@ st.markdown(
           padding-bottom: 0.75rem !important;
         }
         .status-box,
-        div[data-testid="stMarkdownContainer"]:has(.status-box),
-        div[data-testid="stHorizontalBlock"] {
+        div[data-testid="stMarkdownContainer"]:has(.status-box) {
           display: none !important;
+        }
+        div[data-testid="stHorizontalBlock"] {
+          margin: 0 0 0.75rem !important;
+          gap: 0.75rem !important;
+          align-items: center !important;
+        }
+        div[data-testid="stHorizontalBlock"] button {
+          min-height: 42px !important;
+          border-radius: 12px !important;
+          font-size: 0.98rem !important;
+          font-weight: 800 !important;
+          background: #059669 !important;
+          color: #ffffff !important;
+          border: 0 !important;
+        }
+        div[data-testid="stHorizontalBlock"] button:hover {
+          background: #047857 !important;
+          color: #ffffff !important;
         }
       }
       @media (max-width: 760px), (max-height: 520px) and (orientation: landscape), (hover: none) and (pointer: coarse) {

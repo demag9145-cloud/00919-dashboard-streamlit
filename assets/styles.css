@@ -2348,18 +2348,17 @@ select {
     padding: 20px 22px;
   }
 
-  .desktop-core-grid .core-metric-tile > .icon-box,
-  .desktop-focus-card > .icon-box {
-    width: 50px;
-    height: 50px;
-    min-width: 50px;
-    border-radius: 16px;
+  .desktop-core-grid .core-metric-tile > .icon-box {
+    width: 58px;
+    height: 58px;
+    min-width: 58px;
+    border-radius: 18px;
   }
 
   .desktop-core-grid .core-metric-tile > .icon-box svg {
-    width: 26px;
-    height: 26px;
-    stroke-width: 2.35;
+    width: 31px;
+    height: 31px;
+    stroke-width: 2.45;
   }
 
   .desktop-core-grid .core-metric-tile > .icon-box {
@@ -2370,7 +2369,7 @@ select {
     display: block;
     margin: 0;
     margin-bottom: 8px;
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 600;
     line-height: 1.25;
   }
@@ -2384,7 +2383,7 @@ select {
 
   .desktop-core-grid .core-metric-tile strong {
     display: block;
-    font-size: 30px;
+    font-size: 32px;
     font-weight: 800;
     letter-spacing: 0;
   }
@@ -2417,38 +2416,50 @@ select {
 
   .desktop-focus-card {
     min-height: 134px;
+    padding-right: 108px;
   }
 
   .desktop-focus-card > .icon-box,
   .desktop-home .focus-card .icon-box {
-    width: 60px;
-    height: 60px;
-    min-width: 60px;
-    border-radius: 18px;
+    width: 78px;
+    height: 78px;
+    min-width: 78px;
+    border-radius: 24px;
   }
 
   .desktop-focus-card > .icon-box svg,
   .desktop-home .focus-card .icon-box svg {
-    width: 32px;
-    height: 32px;
-    stroke-width: 2.4;
+    width: 42px;
+    height: 42px;
+    stroke-width: 2.5;
+  }
+
+  .desktop-focus-card > .icon-box {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    z-index: 2;
+    transform: translateY(-50%);
   }
 
   .desktop-focus-card > span:not(.icon-box),
   .desktop-home .focus-card .focus-label {
-    font-size: 16px;
+    max-width: 100%;
+    font-size: 17px;
     font-weight: 700;
   }
 
   .desktop-focus-card strong,
   .desktop-home .focus-card .focus-value {
-    font-size: 30px;
+    max-width: 100%;
+    font-size: 32px;
     font-weight: 800;
     line-height: 1.1;
   }
 
   .desktop-focus-card small,
   .desktop-home .focus-card .focus-note {
+    max-width: 100%;
     font-size: 14px;
     color: #64748b;
   }
@@ -2461,7 +2472,7 @@ select {
     width: 96px;
     height: 96px;
     border-radius: 28px;
-    opacity: 0.18;
+    opacity: 0.08;
     transform: rotate(12deg);
   }
 

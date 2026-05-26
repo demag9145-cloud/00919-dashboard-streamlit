@@ -222,6 +222,14 @@ function getLatestMarketRow(rows = state.data?.daily || []) {
   return [...rows].reverse().find((row) => isFiniteValue(row.market_price)) || {};
 }
 
+function daysBetweenDates(startDate, endDate) {
+  if (!startDate || !endDate) return NaN;
+  const start = new Date(`${startDate}T00:00:00Z`);
+  const end = new Date(`${endDate}T00:00:00Z`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return NaN;
+  return Math.floor((end.getTime() - start.getTime()) / 86400000);
+}
+
 function collectDataIntegrityWarnings(latest = {}, dividend = {}, latestMonthly = {}, holdings = {}) {
   const warnings = [];
   const add = (level, label, impact) => warnings.push({ level, label, impact });
@@ -238,11 +246,12 @@ function collectDataIntegrityWarnings(latest = {}, dividend = {}, latestMonthly 
   if (!isFiniteValue(latest.volume_lots)) add("yellow", "成交量", "成交量觀察會缺資料");
 
   const latestMarket = getLatestMarketRow(dailyRows);
-  if (latestMarket.date && latest.date && latestMarket.date > latest.date) {
+  const navLagDays = daysBetweenDates(latest.date, latestMarket.date);
+  if (Number.isFinite(navLagDays) && navLagDays >= 2) {
     add(
       "yellow",
       "淨值/折溢價更新落後",
-      `市價已到 ${latestMarket.date}，但淨值與折溢價只到 ${latest.date}，折溢價圖會停在完整資料日`
+      `市價已到 ${latestMarket.date}，但淨值與折溢價只到 ${latest.date}，已落後 ${navLagDays} 天，折溢價圖會停在完整資料日`
     );
   }
 
