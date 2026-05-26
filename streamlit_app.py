@@ -61,6 +61,17 @@ st.markdown(
       .signal-yellow { color: #c78300; font-weight: 800; }
       .signal-red { color: #b42318; font-weight: 800; }
       .small-note { color: #66736f; font-size: 0.92rem; }
+      @media (min-width: 761px) {
+        .main .block-container {
+          padding-top: 0.35rem !important;
+          padding-bottom: 0.75rem !important;
+        }
+        .status-box,
+        div[data-testid="stMarkdownContainer"]:has(.status-box),
+        div[data-testid="stHorizontalBlock"] {
+          display: none !important;
+        }
+      }
       @media (max-width: 760px), (max-height: 520px) and (orientation: landscape), (hover: none) and (pointer: coarse) {
         .main .block-container {
           padding: 0 0.25rem 0.35rem !important;

@@ -728,6 +728,14 @@ function statusLine(status) {
   return `● ${status.label}　${status.note}`;
 }
 
+function formatStatusShort(status, count = 0) {
+  const level = status?.className || status?.level || "unknown";
+  if (level === "green") return "正常";
+  if (level === "yellow") return count > 0 ? `需留意 ${count} 項` : "需留意";
+  if (level === "red") return count > 0 ? `異常 ${count} 項` : "異常";
+  return "待確認";
+}
+
 function setMobileMetric(id, valueId, statusId, value, status) {
   const tile = document.querySelector(`[data-mobile-metric="${id}"]`) || $(valueId)?.closest(".core-metric-tile");
   if (tile) tile.dataset.status = status.className || "unknown";
@@ -845,12 +853,14 @@ function renderDesktopHero({ signals, freshnessModel, shares, totalReturn, total
   const level = signals.level || "yellow";
   const orb = $("desktopSignalOrb");
   const sidebarDot = document.querySelector(".sidebar-signal__dot");
+  const warningCount = freshnessModel.integrity?.warnings?.length || 0;
+  const shortReason = level === "green" ? "所有數據正常" : formatStatusShort({ className: level }, warningCount || 1);
   if (orb) orb.className = `desktop-hero__orb ${level}`;
   if (sidebarDot) sidebarDot.dataset.status = level;
   setText("desktopSignalLabel", signalText(level));
-  setText("desktopSignalReason", level === "green" ? "所有數據正常" : signals.reason || "請檢查資料");
+  setText("desktopSignalReason", shortReason);
   setText("sidebarSignalLabel", signalText(level));
-  setText("sidebarSignalReason", level === "green" ? "所有數據正常" : signals.reason || "請檢查資料");
+  setText("sidebarSignalReason", shortReason);
   setText("desktopFetchedAt", `資料更新時間 ${formatFetchedAt(state.data.fetched_at)}`);
   const chip = $("desktopFetchedAt");
   if (chip) chip.className = `ui-status-chip hero-time-chip ui-status-chip--${freshnessModel.fetched.className}`;
@@ -950,13 +960,16 @@ function renderDesktopModuleCards(model) {
   const yearlyDividend = calcYearlyDividendTotal(latestYear);
   const yearly54c = calcYearly54cTotal(latestYear);
   const integrityWarnings = model.freshnessModel.integrity?.warnings || [];
+  const signalSummary = model.signals.level === "green"
+    ? "所有數據正常"
+    : formatStatusShort({ className: model.signals.level }, Math.max(1, integrityWarnings.length));
   const moduleCards = document.querySelectorAll(".desktop-module-card");
   const moduleLabels = [
-    ["每月健康檢查", "主要：12 項", "前往檢視"],
-    ["季度配息 / 54C", dividendPerShare ? `主要：${fmt.money(dividendPerShare, 2)} 元` : "主要：--", "前往檢視"],
-    ["持股檢視", top10[0] ? `主要：${top10[0].name} ${top10[0].code || ""}` : "主要：--", "前往檢視"],
-    ["年度稅務總覽", `主要：$${fmt.money(yearlyDividend)}`, "前往檢視"],
-    ["燈號設定", `主要：${signalText(model.signals.level)}`, "前往設定"],
+    ["每月健康檢查", "12 項", "前往檢視"],
+    ["季度配息 / 54C", dividendPerShare ? `${fmt.money(dividendPerShare, 2)} 元` : "--", "前往檢視"],
+    ["持股檢視", top10[0] ? `${top10[0].name} ${top10[0].code || ""}` : "--", "前往檢視"],
+    ["年度稅務總覽", `$${fmt.money(yearlyDividend)}`, "前往檢視"],
+    ["燈號設定", signalText(model.signals.level), "前往設定"],
   ];
   moduleLabels.forEach(([title, note, button], index) => {
     const card = moduleCards[index];
@@ -973,15 +986,11 @@ function renderDesktopModuleCards(model) {
   setText("desktopModuleDividendCash", `本季估 $${fmt.money(estimatedDividendCash)}`);
   setText("desktopModuleHoldingWeight", top10[0] ? fmt.pct(Number(top10[0].weight_pct || 0)) : "--");
   setText("desktopModule54c", `54C 估算 $${fmt.money(yearly54c)}`);
-  setText("desktopModuleSignalReason", model.signals.level === "green" ? "所有數據正常" : `${Math.max(1, integrityWarnings.length)} 項需留意`);
+  setText("desktopModuleSignalReason", signalSummary);
 }
 
 function desktopCompactStatusLabel(status) {
-  const level = status?.className || "unknown";
-  if (level === "green") return "正常";
-  if (level === "yellow") return "需留意";
-  if (level === "red") return "異常";
-  return status?.label || "待確認";
+  return formatStatusShort(status);
 }
 
 function setDesktopStatusRow(prefix, status, detail) {

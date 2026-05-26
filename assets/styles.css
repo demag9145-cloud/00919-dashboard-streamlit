@@ -2296,46 +2296,75 @@ select {
   }
 
   .desktop-home .icon-box {
-    width: 44px;
-    height: 44px;
-    border-radius: 14px;
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    border-radius: 16px;
     opacity: 1;
   }
 
   .desktop-home .icon-box svg {
-    width: 24px;
-    height: 24px;
-    stroke-width: 2.2;
+    width: 26px;
+    height: 26px;
+    stroke-width: 2.3;
     opacity: 1;
   }
 
+  .desktop-home .icon-box--green {
+    background: rgba(16, 185, 129, 0.18);
+    color: #059669;
+  }
+
+  .desktop-home .icon-box--blue {
+    background: rgba(14, 165, 233, 0.18);
+    color: #0284c7;
+  }
+
+  .desktop-home .icon-box--purple {
+    background: rgba(139, 92, 246, 0.18);
+    color: #7c3aed;
+  }
+
+  .desktop-home .icon-box--orange {
+    background: rgba(245, 158, 11, 0.2);
+    color: #d97706;
+  }
+
+  .desktop-home .icon-box--pink {
+    background: rgba(236, 72, 153, 0.18);
+    color: #db2777;
+  }
+
+  .desktop-home .icon-box--cyan {
+    background: rgba(6, 182, 212, 0.18);
+    color: #0891b2;
+  }
+
   .desktop-core-grid .core-metric-tile {
-    min-height: 92px;
-    display: grid;
-    grid-template-columns: 48px minmax(0, 1fr);
-    grid-template-rows: auto auto;
-    align-content: center;
+    min-height: 104px;
+    display: flex;
     align-items: center;
-    gap: 6px 14px;
-    padding: 18px 20px;
+    gap: 16px;
+    padding: 20px 22px;
   }
 
   .desktop-core-grid .core-metric-tile > .icon-box,
   .desktop-focus-card > .icon-box {
-    width: 48px;
-    height: 48px;
-    border-radius: 15px;
+    width: 50px;
+    height: 50px;
+    border-radius: 16px;
   }
 
   .desktop-core-grid .core-metric-tile > .icon-box {
-    grid-row: 1 / span 2;
-    grid-column: 1;
+    flex: 0 0 auto;
   }
 
   .desktop-core-grid .core-metric-tile .metric-label {
-    grid-column: 2;
+    display: block;
     margin: 0;
-    font-size: 13px;
+    margin-bottom: 8px;
+    font-size: 15px;
+    font-weight: 600;
     line-height: 1.25;
   }
 
@@ -2347,13 +2376,25 @@ select {
   }
 
   .desktop-core-grid .core-metric-tile strong {
-    grid-column: 2;
-    font-size: 24px;
+    display: block;
+    font-size: 28px;
     font-weight: 800;
+    letter-spacing: 0;
   }
 
-  .desktop-home .desktop-core-grid .metric-status-line {
+  .desktop-home .metric-status-line,
+  .desktop-home .core-metric-status,
+  .desktop-home .metric-sync-note {
     display: none !important;
+  }
+
+  .desktop-core-grid .core-metric-tile strong.positive,
+  .desktop-core-grid .core-metric-tile .positive,
+  #desktopMarketValue,
+  #desktopUnrealizedPnl.positive,
+  #desktopTotalReturn.positive,
+  #desktopAnnualDividend {
+    color: #047857;
   }
 
   .desktop-core-grid .core-metric-tile[data-status="green"] .metric-status-line { color: #059669; }
@@ -2471,7 +2512,7 @@ select {
   }
 
   .desktop-module-card {
-    min-height: 188px;
+    min-height: 176px;
     justify-items: center;
     text-align: center;
   }
@@ -2497,7 +2538,7 @@ select {
 
   .desktop-module-card strong {
     color: var(--desktop-text);
-    font-size: 17px;
+    font-size: 18px;
     line-height: 1.25;
   }
 
@@ -2528,11 +2569,11 @@ select {
 
   .desktop-status-row {
     position: relative;
-    min-height: 72px;
+    min-height: 66px;
     display: grid;
     align-content: space-between;
     gap: 3px;
-    padding: 12px 10px 10px 22px;
+    padding: 10px 10px 9px 22px;
     border: 1px solid rgba(226, 232, 240, 0.92);
     border-radius: 12px;
     background: #fff;
@@ -2555,7 +2596,7 @@ select {
 
   .desktop-status-row strong {
     color: #059669;
-    font-size: 15px;
+    font-size: 16px;
   }
 
   .desktop-status-row[data-status="yellow"] strong { color: #d97706; }
