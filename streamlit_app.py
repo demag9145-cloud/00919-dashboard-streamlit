@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import base64
 import io
 import json
 import re
@@ -368,6 +369,29 @@ def consume_embedded_update_request() -> None:
     st.code(message[-2000:])
 
 
+def consume_embedded_trade_sync_request() -> None:
+    payload = st.query_params.get("sync_trades")
+    if not payload:
+        return
+
+    try:
+        padded = payload + ("=" * (-len(payload) % 4))
+        decoded = base64.urlsafe_b64decode(padded.encode("ascii")).decode("utf-8")
+        rows = json.loads(decoded)
+        if not isinstance(rows, list):
+            raise ValueError("交易紀錄格式不是清單")
+        normalized = [normalize_trade(row) for row in rows]
+        save_trades(normalized)
+        sync_static_files()
+        st.session_state["last_update_message"] = f"交易紀錄已同步，共 {len(normalized)} 筆"
+        st.query_params.clear()
+        st.rerun()
+    except Exception as exc:
+        st.query_params.clear()
+        st.error("交易紀錄同步失敗")
+        st.code(str(exc))
+
+
 def build_embedded_dashboard_html() -> str:
     index_path = STATIC_DIR / "index.html"
     if not index_path.exists():
@@ -705,6 +729,7 @@ def render_manual() -> None:
 
 def main() -> None:
     optional_password_gate()
+    consume_embedded_trade_sync_request()
     consume_embedded_update_request()
     render_embedded_html_ui()
 

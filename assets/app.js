@@ -385,10 +385,22 @@ async function loadData() {
     throw new Error(`交易紀錄讀取失敗：HTTP ${tradesResponse.status}`);
   }
   state.data = await dashboardResponse.json();
+  const serverTrades = normalizeTrades(await tradesResponse.json());
   const storedTrades = localStorage.getItem("00919_trades");
-  state.trades = normalizeTrades(storedTrades ? JSON.parse(storedTrades) : await tradesResponse.json());
+  const localTrades = storedTrades ? normalizeTrades(JSON.parse(storedTrades)) : null;
+  const mobileCloudView = window.__00919_STREAMLIT_EMBED && window.matchMedia("(max-width: 760px)").matches;
+  state.trades = mobileCloudView ? serverTrades : localTrades || serverTrades;
   saveTrades();
+  maybeMigrateLocalTradesToStreamlit(localTrades, serverTrades);
   render();
+}
+
+function maybeMigrateLocalTradesToStreamlit(localTrades, serverTrades) {
+  if (!window.__00919_STREAMLIT_EMBED || !localTrades?.length) return;
+  const isDesktop = window.matchMedia("(min-width: 761px)").matches;
+  if (!isDesktop) return;
+  if (tradeListKey(localTrades) === tradeListKey(serverTrades)) return;
+  window.setTimeout(() => requestStreamlitTradeSync(localTrades, "legacy-local-trades"), 250);
 }
 
 function normalizeTrades(trades) {
@@ -481,6 +493,38 @@ function requestStreamlitUpdate() {
     console.error(error);
     alert("請使用頁面左上角綠底的更新資料按鈕，讓 Streamlit 執行完整資料更新。");
     return true;
+  }
+}
+
+function encodeBase64Url(text) {
+  const bytes = new TextEncoder().encode(text);
+  let binary = "";
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function requestStreamlitTradeSync(trades = state.trades, reason = "trade-edit") {
+  if (!window.__00919_STREAMLIT_EMBED) return false;
+
+  try {
+    let baseHref = "";
+    try {
+      baseHref = window.parent.location.href;
+    } catch (_) {
+      baseHref = document.referrer || window.location.href;
+    }
+    const parentUrl = new URL(baseHref || window.location.href);
+    parentUrl.searchParams.set("sync_trades", encodeBase64Url(JSON.stringify(trades || [])));
+    parentUrl.searchParams.set("sync_reason", reason);
+    parentUrl.searchParams.set("sync_ts", String(Date.now()));
+    window.top.location.href = parentUrl.toString();
+    return true;
+  } catch (error) {
+    console.error(error);
+    alert("交易紀錄已先儲存在這台裝置。若要同步到手機，請在電腦版匯出資料後再匯入雲端版本。");
+    return false;
   }
 }
 
@@ -1135,7 +1179,7 @@ function bindTradeForm() {
       state.trades = [...state.trades, trade];
     }
     state.trades = state.trades.sort((a, b) => String(a.trade_date).localeCompare(String(b.trade_date)));
-    saveTrades();
+    saveTrades({ syncRemote: true, reason: state.editingTradeId ? "trade-edit" : "trade-add" });
     $("tradeForm").reset();
     state.tradeAction = "buy";
     document.querySelectorAll(".side-toggle button").forEach((item) => item.classList.remove("active"));
@@ -1148,8 +1192,11 @@ function bindTradeForm() {
   $("downloadTemplateButton").addEventListener("click", downloadTradeTemplate);
 }
 
-function saveTrades() {
+function saveTrades(options = {}) {
   localStorage.setItem("00919_trades", JSON.stringify(state.trades));
+  if (options.syncRemote) {
+    requestStreamlitTradeSync(state.trades, options.reason || "trade-save");
+  }
 }
 
 function renderTradeTable(position, latest) {
@@ -1204,7 +1251,7 @@ function renderTradeTable(position, latest) {
     button.addEventListener("click", () => {
       const id = button.dataset.id;
       state.trades = state.trades.filter((trade) => trade.id !== id);
-      saveTrades();
+      saveTrades({ syncRemote: true, reason: "trade-delete" });
       render();
     });
   });
@@ -1386,7 +1433,7 @@ function importTrades(event) {
       state.trades = mergeTrades(state.trades, imported).sort((a, b) =>
         String(a.trade_date).localeCompare(String(b.trade_date))
       );
-      saveTrades();
+      saveTrades({ syncRemote: true, reason: "trade-import" });
       render();
     } catch (error) {
       alert(`匯入失敗：${error.message}`);
@@ -1418,6 +1465,13 @@ function tradeKey(trade) {
     trade.note_type || "",
     trade.note || "",
   ].join("|");
+}
+
+function tradeListKey(trades = []) {
+  return [...trades]
+    .map(tradeKey)
+    .sort()
+    .join("||");
 }
 
 function parseTradesCsv(text) {
