@@ -351,6 +351,23 @@ def sync_static_files() -> None:
         shutil.copy2(source, static_data / source.name)
 
 
+def consume_embedded_update_request() -> None:
+    if st.query_params.get("run_update") != "1":
+        return
+
+    with st.spinner("更新資料中，正在抓取價格、月規模、配息 54C 與前十大持股..."):
+        ok, message = run_update()
+
+    st.query_params.clear()
+    if ok:
+        sync_static_files()
+        st.session_state["last_update_message"] = "資料已更新"
+        st.rerun()
+
+    st.error("資料更新失敗")
+    st.code(message[-2000:])
+
+
 def build_embedded_dashboard_html() -> str:
     index_path = STATIC_DIR / "index.html"
     if not index_path.exists():
@@ -362,6 +379,7 @@ def build_embedded_dashboard_html() -> str:
 
     bootstrap = f"""
     <script>
+      window.__00919_STREAMLIT_EMBED = true;
       window.__00919_DASHBOARD_DATA = {dashboard_json};
       window.__00919_TRADES_DATA = {trades_json};
     </script>
@@ -452,6 +470,9 @@ def build_embedded_dashboard_html() -> str:
 
 def render_embedded_html_ui() -> None:
     sync_static_files()
+    last_update_message = st.session_state.pop("last_update_message", None)
+    if last_update_message:
+        st.success(last_update_message)
     st.markdown(
         """
         <div class="status-box">
@@ -684,6 +705,7 @@ def render_manual() -> None:
 
 def main() -> None:
     optional_password_gate()
+    consume_embedded_update_request()
     render_embedded_html_ui()
 
 

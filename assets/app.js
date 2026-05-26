@@ -468,12 +468,38 @@ function debounce(callback, wait) {
   };
 }
 
+function requestStreamlitUpdate() {
+  if (!window.__00919_STREAMLIT_EMBED) return false;
+
+  try {
+    const parentUrl = new URL(window.parent.location.href);
+    parentUrl.searchParams.set("run_update", "1");
+    parentUrl.searchParams.set("update_ts", String(Date.now()));
+    window.parent.location.href = parentUrl.toString();
+    return true;
+  } catch (error) {
+    console.error(error);
+    alert("請使用頁面左上角綠底的更新資料按鈕，讓 Streamlit 執行完整資料更新。");
+    return true;
+  }
+}
+
 async function refreshDashboardData() {
   const buttons = [
     $("refreshButton"),
     $("homeRefreshButton"),
     $("mobileRefreshButton"),
   ].filter(Boolean);
+  if (requestStreamlitUpdate()) {
+    buttons.forEach((button) => {
+      button.disabled = true;
+      button.classList.add("is-loading");
+      button.textContent = "更新中";
+    });
+    setText("freshFetchedStatus", "更新中");
+    setText("freshFetchedAt", "正在交給 Streamlit 執行完整資料更新");
+    return;
+  }
   buttons.forEach((button) => {
     button.disabled = true;
     button.classList.add("is-loading");
