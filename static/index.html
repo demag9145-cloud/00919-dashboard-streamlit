@@ -17,15 +17,23 @@
           </div>
         </div>
         <nav class="nav">
-          <a class="active" href="#home">每日總覽</a>
-          <a href="#trades">交易紀錄</a>
-          <a href="#monthly">每月</a>
-          <a href="#quarterly">每季</a>
-          <a href="#holdings">持股</a>
-          <a href="#yearly">每年</a>
-          <a href="#signal-settings">燈號設定</a>
-          <a href="#manual">使用說明</a>
+          <a class="active" href="#home"><span data-icon="home" data-icon-color="green"></span>首頁總覽</a>
+          <a href="#daily"><span data-icon="barChart" data-icon-color="cyan"></span>每日總覽</a>
+          <a href="#trades"><span data-icon="briefcase" data-icon-color="blue"></span>交易紀錄</a>
+          <a href="#monthly"><span data-icon="activity" data-icon-color="green"></span>每月健康檢查</a>
+          <a href="#quarterly"><span data-icon="coins" data-icon-color="orange"></span>每季 / 54C 檢視</a>
+          <a href="#holdings"><span data-icon="pieChart" data-icon-color="purple"></span>持股分析</a>
+          <a href="#yearly"><span data-icon="calculator" data-icon-color="pink"></span>年度稅務總覽</a>
+          <a href="#signal-settings"><span data-icon="trafficCone" data-icon-color="green"></span>燈號設定</a>
+          <a href="#manual"><span data-icon="user" data-icon-color="cyan"></span>使用說明</a>
         </nav>
+        <div class="sidebar-signal">
+          <span class="sidebar-signal__dot"></span>
+          <div>
+            <strong id="sidebarSignalLabel">綠燈</strong>
+            <small id="sidebarSignalReason">所有數據正常</small>
+          </div>
+        </div>
         <div class="source-card">
           <span>資料來源</span>
           <strong>MoneyDJ / TWSE e添富 / TWSE</strong>
@@ -203,6 +211,267 @@
             </div>
             <div id="mobileMainChart" class="mobile-chart"></div>
           </section>
+        </section>
+
+        <section class="desktop-home" aria-label="00919 電腦版首頁">
+          <section class="desktop-hero">
+            <div class="desktop-hero__glow"></div>
+            <div class="desktop-hero__orb" id="desktopSignalOrb">
+              <span id="desktopSignalLabel">綠燈</span>
+              <small id="desktopSignalReason">所有數據正常</small>
+            </div>
+            <div class="desktop-hero__meta">
+              <h2>00919 群益台灣精選高息</h2>
+              <p>CAPITAL HIGH DIVIDEND ETF</p>
+              <span class="ui-status-chip hero-time-chip" id="desktopFetchedAt">資料更新時間 --</span>
+            </div>
+            <div class="desktop-hero__actions">
+              <button class="desktop-hero-button" id="desktopRefreshButton" type="button">更新資料</button>
+              <button class="desktop-more-button" type="button" aria-label="更多">•••</button>
+            </div>
+            <div class="desktop-hero-summary">
+              <article class="desktop-hero-summary-card">
+                <span data-icon="layers" data-icon-color="green"></span>
+                <div>
+                  <span>目前股數</span>
+                  <strong id="desktopHeroShares">--</strong>
+                  <small id="desktopHeroSharesStatus">● 正常　--</small>
+                </div>
+              </article>
+              <article class="desktop-hero-summary-card">
+                <span data-icon="lineChart" data-icon-color="green"></span>
+                <div>
+                  <span>含息報酬</span>
+                  <strong id="desktopHeroTotalReturn">--</strong>
+                  <small id="desktopHeroTotalReturnRate">--</small>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <div class="desktop-main-grid">
+            <section class="desktop-card desktop-core-panel">
+              <div class="desktop-section-head">
+                <div>
+                  <span data-icon="activity" data-icon-color="green"></span>
+                  <div>
+                    <p class="eyebrow">Core Metrics</p>
+                    <h3>核心數據與更新狀態</h3>
+                  </div>
+                </div>
+                <span class="ui-status-chip ui-status-chip--green" id="desktopCoreUpdateCount">-- 已更新</span>
+              </div>
+              <div class="desktop-core-grid">
+                <article class="core-metric-tile" data-status="green">
+                  <span data-icon="layers" data-icon-color="green"></span>
+                  <span class="metric-label">目前股數</span>
+                  <strong id="desktopShares">--</strong>
+                  <small class="metric-status-line" id="desktopSharesStatus">● 正常　--</small>
+                </article>
+                <article class="core-metric-tile" data-status="green">
+                  <span data-icon="circleDollar" data-icon-color="blue"></span>
+                  <span class="metric-label">平均成本</span>
+                  <strong id="desktopAvgCost">--</strong>
+                  <small class="metric-status-line" id="desktopAvgCostStatus">● 正常　--</small>
+                </article>
+                <article class="core-metric-tile" data-status="green">
+                  <span data-icon="calendarDays" data-icon-color="purple"></span>
+                  <span class="metric-label">最早買進日</span>
+                  <strong id="desktopFirstTradeDate">--</strong>
+                  <small class="metric-status-line" id="desktopFirstTradeStatus">● 正常　--</small>
+                </article>
+                <article class="core-metric-tile" data-status="green">
+                  <span data-icon="trendingUp" data-icon-color="green"></span>
+                  <span class="metric-label">目前市值</span>
+                  <strong id="desktopMarketValue">--</strong>
+                  <small class="metric-status-line" id="desktopMarketValueStatus">● 正常　--</small>
+                </article>
+                <article class="core-metric-tile" data-status="green">
+                  <span data-icon="wallet" data-icon-color="blue"></span>
+                  <span class="metric-label">投入本金</span>
+                  <strong id="desktopTotalCost">--</strong>
+                  <small class="metric-status-line" id="desktopTotalCostStatus">● 正常　--</small>
+                </article>
+                <article class="core-metric-tile" data-status="green">
+                  <span data-icon="pieChart" data-icon-color="orange"></span>
+                  <span class="metric-label">未實現損益</span>
+                  <strong id="desktopUnrealizedPnl">--</strong>
+                  <small class="metric-status-line" id="desktopUnrealizedPnlStatus">● 正常　--</small>
+                </article>
+                <article class="core-metric-tile" data-status="green">
+                  <span data-icon="coins" data-icon-color="orange"></span>
+                  <span class="metric-label">預估年配息</span>
+                  <strong id="desktopAnnualDividend">--</strong>
+                  <small class="metric-status-line" id="desktopAnnualDividendStatus">● 正常　--</small>
+                </article>
+                <article class="core-metric-tile" data-status="green">
+                  <span data-icon="lineChart" data-icon-color="pink"></span>
+                  <span class="metric-label">含息損益估算</span>
+                  <strong id="desktopTotalReturn">--</strong>
+                  <small class="metric-status-line" id="desktopTotalReturnStatus">● 正常　--</small>
+                </article>
+                <article class="core-metric-tile" data-status="green">
+                  <span data-icon="calculator" data-icon-color="purple"></span>
+                  <span class="metric-label">累積配息估算</span>
+                  <strong id="desktopCumulativeDividend">--</strong>
+                  <small class="metric-status-line" id="desktopCumulativeDividendStatus">● 正常　--</small>
+                </article>
+              </div>
+            </section>
+
+            <section class="desktop-card desktop-focus-panel">
+              <div class="desktop-section-head">
+                <div>
+                  <span data-icon="star" data-icon-color="green"></span>
+                  <div>
+                    <p class="eyebrow">Home Focus</p>
+                    <h3>首頁重點總覽</h3>
+                  </div>
+                </div>
+              </div>
+              <div class="desktop-focus-grid">
+                <article class="desktop-focus-card focus-return">
+                  <span data-icon="trendingUp" data-icon-color="green"></span>
+                  <span>含息報酬</span>
+                  <strong id="desktopFocusTotalReturn">--</strong>
+                  <small id="desktopFocusTotalReturnRate">--</small>
+                </article>
+                <article class="desktop-focus-card focus-dividend">
+                  <span data-icon="coins" data-icon-color="orange"></span>
+                  <span>最新配息</span>
+                  <strong id="desktopFocusDividend">--</strong>
+                  <small id="desktopFocusDividendNote">--</small>
+                </article>
+                <article class="desktop-focus-card focus-people">
+                  <span data-icon="users" data-icon-color="blue"></span>
+                  <span>受益人數</span>
+                  <strong id="desktopFocusBeneficiaries">--</strong>
+                  <small id="desktopFocusBeneficiariesNote">--</small>
+                </article>
+                <article class="desktop-focus-card focus-aum">
+                  <span data-icon="building" data-icon-color="purple"></span>
+                  <span>AUM 規模</span>
+                  <strong id="desktopFocusAum">--</strong>
+                  <small id="desktopFocusAumNote">--</small>
+                </article>
+                <article class="desktop-focus-card focus-top10">
+                  <span data-icon="pieChart" data-icon-color="cyan"></span>
+                  <span>前十大集中度</span>
+                  <strong id="desktopFocusTop10">--</strong>
+                  <small id="desktopFocusTop10Note">--</small>
+                </article>
+                <article class="desktop-focus-card focus-holding">
+                  <span data-icon="cpu" data-icon-color="pink"></span>
+                  <span>第一大持股</span>
+                  <strong id="desktopFocusTopHolding">--</strong>
+                  <small id="desktopFocusTopHoldingNote">--</small>
+                </article>
+              </div>
+            </section>
+          </div>
+
+          <div class="desktop-lower-grid">
+            <section class="desktop-card desktop-chart-panel">
+              <div class="desktop-section-head">
+                <div>
+                  <span data-icon="barChart" data-icon-color="cyan"></span>
+                  <div>
+                    <p class="eyebrow">Trend Watch</p>
+                    <h3>走勢總覽</h3>
+                    <small>市價、淨值、折溢價與成交量</small>
+                  </div>
+                </div>
+                <div class="desktop-chart-actions">
+                  <select id="desktopRangeSelect" aria-label="桌機圖表顯示區間">
+                    <option value="week">近 1 週</option>
+                    <option value="month" selected>近 1 個月</option>
+                    <option value="year">近 1 年</option>
+                    <option value="all">全部</option>
+                  </select>
+                  <button class="desktop-icon-button" type="button" aria-label="展開圖表">↗</button>
+                </div>
+              </div>
+              <div class="desktop-chart-legend">
+                <span><i class="dot price"></i>市價</span>
+                <span><i class="dot navline"></i>淨值</span>
+                <span><i class="dot discount"></i>折溢價 %</span>
+                <span><i class="dot volume"></i>成交量</span>
+              </div>
+              <div id="desktopMainChart" class="desktop-chart"></div>
+            </section>
+
+            <aside class="desktop-side-stack">
+              <section class="desktop-card desktop-module-panel">
+                <div class="desktop-section-head">
+                  <div>
+                    <span data-icon="briefcase" data-icon-color="green"></span>
+                    <div>
+                      <p class="eyebrow">Modules</p>
+                      <h3>快速檢視</h3>
+                    </div>
+                  </div>
+                </div>
+                <div class="desktop-module-grid">
+                  <article class="desktop-module-card">
+                    <span data-icon="activity" data-icon-color="green"></span>
+                    <h4>每月健康檢查</h4>
+                    <p>本月健康項目 12 項</p>
+                    <strong id="desktopModuleMonthly">正常 12 項</strong>
+                    <a class="desktop-action-button" href="#monthly">前往檢視</a>
+                  </article>
+                  <article class="desktop-module-card">
+                    <span data-icon="coins" data-icon-color="orange"></span>
+                    <h4>季度配息 / 54C</h4>
+                    <p id="desktopModuleDividend">最新配息 --</p>
+                    <strong id="desktopModuleDividendCash">--</strong>
+                    <a class="desktop-action-button" href="#quarterly">前往檢視</a>
+                  </article>
+                  <article class="desktop-module-card">
+                    <span data-icon="pieChart" data-icon-color="blue"></span>
+                    <h4>持股檢視</h4>
+                    <p id="desktopModuleHolding">第一大持股 --</p>
+                    <strong id="desktopModuleHoldingWeight">--</strong>
+                    <a class="desktop-action-button" href="#holdings">前往檢視</a>
+                  </article>
+                  <article class="desktop-module-card">
+                    <span data-icon="calculator" data-icon-color="pink"></span>
+                    <h4>年度稅務總覽</h4>
+                    <p id="desktopModuleYearly">年度配息總額 --</p>
+                    <strong id="desktopModule54c">年度 54C 估算 --</strong>
+                    <a class="desktop-action-button" href="#yearly">前往檢視</a>
+                  </article>
+                  <article class="desktop-module-card">
+                    <span data-icon="trafficCone" data-icon-color="green"></span>
+                    <h4>燈號設定</h4>
+                    <p id="desktopModuleSignal">目前燈號 --</p>
+                    <strong id="desktopModuleSignalReason">--</strong>
+                    <a class="desktop-action-button" href="#signal-settings">前往設定</a>
+                  </article>
+                </div>
+              </section>
+
+              <section class="desktop-card desktop-data-status-compact">
+                <div class="desktop-section-head">
+                  <div>
+                    <span data-icon="database" data-icon-color="blue"></span>
+                    <div>
+                      <p class="eyebrow">Data Update</p>
+                      <h3>資料更新狀態</h3>
+                    </div>
+                  </div>
+                  <button class="desktop-mini-button" id="desktopStatusRefreshButton" type="button">更新資料</button>
+                </div>
+                <div class="desktop-status-list">
+                  <div class="desktop-status-row" data-status="green"><span>每日價格</span><strong id="desktopFreshDailyStatus">--</strong><small id="desktopFreshDailyDate">--</small></div>
+                  <div class="desktop-status-row" data-status="green"><span>每月規模</span><strong id="desktopFreshMonthlyStatus">--</strong><small id="desktopFreshMonthlyDate">--</small></div>
+                  <div class="desktop-status-row" data-status="green"><span>配息 / 54C</span><strong id="desktopFreshDividendStatus">--</strong><small id="desktopFreshDividendDate">--</small></div>
+                  <div class="desktop-status-row" data-status="green"><span>前十大持股</span><strong id="desktopFreshHoldingsStatus">--</strong><small id="desktopFreshHoldingsDate">--</small></div>
+                  <div class="desktop-status-row" data-status="green"><span>整體抓取</span><strong id="desktopFreshFetchedStatus">--</strong><small id="desktopFreshFetchedAt">--</small></div>
+                  <div class="desktop-status-row" data-status="green"><span>資料完整性</span><strong id="desktopFreshIntegrityStatus">--</strong><small id="desktopFreshIntegrityNote">--</small></div>
+                </div>
+              </section>
+            </aside>
+          </div>
         </section>
 
         <section class="hero-grid">
