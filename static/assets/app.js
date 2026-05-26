@@ -507,10 +507,25 @@ function requestStreamlitTradeSync(trades = state.trades, reason = "trade-edit")
       baseHref = document.referrer || window.location.href;
     }
     const parentUrl = new URL(baseHref || window.location.href);
-    parentUrl.searchParams.set("sync_trades", encodeBase64Url(JSON.stringify(trades || [])));
-    parentUrl.searchParams.set("sync_reason", reason);
-    parentUrl.searchParams.set("sync_ts", String(Date.now()));
-    window.open(parentUrl.toString(), "_top");
+    const form = document.createElement("form");
+    form.method = "GET";
+    form.target = "_top";
+    form.action = `${parentUrl.origin}${parentUrl.pathname}`;
+
+    Object.entries({
+      sync_trades: encodeBase64Url(JSON.stringify(trades || [])),
+      sync_reason: reason,
+      sync_ts: String(Date.now()),
+    }).forEach(([name, value]) => {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
     return true;
   } catch (error) {
     console.error(error);
@@ -1181,7 +1196,18 @@ function bindTradeForm() {
   $("exportTradesButton").addEventListener("click", exportTradesCsv);
   $("importTradesInput").addEventListener("change", importTrades);
   $("syncTradesButton")?.addEventListener("click", () => {
+    const button = $("syncTradesButton");
+    if (button) {
+      button.disabled = true;
+      button.classList.add("is-loading");
+      button.textContent = "同步中...";
+    }
     if (!requestStreamlitTradeSync(state.trades, "manual-trade-sync")) {
+      if (button) {
+        button.disabled = false;
+        button.classList.remove("is-loading");
+        button.textContent = "同步到雲端";
+      }
       alert("目前環境無法直接同步到雲端，請先匯出資料備份。");
     }
   });
