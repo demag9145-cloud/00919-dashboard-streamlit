@@ -2646,6 +2646,11 @@ select {
     color: #fff;
   }
 
+  .desktop-hero__actions,
+  .desktop-data-status-compact .desktop-mini-button {
+    display: none !important;
+  }
+
   .desktop-status-list {
     display: grid;
     grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -2654,11 +2659,11 @@ select {
 
   .desktop-status-row {
     position: relative;
-    min-height: 66px;
+    min-height: 72px;
     display: grid;
     align-content: space-between;
     gap: 3px;
-    padding: 10px 10px 9px 22px;
+    padding: 11px 10px 10px 24px;
     border: 1px solid rgba(226, 232, 240, 0.92);
     border-radius: 12px;
     background: #fff;
@@ -2669,8 +2674,8 @@ select {
     position: absolute;
     top: 17px;
     left: 10px;
-    width: 8px;
-    height: 8px;
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
     background: #10b981;
   }
@@ -2690,7 +2695,7 @@ select {
 
   .desktop-status-row small {
     color: var(--desktop-muted);
-    font-size: 12px;
+    font-size: 13px;
     line-height: 1.25;
     white-space: nowrap;
     overflow: hidden;
@@ -2699,21 +2704,21 @@ select {
 
   .desktop-data-status-compact,
   .desktop-status-row {
-    font-size: 14px;
+    font-size: 15px;
   }
 
   .desktop-status-row span,
   .desktop-home .data-status-compact .status-name,
   .desktop-home .desktop-data-status-compact .status-name {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
   }
 
   .desktop-status-row strong,
   .desktop-home .data-status-compact .status-value,
   .desktop-home .desktop-data-status-compact .status-value {
-    font-size: 14px;
-    font-weight: 700;
+    font-size: 17px;
+    font-weight: 800;
   }
 
   .nav a .icon-box {

@@ -429,8 +429,6 @@ function bindInputs() {
   $("refreshButton").addEventListener("click", () => refreshDashboardData());
   $("homeRefreshButton")?.addEventListener("click", () => refreshDashboardData());
   $("mobileRefreshButton")?.addEventListener("click", () => refreshDashboardData());
-  $("desktopRefreshButton")?.addEventListener("click", () => refreshDashboardData());
-  $("desktopStatusRefreshButton")?.addEventListener("click", () => refreshDashboardData());
   bindQuickModuleActions();
   $("rangeSelect").addEventListener("change", () => render());
   $("mobileRangeSelect")?.addEventListener("change", () => render());
@@ -475,8 +473,6 @@ async function refreshDashboardData() {
     $("refreshButton"),
     $("homeRefreshButton"),
     $("mobileRefreshButton"),
-    $("desktopRefreshButton"),
-    $("desktopStatusRefreshButton"),
   ].filter(Boolean);
   buttons.forEach((button) => {
     button.disabled = true;
