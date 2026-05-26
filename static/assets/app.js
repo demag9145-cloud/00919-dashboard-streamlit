@@ -391,16 +391,7 @@ async function loadData() {
   const mobileCloudView = window.__00919_STREAMLIT_EMBED && window.matchMedia("(max-width: 760px)").matches;
   state.trades = mobileCloudView ? serverTrades : localTrades || serverTrades;
   saveTrades();
-  maybeMigrateLocalTradesToStreamlit(localTrades, serverTrades);
   render();
-}
-
-function maybeMigrateLocalTradesToStreamlit(localTrades, serverTrades) {
-  if (!window.__00919_STREAMLIT_EMBED || !localTrades?.length) return;
-  const isDesktop = window.matchMedia("(min-width: 761px)").matches;
-  if (!isDesktop) return;
-  if (tradeListKey(localTrades) === tradeListKey(serverTrades)) return;
-  window.setTimeout(() => requestStreamlitTradeSync(localTrades, "legacy-local-trades"), 250);
 }
 
 function normalizeTrades(trades) {
@@ -519,11 +510,11 @@ function requestStreamlitTradeSync(trades = state.trades, reason = "trade-edit")
     parentUrl.searchParams.set("sync_trades", encodeBase64Url(JSON.stringify(trades || [])));
     parentUrl.searchParams.set("sync_reason", reason);
     parentUrl.searchParams.set("sync_ts", String(Date.now()));
-    window.top.location.href = parentUrl.toString();
+    window.open(parentUrl.toString(), "_top");
     return true;
   } catch (error) {
     console.error(error);
-    alert("交易紀錄已先儲存在這台裝置。若要同步到手機，請在電腦版匯出資料後再匯入雲端版本。");
+    alert("交易紀錄已先儲存在這台裝置；瀏覽器擋下雲端同步，請先匯出資料備份。");
     return false;
   }
 }
@@ -1189,6 +1180,11 @@ function bindTradeForm() {
 
   $("exportTradesButton").addEventListener("click", exportTradesCsv);
   $("importTradesInput").addEventListener("change", importTrades);
+  $("syncTradesButton")?.addEventListener("click", () => {
+    if (!requestStreamlitTradeSync(state.trades, "manual-trade-sync")) {
+      alert("目前環境無法直接同步到雲端，請先匯出資料備份。");
+    }
+  });
   $("downloadTemplateButton").addEventListener("click", downloadTradeTemplate);
 }
 
