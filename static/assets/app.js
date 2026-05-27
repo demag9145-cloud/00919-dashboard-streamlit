@@ -501,32 +501,12 @@ function createClientRequestId() {
   return `req-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-function getStreamlitTopUrl() {
-  const candidates = [
-    document.referrer,
-    (() => {
-      try {
-        return window.top.location.href;
-      } catch (_) {
-        return "";
-      }
-    })(),
-    (() => {
-      try {
-        return window.parent.location.href;
-      } catch (_) {
-        return "";
-      }
-    })(),
-    window.location.href,
-    "https://00919-dashboard-app-ljdzgjwntbuxv8hsezlcup.streamlit.app/",
-  ].filter(Boolean);
+const STREAMLIT_APP_BASE_URL = "https://00919-dashboard-app-ljdzgjwntbuxv8hsezlcup.streamlit.app/";
 
-  const preferred = candidates.find((href) => /streamlit\.app|localhost|127\.0\.0\.1/.test(href)) || candidates[0];
-  const url = new URL(preferred);
-  url.hash = "";
-  url.search = "";
-  return url;
+function buildAppendTradeUrl(trade) {
+  const url = new URL(STREAMLIT_APP_BASE_URL);
+  url.searchParams.set("append_trade", encodeBase64Url(JSON.stringify(trade || {})));
+  return url.toString();
 }
 
 function showAppendTradeConfirmLink(targetUrl) {
@@ -545,12 +525,25 @@ function showAppendTradeConfirmLink(targetUrl) {
     ].join(";");
     $("tradeForm")?.insertAdjacentElement("afterend", panel);
   }
+  const safeUrl = escapeHtml(targetUrl);
   panel.innerHTML = `
-    <div>瀏覽器擋下自動送出，請點下面連結完成寫入。</div>
-    <a href="${targetUrl}" target="_top" rel="noreferrer" style="display:inline-block;margin-top:8px;color:#0369a1;">
+    <strong style="display:block;margin-bottom:6px;">準備寫入 Google Sheets</strong>
+    <p style="margin:0 0 10px;color:#92400e;font-weight:600;">瀏覽器限制自動寫入，請點下方按鈕在新分頁完成寫入。</p>
+    <a class="trade-append-confirm-link" href="${safeUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;margin:0 0 10px;padding:9px 14px;border-radius:10px;background:#059669;color:#fff;text-decoration:none;font-weight:800;">
       確認寫入 Google Sheets
     </a>
+    <textarea class="trade-append-confirm-url" readonly style="display:block;width:100%;min-height:74px;box-sizing:border-box;margin:0 0 8px;padding:8px 10px;border:1px solid #f59e0b;border-radius:8px;background:#fff;color:#334155;font-size:12px;font-weight:500;">${safeUrl}</textarea>
+    <button type="button" class="trade-append-copy-button" style="padding:7px 12px;border:1px solid #d97706;border-radius:8px;background:#fff7ed;color:#92400e;font-weight:800;cursor:pointer;">複製寫入網址</button>
   `;
+  panel.querySelector(".trade-append-copy-button")?.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(targetUrl);
+      panel.querySelector(".trade-append-copy-button").textContent = "已複製";
+    } catch (_) {
+      panel.querySelector(".trade-append-confirm-url")?.select();
+      panel.querySelector(".trade-append-copy-button").textContent = "請手動複製";
+    }
+  });
 }
 
 function requestStreamlitTradeSync(trades = state.trades, reason = "trade-edit") {
@@ -595,27 +588,13 @@ function requestStreamlitTradeAppend(trade) {
   if (!window.__00919_STREAMLIT_EMBED) return false;
 
   try {
-    const parentUrl = getStreamlitTopUrl();
-    const params = {
-      append_trade: encodeBase64Url(JSON.stringify(trade || {})),
-      append_ts: String(Date.now()),
-    };
-    Object.entries(params).forEach(([name, value]) => parentUrl.searchParams.set(name, value));
-    const targetUrl = parentUrl.toString();
-    console.info("[00919] append request 已送出", Object.keys(params));
-
-    window.setTimeout(() => showAppendTradeConfirmLink(targetUrl), 1200);
-
-    try {
-      window.open(targetUrl, "_top");
-      return true;
-    } catch (_) {
-      showAppendTradeConfirmLink(targetUrl);
-    }
+    const targetUrl = buildAppendTradeUrl(trade);
+    console.info("[00919] append_trade_url =", targetUrl);
+    showAppendTradeConfirmLink(targetUrl);
     return true;
   } catch (error) {
     console.error(error);
-    alert("寫入 Google Sheets 失敗：瀏覽器擋下雲端寫入請求。");
+    alert("寫入 Google Sheets 失敗：無法產生寫入網址。");
     return false;
   }
 }
@@ -1273,15 +1252,9 @@ function bindTradeForm() {
       if (requestStreamlitTradeAppend(trade)) {
         const submitButton = $("tradeSubmitButton");
         if (submitButton) {
-          submitButton.disabled = true;
-          submitButton.classList.add("is-loading");
-          submitButton.textContent = "寫入中...";
-          window.setTimeout(() => {
-            submitButton.disabled = false;
-            submitButton.classList.remove("is-loading");
-            submitButton.textContent = "新增交易";
-            alert("寫入逾時，請檢查 Streamlit 後端是否收到 append_trade request");
-          }, 10000);
+          submitButton.disabled = false;
+          submitButton.classList.remove("is-loading");
+          submitButton.textContent = "新增交易";
         }
         return;
       }
