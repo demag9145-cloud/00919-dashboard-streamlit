@@ -419,7 +419,7 @@ def log_append_debug(message: str) -> None:
     print(f"[00919 append] {message}")
 
 
-def render_google_sheets_trade_form(status_message: str | None = None) -> None:
+def render_google_sheets_trade_form(status_message: str | None = None, show_title: bool = True) -> None:
     if append_trade_to_google_sheets is None:
         st.warning("Google Sheets 寫入模組尚未啟用；目前只能讀取既有交易資料。")
         return
@@ -486,7 +486,8 @@ def render_google_sheets_trade_form(status_message: str | None = None) -> None:
         unsafe_allow_html=True,
     )
     st.markdown("<div class='streamlit-trade-form-shell'>", unsafe_allow_html=True)
-    st.markdown("<div class='streamlit-trade-form-title'>新增交易</div>", unsafe_allow_html=True)
+    if show_title:
+        st.markdown("<div class='streamlit-trade-form-title'>新增交易</div>", unsafe_allow_html=True)
     if status_message:
         st.markdown(
             f"<div class='trade-form-status'>{html.escape(status_message)}，資料已重新讀取。</div>",
@@ -546,6 +547,294 @@ def render_google_sheets_trade_form(status_message: str | None = None) -> None:
     )
     st.session_state["last_update_message"] = "新增交易已寫入 Google Sheets"
     st.rerun()
+
+
+def trades_to_csv(rows: list[dict]) -> str:
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=["trade_date", "action", "shares", "price", "note_type", "note"])
+    writer.writeheader()
+    for row in rows:
+        normalized = normalize_trade(row)
+        writer.writerow(
+            {
+                "trade_date": normalized.get("trade_date", ""),
+                "action": str(normalized.get("action", "")).upper(),
+                "shares": normalized.get("shares", 0),
+                "price": normalized.get("price", 0),
+                "note_type": normalized.get("note_type", ""),
+                "note": normalized.get("note", ""),
+            }
+        )
+    return output.getvalue()
+
+
+def render_native_trade_log_section(status_message: str | None = None) -> None:
+    dashboard = load_dashboard()
+    trades, trades_source = load_trades_with_source()
+    dividends = dashboard.get("dividends", [])
+    latest = dashboard.get("latest_daily", {})
+    market_price = float(latest.get("market_price") or 0)
+    position = calc_position(trades, dividends)
+    market_value = position["shares"] * market_price
+    unrealized = market_value - position["cost"]
+    total_return = unrealized + position["cumulative_dividend"] + position["realized"]
+
+    st.markdown(
+        """
+        <style>
+          .native-trade-anchor { scroll-margin-top: 18px; }
+          .native-trade-log {
+            margin: 14px 0 16px;
+            padding: 16px;
+            border: 1px solid #d9e2df;
+            border-radius: 14px;
+            background: #ffffff;
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+          }
+          .native-trade-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: flex-start;
+            margin-bottom: 14px;
+          }
+          .native-trade-head p {
+            margin: 0;
+            color: #64748b;
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+          }
+          .native-trade-head h3 {
+            margin: 2px 0 0;
+            color: #0f172a;
+            font-size: 1.25rem;
+            font-weight: 900;
+          }
+          .native-trade-head small { color: #64748b; font-size: 0.9rem; }
+          .native-trade-stats {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+          }
+          .native-trade-stat {
+            min-height: 72px;
+            padding: 12px 14px;
+            border: 1px solid #d9e2df;
+            border-radius: 8px;
+            background: #fbfcfc;
+          }
+          .native-trade-stat span {
+            display: block;
+            color: #64748b;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+          }
+          .native-trade-stat strong {
+            color: #0f172a;
+            font-size: 1.12rem;
+            font-weight: 900;
+          }
+          .native-trade-stat strong.positive { color: #059669; }
+          .native-trade-form-title {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: center;
+            margin: 12px 0 8px;
+          }
+          .native-trade-form-title strong {
+            color: #0f172a;
+            font-size: 1rem;
+            font-weight: 900;
+          }
+          .native-trade-form-title small { color: #64748b; font-size: 0.86rem; }
+          .native-trade-log div[data-testid="stForm"] {
+            border: 1px solid #d9e2df;
+            border-radius: 12px;
+            padding: 14px 16px 16px;
+            background: #fbfcfc;
+            box-shadow: none;
+          }
+          .native-trade-log div[data-testid="stForm"] [data-testid="stFormSubmitButton"] button {
+            background: #059669;
+            border: 0;
+            border-radius: 10px;
+            color: #ffffff;
+            font-weight: 900;
+            min-height: 42px;
+          }
+          .native-trade-log div[data-testid="stForm"] [data-testid="stFormSubmitButton"] button:hover {
+            background: #047857;
+            color: #ffffff;
+          }
+          .native-trade-status {
+            margin: 0 0 10px;
+            padding: 10px 12px;
+            border: 1px solid #bbf7d0;
+            border-radius: 10px;
+            background: #f0fdf4;
+            color: #166534;
+            font-size: 0.92rem;
+            font-weight: 800;
+          }
+          .native-trade-table-wrap {
+            max-height: 360px;
+            overflow: auto;
+            border: 1px solid #d9e2df;
+            border-radius: 8px;
+            margin-top: 12px;
+          }
+          .native-trade-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.94rem;
+          }
+          .native-trade-table th,
+          .native-trade-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #e6ecea;
+            text-align: left;
+            white-space: nowrap;
+          }
+          .native-trade-table th {
+            background: #eef3f2;
+            color: #475569;
+            font-weight: 800;
+          }
+          .native-trade-table td { color: #0f172a; }
+          .native-trade-badge {
+            display: inline-flex;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #e8f8f0;
+            color: #059669;
+            font-weight: 900;
+            font-size: 0.82rem;
+          }
+          .native-trade-badge.sell { background: #fff1f2; color: #e11d48; }
+          .native-trade-source {
+            color: #64748b;
+            font-size: 0.82rem;
+            margin-top: 8px;
+          }
+          div[data-testid="stDownloadButton"] button {
+            min-height: 34px;
+            border-radius: 8px;
+            border: 1px solid #d9e2df;
+            background: #ffffff;
+            color: #0f172a;
+            font-weight: 800;
+          }
+          @media (max-width: 760px) {
+            .native-trade-log,
+            .native-trade-anchor { display: none !important; }
+          }
+        </style>
+        <div id="st-trades-section" class="native-trade-anchor"></div>
+        <section class="native-trade-log">
+          <div class="native-trade-head">
+            <div>
+              <p>Trade Log</p>
+              <h3>交易紀錄</h3>
+            </div>
+            <small>交易紀錄會驅動首頁股數、成本與含息損益</small>
+          </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    stats = [
+        ("目前股數", f"{money(position['shares'])} 股", False),
+        ("平均成本", money(position["avg_cost"], 2), False),
+        ("投入本金", f"${money(position['cost'])}", False),
+        ("累積配息估算", f"${money(position['cumulative_dividend'])}", False),
+        ("目前市值", f"${money(market_value)}", False),
+        ("未實現損益", f"${money(unrealized)}", unrealized >= 0),
+        ("含息損益估算", f"${money(total_return)}", total_return >= 0),
+    ]
+    stats_html = "".join(
+        f"<div class='native-trade-stat'><span>{label}</span><strong class='{'positive' if positive else ''}'>{value}</strong></div>"
+        for label, value, positive in stats
+    )
+    st.markdown(f"<div class='native-trade-stats'>{stats_html}</div>", unsafe_allow_html=True)
+
+    if status_message:
+        st.markdown(
+            f"<div class='native-trade-status'>{html.escape(status_message)}，資料已重新讀取。</div>",
+            unsafe_allow_html=True,
+        )
+
+    st.markdown(
+        """
+        <div class="native-trade-form-title">
+          <strong>新增交易</strong>
+          <small>資料將直接寫入 Google Sheets，所有裝置會同步更新。</small>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    render_google_sheets_trade_form(None, show_title=False)
+
+    sorted_trades = sorted([normalize_trade(row) for row in trades], key=lambda row: row.get("trade_date", ""), reverse=True)
+    table_rows = []
+    for row in sorted_trades:
+        shares = int(row.get("shares") or 0)
+        price = float(row.get("price") or 0)
+        action = str(row.get("action") or "").lower()
+        is_sell = action == "sell"
+        action_label = "賣出" if is_sell else "買入"
+        table_rows.append(
+            "<tr>"
+            f"<td><span class='native-trade-badge {'sell' if is_sell else ''}'>{action_label}</span></td>"
+            f"<td>{html.escape(row.get('trade_date') or '--')}</td>"
+            f"<td>{money(shares)} 股</td>"
+            f"<td>{money(price, 2)}</td>"
+            f"<td>${money(shares * price)}</td>"
+            f"<td>{html.escape(row.get('note_type') or '')}</td>"
+            f"<td>{html.escape(row.get('note') or '')}</td>"
+            "</tr>"
+        )
+    if not table_rows:
+        table_rows.append("<tr><td colspan='7'>尚無交易紀錄。</td></tr>")
+
+    st.markdown(
+        """
+        <div class="native-trade-table-wrap">
+          <table class="native-trade-table">
+            <thead>
+              <tr>
+                <th>買 / 賣</th>
+                <th>交易日期</th>
+                <th>交易股數</th>
+                <th>成交價位</th>
+                <th>交易金額</th>
+                <th>分類</th>
+                <th>自訂備註</th>
+              </tr>
+            </thead>
+            <tbody>
+        """
+        + "".join(table_rows)
+        + """
+            </tbody>
+          </table>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    template_data = "trade_date,action,shares,price,note_type,note\n2026-05-27,BUY,1000,27.00,其他,範例\n"
+    action_cols = st.columns([1, 1, 5])
+    with action_cols[0]:
+        st.download_button("匯出資料", trades_to_csv(trades), "00919_trades.csv", "text/csv", use_container_width=True)
+    with action_cols[1]:
+        st.download_button("下載範本", template_data, "00919_trade_template.csv", "text/csv", use_container_width=True)
+    st.markdown(f"<div class='native-trade-source'>{html.escape(trades_source.get('message', ''))}</div>", unsafe_allow_html=True)
+    st.markdown("</section>", unsafe_allow_html=True)
 
 
 def consume_direct_append_test_request() -> None:
@@ -659,9 +948,7 @@ def build_embedded_dashboard_html(split_mode: str = "full") -> str:
 
     bootstrap = f"""
     <style>
-      body.streamlit-before-trade-form .trade-layout,
-      body.streamlit-before-trade-form .trade-table-wrap,
-      body.streamlit-before-trade-form .trade-actions,
+      body.streamlit-before-trade-form #trades,
       body.streamlit-before-trade-form #monthly,
       body.streamlit-before-trade-form #quarterly,
       body.streamlit-before-trade-form #holdings,
@@ -677,9 +964,7 @@ def build_embedded_dashboard_html(split_mode: str = "full") -> str:
       body.streamlit-after-trade-form .data-freshness-section,
       body.streamlit-after-trade-form .home-focus-section,
       body.streamlit-after-trade-form #daily,
-      body.streamlit-after-trade-form #trades > .section-head,
-      body.streamlit-after-trade-form #trades > .trade-summary-stats,
-      body.streamlit-after-trade-form #trades > .trade-layout {{
+      body.streamlit-after-trade-form #trades {{
         display: none !important;
       }}
 
@@ -695,10 +980,6 @@ def build_embedded_dashboard_html(split_mode: str = "full") -> str:
         width: 100% !important;
         max-width: none !important;
         padding: 0 !important;
-      }}
-
-      body.streamlit-after-trade-form #trades {{
-        margin-top: 0 !important;
       }}
 
       @media (max-width: 760px) {{
@@ -799,6 +1080,55 @@ def build_embedded_dashboard_html(split_mode: str = "full") -> str:
     return html
 
 
+def render_iframe_navigation_bridge() -> None:
+    components.html(
+        """
+        <script>
+          const SECTION_SELECTORS = {
+            "#trades": "#st-trades-section"
+          };
+
+          function scrollParentToElement(selector) {
+            const parentDoc = window.parent.document;
+            const target = parentDoc.querySelector(selector);
+            if (!target) return false;
+            const top = target.getBoundingClientRect().top + window.parent.scrollY - 12;
+            window.parent.scrollTo({ top, behavior: "smooth" });
+            return true;
+          }
+
+          window.addEventListener("message", (event) => {
+            const data = event.data || {};
+            if (data.type === "00919:navigate") {
+              if (SECTION_SELECTORS[data.hash] && scrollParentToElement(SECTION_SELECTORS[data.hash])) {
+                return;
+              }
+              const frames = Array.from(window.parent.document.querySelectorAll("iframe"));
+              frames.forEach((frame) => {
+                try {
+                  frame.contentWindow.postMessage({ type: "00919:scroll-to", hash: data.hash }, "*");
+                } catch (err) {
+                  /* ignore cross-frame failures */
+                }
+              });
+            }
+
+            if (data.type === "00919:navigate-offset") {
+              const frames = Array.from(window.parent.document.querySelectorAll("iframe"));
+              const sourceFrame = frames.find((frame) => frame.contentWindow === event.source);
+              if (!sourceFrame) return;
+              const frameTop = sourceFrame.getBoundingClientRect().top + window.parent.scrollY;
+              const targetTop = frameTop + Number(data.top || 0) - 12;
+              window.parent.scrollTo({ top: targetTop, behavior: "smooth" });
+            }
+          });
+        </script>
+        """,
+        height=1,
+        scrolling=False,
+    )
+
+
 def render_embedded_html_ui() -> None:
     sync_static_files()
     last_update_message = st.session_state.pop("last_update_message", None)
@@ -817,8 +1147,10 @@ def render_embedded_html_ui() -> None:
         fetched = load_dashboard().get("fetched_at", "--")
         st.caption(f"目前資料抓取時間：{fetched}")
 
-    render_google_sheets_trade_form(last_update_message)
-    components.html(build_embedded_dashboard_html(), height=2600, scrolling=False)
+    render_iframe_navigation_bridge()
+    components.html(build_embedded_dashboard_html("before_trade_form"), height=1800, scrolling=False)
+    render_native_trade_log_section(last_update_message)
+    components.html(build_embedded_dashboard_html("after_trade_form"), height=2600, scrolling=False)
 
 
 def render_home(data: dict, trades: list[dict]) -> None:

@@ -28,13 +28,25 @@ function setActiveNav(hash) {
   });
 }
 
+function isVisibleTarget(target) {
+  if (!target) return false;
+  return window.getComputedStyle(target).display !== "none";
+}
+
+function requestParentNavigation(hash) {
+  if (!window.__00919_STREAMLIT_EMBED) return false;
+  window.parent.postMessage({ type: "00919:navigate", hash }, "*");
+  setActiveNav(hash);
+  return true;
+}
+
 function scrollToNavTarget(hash, replace = false) {
   if (isMobileHomeOnly() && hash !== "#home") {
     hash = "#home";
     replace = true;
   }
   const target = document.querySelector(hash);
-  if (!target) return;
+  if (!isVisibleTarget(target)) return;
   target.scrollIntoView({ behavior: "smooth", block: "start" });
   if (replace) {
     history.replaceState(null, "", hash);
@@ -47,8 +59,20 @@ function scrollToNavTarget(hash, replace = false) {
 navLinks.forEach((link) => {
   link.addEventListener("click", (event) => {
     event.preventDefault();
-    scrollToNavTarget(link.getAttribute("href"));
+    const hash = link.getAttribute("href");
+    if (requestParentNavigation(hash)) return;
+    scrollToNavTarget(hash);
   });
+});
+
+window.addEventListener("message", (event) => {
+  const data = event.data || {};
+  if (data.type !== "00919:scroll-to" || !data.hash) return;
+  const target = document.querySelector(data.hash);
+  if (!isVisibleTarget(target)) return;
+  const top = target.getBoundingClientRect().top + window.scrollY;
+  window.parent.postMessage({ type: "00919:navigate-offset", hash: data.hash, top }, "*");
+  setActiveNav(data.hash);
 });
 
 window.addEventListener("popstate", () => {
