@@ -487,10 +487,6 @@ def render_google_sheets_trade_form(status_message: str | None = None) -> None:
     )
     st.markdown("<div class='streamlit-trade-form-shell'>", unsafe_allow_html=True)
     st.markdown("<div class='streamlit-trade-form-title'>新增交易</div>", unsafe_allow_html=True)
-    st.markdown(
-        "<div class='trade-form-panel-note'>資料將直接寫入 Google Sheets，寫入成功後交易紀錄與持股統計會同步更新。</div>",
-        unsafe_allow_html=True,
-    )
     if status_message:
         st.markdown(
             f"<div class='trade-form-status'>{html.escape(status_message)}，資料已重新讀取。</div>",
@@ -806,18 +802,6 @@ def build_embedded_dashboard_html(split_mode: str = "full") -> str:
 def render_embedded_html_ui() -> None:
     sync_static_files()
     last_update_message = st.session_state.pop("last_update_message", None)
-    st.markdown(
-        """
-        <div class="status-box">
-          <strong>雲端測試版</strong>
-          <div class="small-note">
-            下方嵌入的是本機端同一套 HTML 儀表板。雲端更新請按這裡的「更新資料」，
-            儀表板內原本的更新按鈕在 Streamlit Cloud 上只會重新讀取資料檔。
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
     left, right = st.columns([1, 5])
     with left:
         if st.button("更新資料", type="primary", use_container_width=True):
@@ -833,9 +817,8 @@ def render_embedded_html_ui() -> None:
         fetched = load_dashboard().get("fetched_at", "--")
         st.caption(f"目前資料抓取時間：{fetched}")
 
-    components.html(build_embedded_dashboard_html("before_trade_form"), height=1900, scrolling=False)
     render_google_sheets_trade_form(last_update_message)
-    components.html(build_embedded_dashboard_html("after_trade_form"), height=1900, scrolling=False)
+    components.html(build_embedded_dashboard_html(), height=2600, scrolling=False)
 
 
 def render_home(data: dict, trades: list[dict]) -> None:
