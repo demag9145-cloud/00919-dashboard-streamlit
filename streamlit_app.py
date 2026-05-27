@@ -1084,44 +1084,50 @@ def render_iframe_navigation_bridge() -> None:
     components.html(
         """
         <script>
-          const SECTION_SELECTORS = {
-            "#trades": "#st-trades-section"
-          };
+          (function install00919NavBridge() {
+            const parentWindow = window.parent;
+            const parentDoc = parentWindow.document;
+            if (parentWindow.__00919NavBridgeInstalled) return;
+            parentWindow.__00919NavBridgeInstalled = true;
 
-          function scrollParentToElement(selector) {
-            const parentDoc = window.parent.document;
-            const target = parentDoc.querySelector(selector);
-            if (!target) return false;
-            const top = target.getBoundingClientRect().top + window.parent.scrollY - 12;
-            window.parent.scrollTo({ top, behavior: "smooth" });
-            return true;
-          }
+            const SECTION_SELECTORS = {
+              "#trades": "#st-trades-section"
+            };
 
-          window.addEventListener("message", (event) => {
-            const data = event.data || {};
-            if (data.type === "00919:navigate") {
-              if (SECTION_SELECTORS[data.hash] && scrollParentToElement(SECTION_SELECTORS[data.hash])) {
-                return;
-              }
-              const frames = Array.from(window.parent.document.querySelectorAll("iframe"));
-              frames.forEach((frame) => {
-                try {
-                  frame.contentWindow.postMessage({ type: "00919:scroll-to", hash: data.hash }, "*");
-                } catch (err) {
-                  /* ignore cross-frame failures */
+            function scrollParentToElement(selector) {
+              const target = parentDoc.querySelector(selector);
+              if (!target) return false;
+              const top = target.getBoundingClientRect().top + parentWindow.scrollY - 12;
+              parentWindow.scrollTo({ top, behavior: "smooth" });
+              return true;
+            }
+
+            parentWindow.addEventListener("message", (event) => {
+              const data = event.data || {};
+              if (data.type === "00919:navigate") {
+                if (SECTION_SELECTORS[data.hash] && scrollParentToElement(SECTION_SELECTORS[data.hash])) {
+                  return;
                 }
-              });
-            }
+                const frames = Array.from(parentDoc.querySelectorAll("iframe"));
+                frames.forEach((frame) => {
+                  try {
+                    frame.contentWindow.postMessage({ type: "00919:scroll-to", hash: data.hash }, "*");
+                  } catch (err) {
+                    /* ignore cross-frame failures */
+                  }
+                });
+              }
 
-            if (data.type === "00919:navigate-offset") {
-              const frames = Array.from(window.parent.document.querySelectorAll("iframe"));
-              const sourceFrame = frames.find((frame) => frame.contentWindow === event.source);
-              if (!sourceFrame) return;
-              const frameTop = sourceFrame.getBoundingClientRect().top + window.parent.scrollY;
-              const targetTop = frameTop + Number(data.top || 0) - 12;
-              window.parent.scrollTo({ top: targetTop, behavior: "smooth" });
-            }
-          });
+              if (data.type === "00919:navigate-offset") {
+                const frames = Array.from(parentDoc.querySelectorAll("iframe"));
+                const sourceFrame = frames.find((frame) => frame.contentWindow === event.source);
+                if (!sourceFrame) return;
+                const frameTop = sourceFrame.getBoundingClientRect().top + parentWindow.scrollY;
+                const targetTop = frameTop + Number(data.top || 0) - 12;
+                parentWindow.scrollTo({ top: targetTop, behavior: "smooth" });
+              }
+            });
+          })();
         </script>
         """,
         height=1,
