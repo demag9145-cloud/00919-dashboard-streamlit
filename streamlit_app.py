@@ -16,6 +16,11 @@ import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
 
+try:
+    from services.google_sheets_trades import load_google_sheets_trades
+except Exception:  # Keep the formal app usable even if optional cloud deps are absent locally.
+    load_google_sheets_trades = None
+
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
@@ -170,8 +175,34 @@ def load_dashboard() -> dict:
     return read_json(DASHBOARD_PATH, {})
 
 
+def load_trades_with_source() -> tuple[list[dict], dict]:
+    if load_google_sheets_trades is not None:
+        try:
+            result = load_google_sheets_trades()
+            return result.rows, {
+                "source": result.source,
+                "ok": True,
+                "message": result.message,
+            }
+        except Exception as exc:
+            fallback = read_json(TRADES_PATH, [])
+            return fallback, {
+                "source": "data/trades.json",
+                "ok": False,
+                "message": f"Google Sheets 失敗，改用 data/trades.json fallback：{type(exc).__name__}",
+            }
+
+    fallback = read_json(TRADES_PATH, [])
+    return fallback, {
+        "source": "data/trades.json",
+        "ok": False,
+        "message": "Google Sheets 模組未載入，改用 data/trades.json fallback",
+    }
+
+
 def load_trades() -> list[dict]:
-    return read_json(TRADES_PATH, [])
+    rows, _ = load_trades_with_source()
+    return rows
 
 
 def save_trades(rows: list[dict]) -> None:
@@ -399,13 +430,17 @@ def build_embedded_dashboard_html() -> str:
 
     html = index_path.read_text(encoding="utf-8")
     dashboard_json = json.dumps(load_dashboard(), ensure_ascii=False)
-    trades_json = json.dumps(load_trades(), ensure_ascii=False)
+    trades, trades_source = load_trades_with_source()
+    trades_json = json.dumps(trades, ensure_ascii=False)
+    trades_source_json = json.dumps(trades_source, ensure_ascii=False)
 
     bootstrap = f"""
     <script>
       window.__00919_STREAMLIT_EMBED = true;
       window.__00919_DASHBOARD_DATA = {dashboard_json};
       window.__00919_TRADES_DATA = {trades_json};
+      window.__00919_TRADES_SOURCE = {trades_source_json};
+      console.info("[00919] " + (window.__00919_TRADES_SOURCE.message || "交易紀錄來源已載入"));
     </script>
     """
     html = html.replace("</head>", f"{bootstrap}</head>", 1)

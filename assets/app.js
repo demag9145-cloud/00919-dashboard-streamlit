@@ -386,10 +386,10 @@ async function loadData() {
   }
   state.data = await dashboardResponse.json();
   const serverTrades = normalizeTrades(await tradesResponse.json());
-  const storedTrades = localStorage.getItem("00919_trades");
-  const localTrades = storedTrades ? normalizeTrades(JSON.parse(storedTrades)) : null;
-  const mobileCloudView = window.__00919_STREAMLIT_EMBED && window.matchMedia("(max-width: 760px)").matches;
-  state.trades = mobileCloudView ? serverTrades : localTrades || serverTrades;
+  state.trades = serverTrades;
+  if (window.__00919_TRADES_SOURCE?.message) {
+    console.info(`[00919] ${window.__00919_TRADES_SOURCE.message}`);
+  }
   saveTrades();
   render();
 }
