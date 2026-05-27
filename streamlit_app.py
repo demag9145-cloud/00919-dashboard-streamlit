@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import base64
+import html
 import io
 import json
 import re
@@ -418,7 +419,7 @@ def log_append_debug(message: str) -> None:
     print(f"[00919 append] {message}")
 
 
-def render_google_sheets_trade_form() -> None:
+def render_google_sheets_trade_form(status_message: str | None = None) -> None:
     if append_trade_to_google_sheets is None:
         st.warning("Google Sheets 寫入模組尚未啟用；目前只能讀取既有交易資料。")
         return
@@ -426,12 +427,22 @@ def render_google_sheets_trade_form() -> None:
     st.markdown(
         """
         <style>
+          .streamlit-trade-form-shell {
+            margin: 12px 0 14px;
+            padding: 0;
+          }
+          .streamlit-trade-form-title {
+            margin: 0 0 8px;
+            color: #0f172a;
+            font-size: 1.2rem;
+            font-weight: 800;
+          }
           div[data-testid="stForm"] {
             border: 1px solid #d9e2df;
-            border-radius: 12px;
-            padding: 16px 18px 18px;
+            border-radius: 14px;
+            padding: 14px 16px 16px;
             background: #ffffff;
-            box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
           }
           div[data-testid="stForm"] [data-testid="stFormSubmitButton"] button {
             background: #059669;
@@ -454,15 +465,37 @@ def render_google_sheets_trade_form() -> None:
             color: #1e3a8a;
             font-size: 0.92rem;
           }
+          .trade-form-status {
+            margin: 0 0 10px;
+            padding: 10px 12px;
+            border: 1px solid #bbf7d0;
+            border-radius: 10px;
+            background: #f0fdf4;
+            color: #166534;
+            font-size: 0.92rem;
+            font-weight: 700;
+          }
+          @media (max-width: 760px) {
+            .streamlit-trade-form-shell,
+            div[data-testid="stForm"] {
+              display: none !important;
+            }
+          }
         </style>
         """,
         unsafe_allow_html=True,
     )
-    st.subheader("新增交易（寫入 Google Sheets）")
+    st.markdown("<div class='streamlit-trade-form-shell'>", unsafe_allow_html=True)
+    st.markdown("<div class='streamlit-trade-form-title'>新增交易</div>", unsafe_allow_html=True)
     st.markdown(
-        "<div class='trade-form-panel-note'>填寫下方交易資料後，按「新增並寫入 Google Sheets」，資料會直接寫入雲端表格，所有裝置會同步更新。</div>",
+        "<div class='trade-form-panel-note'>資料將直接寫入 Google Sheets，寫入成功後交易紀錄與持股統計會同步更新。</div>",
         unsafe_allow_html=True,
     )
+    if status_message:
+        st.markdown(
+            f"<div class='trade-form-status'>{html.escape(status_message)}，資料已重新讀取。</div>",
+            unsafe_allow_html=True,
+        )
 
     with st.form("google_sheets_trade_append_form", clear_on_submit=True):
         row1 = st.columns([1.0, 1.25, 1.1, 1.1])
@@ -479,6 +512,8 @@ def render_google_sheets_trade_form() -> None:
         note = row2[1].text_input("備註", placeholder="例如：streamlit form test")
 
         submitted = st.form_submit_button("新增並寫入 Google Sheets", use_container_width=True)
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
     if not submitted:
         return
@@ -610,19 +645,72 @@ def consume_embedded_trade_sync_request() -> None:
         st.code(str(exc))
 
 
-def build_embedded_dashboard_html() -> str:
+def build_embedded_dashboard_html(split_mode: str = "full") -> str:
     index_path = STATIC_DIR / "index.html"
     if not index_path.exists():
         return "<h2>找不到 static/index.html</h2>"
 
     html = index_path.read_text(encoding="utf-8")
-    html = html.replace("<body>", '<body class="streamlit-embedded">', 1)
+    split_class = {
+        "before_trade_form": " streamlit-before-trade-form",
+        "after_trade_form": " streamlit-after-trade-form",
+    }.get(split_mode, "")
+    html = html.replace("<body>", f'<body class="streamlit-embedded{split_class}">', 1)
     dashboard_json = json.dumps(load_dashboard(), ensure_ascii=False)
     trades, trades_source = load_trades_with_source()
     trades_json = json.dumps(trades, ensure_ascii=False)
     trades_source_json = json.dumps(trades_source, ensure_ascii=False)
 
     bootstrap = f"""
+    <style>
+      body.streamlit-before-trade-form .trade-layout,
+      body.streamlit-before-trade-form .trade-table-wrap,
+      body.streamlit-before-trade-form .trade-actions,
+      body.streamlit-before-trade-form #monthly,
+      body.streamlit-before-trade-form #quarterly,
+      body.streamlit-before-trade-form #holdings,
+      body.streamlit-before-trade-form #yearly,
+      body.streamlit-before-trade-form #signal-settings,
+      body.streamlit-before-trade-form #manual {{
+        display: none !important;
+      }}
+
+      body.streamlit-after-trade-form .mobile-home,
+      body.streamlit-after-trade-form .desktop-home,
+      body.streamlit-after-trade-form .hero-grid,
+      body.streamlit-after-trade-form .data-freshness-section,
+      body.streamlit-after-trade-form .home-focus-section,
+      body.streamlit-after-trade-form #daily,
+      body.streamlit-after-trade-form #trades > .section-head,
+      body.streamlit-after-trade-form #trades > .trade-summary-stats,
+      body.streamlit-after-trade-form #trades > .trade-layout {{
+        display: none !important;
+      }}
+
+      body.streamlit-after-trade-form .sidebar {{
+        display: none !important;
+      }}
+
+      body.streamlit-after-trade-form .app-shell {{
+        display: block !important;
+      }}
+
+      body.streamlit-after-trade-form .content {{
+        width: 100% !important;
+        max-width: none !important;
+        padding: 0 !important;
+      }}
+
+      body.streamlit-after-trade-form #trades {{
+        margin-top: 0 !important;
+      }}
+
+      @media (max-width: 760px) {{
+        body.streamlit-after-trade-form {{
+          display: none !important;
+        }}
+      }}
+    </style>
     <script>
       window.__00919_STREAMLIT_EMBED = true;
       window.__00919_DASHBOARD_DATA = {dashboard_json};
@@ -718,8 +806,6 @@ def build_embedded_dashboard_html() -> str:
 def render_embedded_html_ui() -> None:
     sync_static_files()
     last_update_message = st.session_state.pop("last_update_message", None)
-    if last_update_message:
-        st.success(last_update_message)
     st.markdown(
         """
         <div class="status-box">
@@ -747,8 +833,9 @@ def render_embedded_html_ui() -> None:
         fetched = load_dashboard().get("fetched_at", "--")
         st.caption(f"目前資料抓取時間：{fetched}")
 
-    render_google_sheets_trade_form()
-    components.html(build_embedded_dashboard_html(), height=2600, scrolling=False)
+    components.html(build_embedded_dashboard_html("before_trade_form"), height=1900, scrolling=False)
+    render_google_sheets_trade_form(last_update_message)
+    components.html(build_embedded_dashboard_html("after_trade_form"), height=1900, scrolling=False)
 
 
 def render_home(data: dict, trades: list[dict]) -> None:
