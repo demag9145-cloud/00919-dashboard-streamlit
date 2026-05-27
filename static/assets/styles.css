@@ -1122,6 +1122,10 @@ input {
   margin-top: 14px;
 }
 
+.streamlit-embedded .trade-layout {
+  display: none !important;
+}
+
 .trade-form {
   display: grid;
   grid-template-columns: 190px repeat(4, minmax(150px, 1fr)) minmax(220px, 1.2fr) 150px;

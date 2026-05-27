@@ -418,6 +418,105 @@ def log_append_debug(message: str) -> None:
     print(f"[00919 append] {message}")
 
 
+def render_google_sheets_trade_form() -> None:
+    if append_trade_to_google_sheets is None:
+        st.warning("Google Sheets 寫入模組尚未啟用；目前只能讀取既有交易資料。")
+        return
+
+    st.markdown(
+        """
+        <style>
+          div[data-testid="stForm"] {
+            border: 1px solid #d9e2df;
+            border-radius: 12px;
+            padding: 16px 18px 18px;
+            background: #ffffff;
+            box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+          }
+          div[data-testid="stForm"] [data-testid="stFormSubmitButton"] button {
+            background: #059669;
+            border: 0;
+            border-radius: 10px;
+            color: #ffffff;
+            font-weight: 800;
+            min-height: 42px;
+          }
+          div[data-testid="stForm"] [data-testid="stFormSubmitButton"] button:hover {
+            background: #047857;
+            color: #ffffff;
+          }
+          .trade-form-panel-note {
+            margin: 0 0 12px;
+            padding: 10px 12px;
+            border: 1px solid #bfdbfe;
+            border-radius: 10px;
+            background: #eff6ff;
+            color: #1e3a8a;
+            font-size: 0.92rem;
+          }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.subheader("新增交易（寫入 Google Sheets）")
+    st.markdown(
+        "<div class='trade-form-panel-note'>填寫下方交易資料後，按「新增並寫入 Google Sheets」，資料會直接寫入雲端表格，所有裝置會同步更新。</div>",
+        unsafe_allow_html=True,
+    )
+
+    with st.form("google_sheets_trade_append_form", clear_on_submit=True):
+        row1 = st.columns([1.0, 1.25, 1.1, 1.1])
+        action_label = row1[0].radio("交易類型", ["買入", "賣出"], horizontal=True)
+        trade_date_value = row1[1].date_input("交易日期", value=date.today())
+        shares = row1[2].number_input("交易股數", min_value=1, step=1, value=1)
+        price = row1[3].number_input("成交價", min_value=0.0, step=0.01, value=0.0, format="%.2f")
+
+        row2 = st.columns([1.2, 2.8])
+        note_type = row2[0].selectbox(
+            "備註分類",
+            ["其他", "測試", "定期買入", "加碼", "減碼", "配息再投入", "手動修正"],
+        )
+        note = row2[1].text_input("備註", placeholder="例如：streamlit form test")
+
+        submitted = st.form_submit_button("新增並寫入 Google Sheets", use_container_width=True)
+
+    if not submitted:
+        return
+
+    action = "BUY" if action_label == "買入" else "SELL"
+    if not trade_date_value or int(shares) <= 0 or float(price) <= 0 or action not in {"BUY", "SELL"}:
+        st.error("寫入 Google Sheets 失敗：請確認日期、股數與成交價都已正確填寫。")
+        return
+
+    trade = {
+        "trade_date": trade_date_value.strftime("%Y-%m-%d"),
+        "action": action,
+        "shares": int(shares),
+        "price": float(price),
+        "note_type": note_type,
+        "note": note.strip(),
+        "source": "streamlit_form",
+        "created_at": datetime.now().isoformat(timespec="seconds"),
+    }
+
+    try:
+        append_trade_to_google_sheets(trade)
+    except Exception as exc:
+        log_append_debug(f"streamlit form append failed: {type(exc).__name__}: {exc}")
+        st.error("寫入 Google Sheets 失敗")
+        st.info(google_sheets_write_help())
+        st.code(f"{type(exc).__name__}: {exc}")
+        return
+
+    log_append_debug(
+        "streamlit form append success "
+        f"trade_date={trade['trade_date']} action={trade['action']} "
+        f"shares={trade['shares']} price={trade['price']}"
+    )
+    st.session_state["last_update_message"] = "新增交易已寫入 Google Sheets"
+    st.rerun()
+
+
 def consume_direct_append_test_request() -> None:
     if st.query_params.get("test_append_trade") != "1":
         return
@@ -517,6 +616,7 @@ def build_embedded_dashboard_html() -> str:
         return "<h2>找不到 static/index.html</h2>"
 
     html = index_path.read_text(encoding="utf-8")
+    html = html.replace("<body>", '<body class="streamlit-embedded">', 1)
     dashboard_json = json.dumps(load_dashboard(), ensure_ascii=False)
     trades, trades_source = load_trades_with_source()
     trades_json = json.dumps(trades, ensure_ascii=False)
@@ -647,6 +747,7 @@ def render_embedded_html_ui() -> None:
         fetched = load_dashboard().get("fetched_at", "--")
         st.caption(f"目前資料抓取時間：{fetched}")
 
+    render_google_sheets_trade_form()
     components.html(build_embedded_dashboard_html(), height=2600, scrolling=False)
 
 
