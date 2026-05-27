@@ -545,24 +545,25 @@ function requestStreamlitTradeAppend(trade) {
       baseHref = document.referrer || window.location.href;
     }
     const parentUrl = new URL(baseHref || window.location.href);
-    const form = document.createElement("form");
-    form.method = "GET";
-    form.target = "_top";
-    form.action = `${parentUrl.origin}${parentUrl.pathname}`;
-
-    Object.entries({
+    parentUrl.search = "";
+    const params = {
       append_trade: encodeBase64Url(JSON.stringify(trade || {})),
       append_ts: String(Date.now()),
-    }).forEach(([name, value]) => {
-      const input = document.createElement("input");
-      input.type = "hidden";
-      input.name = name;
-      input.value = value;
-      form.appendChild(input);
-    });
+    };
+    Object.entries(params).forEach(([name, value]) => parentUrl.searchParams.set(name, value));
+    console.info("[00919] append request 已送出", Object.keys(params));
 
-    document.body.appendChild(form);
-    form.submit();
+    try {
+      window.parent.location.href = parentUrl.toString();
+      return true;
+    } catch (_) {
+      const link = document.createElement("a");
+      link.href = parentUrl.toString();
+      link.target = "_top";
+      link.rel = "noreferrer";
+      document.body.appendChild(link);
+      link.click();
+    }
     return true;
   } catch (error) {
     console.error(error);
@@ -1226,6 +1227,12 @@ function bindTradeForm() {
           submitButton.disabled = true;
           submitButton.classList.add("is-loading");
           submitButton.textContent = "寫入中...";
+          window.setTimeout(() => {
+            submitButton.disabled = false;
+            submitButton.classList.remove("is-loading");
+            submitButton.textContent = "新增交易";
+            alert("寫入逾時，請檢查 Streamlit 後端是否收到 append_trade request");
+          }, 10000);
         }
         return;
       }

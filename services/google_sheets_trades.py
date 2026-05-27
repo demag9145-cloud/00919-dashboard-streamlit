@@ -132,3 +132,16 @@ def append_trade_to_google_sheets(trade: dict) -> dict:
         "message": "新增交易已寫入 Google Sheets",
         "trade": normalized,
     }
+
+
+def test_append_trade_directly() -> dict:
+    return append_trade_to_google_sheets(
+        {
+            "trade_date": "2026-05-27",
+            "action": "BUY",
+            "shares": 1,
+            "price": 27.00,
+            "note_type": "測試",
+            "note": "後端直接寫入測試",
+        }
+    )

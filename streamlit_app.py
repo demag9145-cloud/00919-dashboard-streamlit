@@ -17,10 +17,15 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 try:
-    from services.google_sheets_trades import append_trade_to_google_sheets, load_google_sheets_trades
+    from services.google_sheets_trades import (
+        append_trade_to_google_sheets,
+        load_google_sheets_trades,
+        test_append_trade_directly,
+    )
 except Exception:  # Keep the formal app usable even if optional cloud deps are absent locally.
     append_trade_to_google_sheets = None
     load_google_sheets_trades = None
+    test_append_trade_directly = None
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -409,6 +414,32 @@ def google_sheets_write_help() -> str:
     )
 
 
+def log_append_debug(message: str) -> None:
+    print(f"[00919 append] {message}")
+
+
+def consume_direct_append_test_request() -> None:
+    if st.query_params.get("test_append_trade") != "1":
+        return
+
+    try:
+        if test_append_trade_directly is None:
+            raise RuntimeError("Google Sheets 直接寫入測試模組未載入")
+        log_append_debug("direct append test start")
+        test_append_trade_directly()
+        log_append_debug("direct append test success")
+        st.query_params.clear()
+        st.success("後端直接 append 測試成功，請到 Google Sheets Trades 最後一列確認。")
+        st.stop()
+    except Exception as exc:
+        log_append_debug(f"direct append test failed: {type(exc).__name__}: {exc}")
+        st.query_params.clear()
+        st.error("後端直接 append 測試失敗")
+        st.info(google_sheets_write_help())
+        st.code(f"{type(exc).__name__}: {exc}")
+        st.stop()
+
+
 def consume_embedded_trade_append_request() -> None:
     payload = st.query_params.get("append_trade")
     if not payload:
@@ -425,11 +456,21 @@ def consume_embedded_trade_append_request() -> None:
             raise ValueError("新增交易資料格式錯誤")
 
         normalized = normalize_trade(trade)
+        log_append_debug(
+            "received append_trade request "
+            f"trade_date={normalized.get('trade_date')} "
+            f"action={normalized.get('action')} "
+            f"shares={normalized.get('shares')} "
+            f"price={normalized.get('price')}"
+        )
+        log_append_debug("append_trade_to_google_sheets start")
         append_trade_to_google_sheets(normalized)
+        log_append_debug("append_trade_to_google_sheets success")
         st.query_params.clear()
         st.session_state["last_update_message"] = "新增交易已寫入 Google Sheets"
         st.rerun()
     except Exception as exc:
+        log_append_debug(f"append_trade_to_google_sheets failed: {type(exc).__name__}: {exc}")
         st.query_params.clear()
         st.error("寫入 Google Sheets 失敗")
         st.info(google_sheets_write_help())
@@ -801,6 +842,7 @@ def render_manual() -> None:
 
 def main() -> None:
     optional_password_gate()
+    consume_direct_append_test_request()
     consume_embedded_trade_append_request()
     consume_embedded_trade_sync_request()
     consume_embedded_update_request()
