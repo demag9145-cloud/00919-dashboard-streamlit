@@ -8,8 +8,9 @@ import streamlit as st
 from google.oauth2.service_account import Credentials
 
 
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 WORKSHEET_NAME = "Trades"
+DEFAULT_HEADERS = ["trade_date", "action", "shares", "price", "note_type", "note"]
 
 
 @dataclass
@@ -98,3 +99,36 @@ def load_google_sheets_trades() -> TradesLoadResult:
         source="google_sheets",
         message=f"使用 Google Sheets Trades：成功讀取 {len(trades)} 筆",
     )
+
+
+def append_trade_to_google_sheets(trade: dict) -> dict:
+    service_account = dict(st.secrets["gcp_service_account"])
+    sheet_id = st.secrets["GOOGLE_SHEET_ID"]
+
+    credentials = Credentials.from_service_account_info(service_account, scopes=SCOPES)
+    client = gspread.authorize(credentials)
+    worksheet = client.open_by_key(sheet_id).worksheet(WORKSHEET_NAME)
+
+    headers = [str(item).strip() for item in worksheet.row_values(1)]
+    if not headers:
+        headers = DEFAULT_HEADERS
+        worksheet.append_row(headers, value_input_option="USER_ENTERED")
+
+    normalized = normalize_sheet_trade(trade, 0)
+    values_by_header = {
+        "trade_date": normalized["trade_date"],
+        "action": normalized["action"].upper(),
+        "shares": normalized["shares"],
+        "price": normalized["price"],
+        "note_type": normalized["note_type"],
+        "note": normalized["note"],
+        "fee": normalized.get("fee", 0),
+        "tax": normalized.get("tax", 0),
+    }
+    row_values = [values_by_header.get(header, "") for header in headers]
+    worksheet.append_row(row_values, value_input_option="USER_ENTERED")
+    return {
+        "ok": True,
+        "message": "新增交易已寫入 Google Sheets",
+        "trade": normalized,
+    }

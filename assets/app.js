@@ -534,6 +534,43 @@ function requestStreamlitTradeSync(trades = state.trades, reason = "trade-edit")
   }
 }
 
+function requestStreamlitTradeAppend(trade) {
+  if (!window.__00919_STREAMLIT_EMBED) return false;
+
+  try {
+    let baseHref = "";
+    try {
+      baseHref = window.parent.location.href;
+    } catch (_) {
+      baseHref = document.referrer || window.location.href;
+    }
+    const parentUrl = new URL(baseHref || window.location.href);
+    const form = document.createElement("form");
+    form.method = "GET";
+    form.target = "_top";
+    form.action = `${parentUrl.origin}${parentUrl.pathname}`;
+
+    Object.entries({
+      append_trade: encodeBase64Url(JSON.stringify(trade || {})),
+      append_ts: String(Date.now()),
+    }).forEach(([name, value]) => {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+    return true;
+  } catch (error) {
+    console.error(error);
+    alert("寫入 Google Sheets 失敗：瀏覽器擋下雲端寫入請求。");
+    return false;
+  }
+}
+
 async function refreshDashboardData() {
   const buttons = [
     $("refreshButton"),
@@ -1177,15 +1214,25 @@ function bindTradeForm() {
       note: $("tradeNoteInput").value.trim(),
     };
     if (!trade.trade_date || !trade.shares || !trade.price) return;
-    if (state.editingTradeId) {
+    const isEditing = Boolean(state.editingTradeId);
+    if (isEditing) {
       state.trades = state.trades.map((item) => (item.id === state.editingTradeId ? trade : item));
       state.editingTradeId = "";
       setText("tradeSubmitButton", "新增交易");
     } else {
+      if (requestStreamlitTradeAppend(trade)) {
+        const submitButton = $("tradeSubmitButton");
+        if (submitButton) {
+          submitButton.disabled = true;
+          submitButton.classList.add("is-loading");
+          submitButton.textContent = "寫入中...";
+        }
+        return;
+      }
       state.trades = [...state.trades, trade];
     }
     state.trades = state.trades.sort((a, b) => String(a.trade_date).localeCompare(String(b.trade_date)));
-    saveTrades({ syncRemote: true, reason: state.editingTradeId ? "trade-edit" : "trade-add" });
+    saveTrades({ syncRemote: false, reason: isEditing ? "trade-edit" : "trade-add" });
     $("tradeForm").reset();
     state.tradeAction = "buy";
     document.querySelectorAll(".side-toggle button").forEach((item) => item.classList.remove("active"));

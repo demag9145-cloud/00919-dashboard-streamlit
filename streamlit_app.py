@@ -17,8 +17,9 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 try:
-    from services.google_sheets_trades import load_google_sheets_trades
+    from services.google_sheets_trades import append_trade_to_google_sheets, load_google_sheets_trades
 except Exception:  # Keep the formal app usable even if optional cloud deps are absent locally.
+    append_trade_to_google_sheets = None
     load_google_sheets_trades = None
 
 
@@ -400,6 +401,42 @@ def consume_embedded_update_request() -> None:
     st.code(message[-2000:])
 
 
+def google_sheets_write_help() -> str:
+    return (
+        "寫入 Google Sheets 失敗。可能原因：Service Account 尚未加入 Google Sheet 共用、"
+        "Service Account 不是編輯者、Google API scope 仍是 readonly、"
+        "GOOGLE_SHEET_ID 錯誤，或 Trades 工作表不存在。"
+    )
+
+
+def consume_embedded_trade_append_request() -> None:
+    payload = st.query_params.get("append_trade")
+    if not payload:
+        return
+
+    try:
+        if append_trade_to_google_sheets is None:
+            raise RuntimeError("Google Sheets 寫入模組未載入")
+
+        padded = payload + ("=" * (-len(payload) % 4))
+        decoded = base64.urlsafe_b64decode(padded.encode("ascii")).decode("utf-8")
+        trade = json.loads(decoded)
+        if not isinstance(trade, dict):
+            raise ValueError("新增交易資料格式錯誤")
+
+        normalized = normalize_trade(trade)
+        append_trade_to_google_sheets(normalized)
+        st.query_params.clear()
+        st.session_state["last_update_message"] = "新增交易已寫入 Google Sheets"
+        st.rerun()
+    except Exception as exc:
+        st.query_params.clear()
+        st.error("寫入 Google Sheets 失敗")
+        st.info(google_sheets_write_help())
+        st.code(f"{type(exc).__name__}: {exc}")
+        st.stop()
+
+
 def consume_embedded_trade_sync_request() -> None:
     payload = st.query_params.get("sync_trades")
     if not payload:
@@ -764,6 +801,7 @@ def render_manual() -> None:
 
 def main() -> None:
     optional_password_gate()
+    consume_embedded_trade_append_request()
     consume_embedded_trade_sync_request()
     consume_embedded_update_request()
     render_embedded_html_ui()
