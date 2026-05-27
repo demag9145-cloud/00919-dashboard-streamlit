@@ -456,6 +456,13 @@ def consume_embedded_trade_append_request() -> None:
             raise ValueError("新增交易資料格式錯誤")
 
         normalized = normalize_trade(trade)
+        client_request_id = str(trade.get("client_request_id") or "").strip()
+        processed = st.session_state.setdefault("processed_append_trade_ids", set())
+        if client_request_id and client_request_id in processed:
+            log_append_debug(f"skip duplicate append_trade request client_request_id={client_request_id}")
+            st.query_params.clear()
+            st.rerun()
+
         log_append_debug(
             "received append_trade request "
             f"trade_date={normalized.get('trade_date')} "
@@ -464,7 +471,10 @@ def consume_embedded_trade_append_request() -> None:
             f"price={normalized.get('price')}"
         )
         log_append_debug("append_trade_to_google_sheets start")
-        append_trade_to_google_sheets(normalized)
+        append_payload = {**normalized, "client_request_id": client_request_id}
+        append_trade_to_google_sheets(append_payload)
+        if client_request_id:
+            processed.add(client_request_id)
         log_append_debug("append_trade_to_google_sheets success")
         st.query_params.clear()
         st.session_state["last_update_message"] = "新增交易已寫入 Google Sheets"

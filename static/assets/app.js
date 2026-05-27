@@ -496,6 +496,63 @@ function encodeBase64Url(text) {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
+function createClientRequestId() {
+  if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+  return `req-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function getStreamlitTopUrl() {
+  const candidates = [
+    document.referrer,
+    (() => {
+      try {
+        return window.top.location.href;
+      } catch (_) {
+        return "";
+      }
+    })(),
+    (() => {
+      try {
+        return window.parent.location.href;
+      } catch (_) {
+        return "";
+      }
+    })(),
+    window.location.href,
+    "https://00919-dashboard-app-ljdzgjwntbuxv8hsezlcup.streamlit.app/",
+  ].filter(Boolean);
+
+  const preferred = candidates.find((href) => /streamlit\.app|localhost|127\.0\.0\.1/.test(href)) || candidates[0];
+  const url = new URL(preferred);
+  url.hash = "";
+  url.search = "";
+  return url;
+}
+
+function showAppendTradeConfirmLink(targetUrl) {
+  let panel = $("appendTradeConfirmPanel");
+  if (!panel) {
+    panel = document.createElement("div");
+    panel.id = "appendTradeConfirmPanel";
+    panel.style.cssText = [
+      "margin-top:10px",
+      "padding:12px 14px",
+      "border:1px solid #f59e0b",
+      "border-radius:10px",
+      "background:#fffbeb",
+      "color:#92400e",
+      "font-weight:700",
+    ].join(";");
+    $("tradeForm")?.insertAdjacentElement("afterend", panel);
+  }
+  panel.innerHTML = `
+    <div>瀏覽器擋下自動送出，請點下面連結完成寫入。</div>
+    <a href="${targetUrl}" target="_top" rel="noreferrer" style="display:inline-block;margin-top:8px;color:#0369a1;">
+      確認寫入 Google Sheets
+    </a>
+  `;
+}
+
 function requestStreamlitTradeSync(trades = state.trades, reason = "trade-edit") {
   if (!window.__00919_STREAMLIT_EMBED) return false;
 
@@ -538,31 +595,22 @@ function requestStreamlitTradeAppend(trade) {
   if (!window.__00919_STREAMLIT_EMBED) return false;
 
   try {
-    let baseHref = "";
-    try {
-      baseHref = window.parent.location.href;
-    } catch (_) {
-      baseHref = document.referrer || window.location.href;
-    }
-    const parentUrl = new URL(baseHref || window.location.href);
-    parentUrl.search = "";
+    const parentUrl = getStreamlitTopUrl();
     const params = {
       append_trade: encodeBase64Url(JSON.stringify(trade || {})),
       append_ts: String(Date.now()),
     };
     Object.entries(params).forEach(([name, value]) => parentUrl.searchParams.set(name, value));
+    const targetUrl = parentUrl.toString();
     console.info("[00919] append request 已送出", Object.keys(params));
 
+    window.setTimeout(() => showAppendTradeConfirmLink(targetUrl), 1200);
+
     try {
-      window.parent.location.href = parentUrl.toString();
+      window.open(targetUrl, "_top");
       return true;
     } catch (_) {
-      const link = document.createElement("a");
-      link.href = parentUrl.toString();
-      link.target = "_top";
-      link.rel = "noreferrer";
-      document.body.appendChild(link);
-      link.click();
+      showAppendTradeConfirmLink(targetUrl);
     }
     return true;
   } catch (error) {
@@ -1205,6 +1253,7 @@ function bindTradeForm() {
     event.preventDefault();
     const trade = {
       id: state.editingTradeId || `trade-${Date.now()}`,
+      client_request_id: createClientRequestId(),
       trade_date: normalizeTradeDate($("tradeDateInput").value),
       action: state.tradeAction,
       shares: Number($("tradeSharesInput").value || 0),

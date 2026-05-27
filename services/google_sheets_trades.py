@@ -77,6 +77,7 @@ def normalize_sheet_trade(row: dict, index: int) -> dict:
         "tax": _to_float(_pick(row, "tax", "交易稅", default=0)),
         "note_type": note_type,
         "note": note,
+        "client_request_id": str(_pick(row, "client_request_id", "request_id", default="")).strip(),
     }
 
 
@@ -124,6 +125,7 @@ def append_trade_to_google_sheets(trade: dict) -> dict:
         "note": normalized["note"],
         "fee": normalized.get("fee", 0),
         "tax": normalized.get("tax", 0),
+        "client_request_id": normalized.get("client_request_id", ""),
     }
     row_values = [values_by_header.get(header, "") for header in headers]
     worksheet.append_row(row_values, value_input_option="USER_ENTERED")
