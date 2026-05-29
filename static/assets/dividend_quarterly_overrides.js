@@ -84,7 +84,7 @@ drawDividendCompositionChart = function drawDividendCompositionChart(rows) {
   );
 
   chart.innerHTML = `
-    <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="00919 每季配息組成直條圖">
+    <svg width="${width}" height="${height}" style="width:${width}px; min-width:${width}px; max-width:none; height:${height}px;" viewBox="0 0 ${width} ${height}" role="img" aria-label="00919 每季配息組成直條圖">
       ${yGrid.join("")}
       ${percentAxis.join("")}
       <line x1="${pad.left}" x2="${width - pad.right}" y1="${barBase}" y2="${barBase}" stroke="#bdc8cd" />

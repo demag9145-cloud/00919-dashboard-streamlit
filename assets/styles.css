@@ -5044,3 +5044,126 @@ body.streamlit-embedded #trades .native-trades-fallback-card ~ .trade-actions {
   }
 }
 
+
+
+/* === UI30: non-home readability + quarterly chart centering + trade table full-height === */
+@media (min-width: 761px) {
+  /* 1) 每季配息組成圖：短資料置中，資料變多才左右延伸並出現橫向捲軸 */
+  body.streamlit-embedded #quarterly .dividend-composition-chart {
+    display: block !important;
+    text-align: center !important;
+    min-height: 456px !important;
+    padding: 10px 8px 8px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-gutter: stable both-edges !important;
+  }
+
+  body.streamlit-embedded #quarterly .dividend-composition-chart svg {
+    display: block !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  body.streamlit-embedded #quarterly .dividend-composition-card {
+    padding: 20px !important;
+  }
+
+  body.streamlit-embedded #quarterly .dividend-composition-head h4 {
+    font-size: 20px !important;
+  }
+
+  body.streamlit-embedded #quarterly .dividend-composition-head p,
+  body.streamlit-embedded #quarterly .dividend-composition-legend {
+    font-size: 15px !important;
+  }
+
+  /* 2) 交易紀錄表：先往頁面下方延伸，真的不夠再由表格內部捲動 */
+  body.streamlit-embedded[data-active-page="trades"] #trades .trade-table-wrap {
+    height: clamp(430px, calc(100vh - 405px), 720px) !important;
+    max-height: clamp(430px, calc(100vh - 405px), 720px) !important;
+    min-height: 430px !important;
+    overflow-y: auto !important;
+    overflow-x: auto !important;
+    scrollbar-gutter: stable both-edges !important;
+  }
+
+  body.streamlit-embedded[data-active-page="trades"] #trades .trade-table {
+    min-height: 100% !important;
+  }
+
+  body.streamlit-embedded[data-active-page="trades"] #trades .trade-table th,
+  body.streamlit-embedded[data-active-page="trades"] #trades .trade-table td {
+    padding-top: 15px !important;
+    padding-bottom: 15px !important;
+  }
+
+  body.streamlit-embedded[data-active-page="trades"] #trades .trade-summary-stats div {
+    min-height: 72px !important;
+  }
+
+  /* 3) 除首頁總覽外，各分頁標題、註解、欄位、表格文字整體放大 */
+  body.streamlit-embedded:not([data-active-page="home"]) .content > section:not(.dashboard-page-hidden):not([hidden]) .section-head h3 {
+    font-size: 24px !important;
+    line-height: 1.2 !important;
+  }
+
+  body.streamlit-embedded:not([data-active-page="home"]) .content > section:not(.dashboard-page-hidden):not([hidden]) .section-head small,
+  body.streamlit-embedded:not([data-active-page="home"]) .content > section:not(.dashboard-page-hidden):not([hidden]) .section-head .chart-tools,
+  body.streamlit-embedded:not([data-active-page="home"]) .content > section:not(.dashboard-page-hidden):not([hidden]) .eyebrow {
+    font-size: 14px !important;
+    line-height: 1.55 !important;
+  }
+
+  body.streamlit-embedded:not([data-active-page="home"]) .dividend-card {
+    min-height: 112px !important;
+    padding: 16px !important;
+  }
+
+  body.streamlit-embedded:not([data-active-page="home"]) .dividend-card span,
+  body.streamlit-embedded:not([data-active-page="home"]) .dividend-card small,
+  body.streamlit-embedded:not([data-active-page="home"]) .panel-title small,
+  body.streamlit-embedded:not([data-active-page="home"]) .monthly-signal-card p,
+  body.streamlit-embedded:not([data-active-page="home"]) .holding-rotation-card small,
+  body.streamlit-embedded:not([data-active-page="home"]) .settings-intro p,
+  body.streamlit-embedded:not([data-active-page="home"]) .settings-intro small {
+    font-size: 15px !important;
+    line-height: 1.55 !important;
+  }
+
+  body.streamlit-embedded:not([data-active-page="home"]) .dividend-card strong,
+  body.streamlit-embedded:not([data-active-page="home"]) .monthly-signal-card strong,
+  body.streamlit-embedded:not([data-active-page="home"]) .panel-title span,
+  body.streamlit-embedded:not([data-active-page="home"]) .holding-rotation-card strong,
+  body.streamlit-embedded:not([data-active-page="home"]) .settings-intro strong {
+    font-size: 22px !important;
+    line-height: 1.28 !important;
+  }
+
+  body.streamlit-embedded:not([data-active-page="home"]) .trade-table th,
+  body.streamlit-embedded:not([data-active-page="home"]) .monthly-table th,
+  body.streamlit-embedded:not([data-active-page="home"]) .dividend-table th,
+  body.streamlit-embedded:not([data-active-page="home"]) .holdings-table th,
+  body.streamlit-embedded:not([data-active-page="home"]) .yearly-tax-table th,
+  body.streamlit-embedded:not([data-active-page="home"]) .settings-diagnostics-table th {
+    font-size: 14px !important;
+    line-height: 1.35 !important;
+  }
+
+  body.streamlit-embedded:not([data-active-page="home"]) .trade-table td,
+  body.streamlit-embedded:not([data-active-page="home"]) .monthly-table td,
+  body.streamlit-embedded:not([data-active-page="home"]) .dividend-table td,
+  body.streamlit-embedded:not([data-active-page="home"]) .holdings-table td,
+  body.streamlit-embedded:not([data-active-page="home"]) .yearly-tax-table td,
+  body.streamlit-embedded:not([data-active-page="home"]) .settings-diagnostics-table td {
+    font-size: 15px !important;
+    line-height: 1.45 !important;
+  }
+
+  body.streamlit-embedded:not([data-active-page="home"]) input,
+  body.streamlit-embedded:not([data-active-page="home"]) select,
+  body.streamlit-embedded:not([data-active-page="home"]) button,
+  body.streamlit-embedded:not([data-active-page="home"]) .settings-actions button {
+    font-size: 15px !important;
+  }
+}
