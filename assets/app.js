@@ -1,4 +1,4 @@
-﻿const state = {
+const state = {
   data: null,
   trades: [],
   tradeAction: "buy",
@@ -169,6 +169,19 @@ function signalSeverity(level) {
   return { red: 3, yellow: 2, unknown: 1, green: 0 }[level || "unknown"] ?? 1;
 }
 
+function getTop10RotationInfo(top10, holdings, history) {
+  const previous = [...(history || [])]
+    .filter((row) => row.data_date && row.data_date !== holdings.data_date)
+    .sort((a, b) => String(a.data_date).localeCompare(String(b.data_date)))
+    .at(-1);
+  if (!previous) return { count: 0, hasPrevious: false };
+  const currentCodes = new Set((top10 || []).map((row) => row.code).filter(Boolean));
+  const previousCodes = new Set((previous.top10 || []).map((row) => row.code).filter(Boolean));
+  const addedCount = [...currentCodes].filter((code) => !previousCodes.has(code)).length;
+  const removedCount = [...previousCodes].filter((code) => !currentCodes.has(code)).length;
+  return { count: addedCount + removedCount, hasPrevious: true, addedCount, removedCount };
+}
+
 function calcHoldingSignalForSummary() {
   const settings = getAppSignalSettings();
   const holdings = state.data?.holdings || {};
@@ -182,31 +195,159 @@ function calcHoldingSignalForSummary() {
   }
   const top10Total = top10.reduce((sum, row) => sum + Number(row.weight_pct || 0), 0);
   const concentrationThreshold = Number(settings.top10ConcentrationYellowPct ?? 75);
-  if (top10Total >= concentrationThreshold) {
+  if (concentrationThreshold > 0 && top10Total >= concentrationThreshold) {
     return {
       level: "yellow",
       reason: `持股：前十大集中度 ${fmt.pct(top10Total)} 達到門檻，請到持股頁查看持股占比。`,
     };
   }
-  const previous = [...history]
-    .filter((row) => row.data_date && row.data_date !== holdings.data_date)
-    .sort((a, b) => String(a.data_date).localeCompare(String(b.data_date)))
-    .at(-1);
-  if (previous) {
-    const currentCodes = new Set(top10.map((row) => row.code).filter(Boolean));
-    const previousCodes = new Set((previous.top10 || []).map((row) => row.code).filter(Boolean));
-    const addedCount = [...currentCodes].filter((code) => !previousCodes.has(code)).length;
-    const removedCount = [...previousCodes].filter((code) => !currentCodes.has(code)).length;
-    const rotationCount = addedCount + removedCount;
-    const rotationThreshold = Number(settings.top10RotationWarningCount ?? 1);
-    if (rotationThreshold > 0 && rotationCount >= rotationThreshold) {
-      return {
-        level: "yellow",
-        reason: `持股：前十大汰換 ${rotationCount} 檔，請到持股頁查看新增與淘汰紀錄。`,
-      };
-    }
+
+  const rotationInfo = getTop10RotationInfo(top10, holdings, history);
+  const rotationThreshold = Number(settings.top10RotationWarningCount ?? 1);
+  if (rotationThreshold > 0 && rotationInfo.hasPrevious && rotationInfo.count >= rotationThreshold) {
+    return {
+      level: "yellow",
+      reason: `持股：前十大汰換 ${rotationInfo.count} 檔，請到持股頁查看新增與淘汰紀錄。`,
+    };
   }
   return { level: "green", reason: "所有數據正常" };
+}
+
+function calcBeneficiarySignalForSummary() {
+  const settings = getAppSignalSettings();
+  const declineThreshold = Math.max(1, Math.round(Number(settings.beneficiaryDeclineMonths ?? 3)));
+  const rows = (state.data?.monthly_history || state.data?.monthly_size || [])
+    .filter((row) => row.month && isFiniteValue(row.beneficiary_count))
+    .sort((a, b) => String(a.month).localeCompare(String(b.month)));
+  if (rows.length < 2) {
+    return { level: "green", reason: "受益人數：資料不足，暫不列入主燈號。" };
+  }
+  let declineCount = 0;
+  for (let i = rows.length - 1; i > 0; i -= 1) {
+    const current = Number(rows[i].beneficiary_count);
+    const previous = Number(rows[i - 1].beneficiary_count);
+    if (Number.isFinite(current) && Number.isFinite(previous) && current < previous) {
+      declineCount += 1;
+    } else {
+      break;
+    }
+  }
+  if (declineCount >= declineThreshold) {
+    const latest = rows[rows.length - 1];
+    return {
+      level: "yellow",
+      reason: `受益人數：已連續 ${declineCount} 個月下降，達到設定門檻 ${declineThreshold} 個月。`,
+      detail: `${latest.month} 受益人 ${fmt.money(Number(latest.beneficiary_count))} 人`,
+    };
+  }
+  return { level: "green", reason: `受益人數：未達連續下降 ${declineThreshold} 個月門檻。` };
+}
+
+function calcTaxSignalForSummary() {
+  const settings = getAppSignalSettings();
+  const single54cThreshold = Math.max(0, Number(settings.single54cThreshold ?? HEALTH_PREMIUM_THRESHOLD));
+  const supplementalPremiumRate = Math.max(0, Number(settings.supplementalPremiumRatePct ?? HEALTH_PREMIUM_RATE * 100)) / 100;
+  const supplementalPremiumWarningAmount = Math.max(0, Number(settings.supplementalPremiumWarningAmount ?? 0));
+  const dividend = state.data?.latest_dividend || {};
+  if (!dividend.ex_date || !isFiniteValue(dividend.estimated_54c_per_share)) {
+    return { level: "green", reason: "54C：目前沒有可用的最新 54C 資料，暫不列入主燈號。" };
+  }
+  const shares = calcSharesOnDate(state.trades || [], dividend.ex_date);
+  const estimated54c = shares * Number(dividend.estimated_54c_per_share || 0);
+  const premium = estimated54c >= single54cThreshold ? estimated54c * supplementalPremiumRate : 0;
+  if (estimated54c >= single54cThreshold) {
+    return {
+      level: "yellow",
+      reason: `54C：單次估算 $${fmt.money(estimated54c)} 達到觀察門檻 $${fmt.money(single54cThreshold)}。`,
+    };
+  }
+  if (supplementalPremiumWarningAmount > 0 && premium >= supplementalPremiumWarningAmount) {
+    return {
+      level: "yellow",
+      reason: `補充保費：估算 $${fmt.money(premium)} 達到黃燈門檻 $${fmt.money(supplementalPremiumWarningAmount)}。`,
+    };
+  }
+  return { level: "green", reason: "54C 與補充保費未達設定觀察門檻。" };
+}
+
+function calcCurrentSignalDiagnostics(latest = getLatestCompleteDailyRow()) {
+  const settings = getAppSignalSettings();
+  const holdings = state.data?.holdings || {};
+  const top10 = holdings.top10 || [];
+  const top10Total = top10.reduce((sum, row) => sum + Number(row.weight_pct || 0), 0);
+  const latestMarket = getLatestMarketRow();
+  const navLagBusinessDays = businessDaysBetweenDates(latest?.date, latestMarket?.date);
+  const dividend = state.data?.latest_dividend || {};
+  const sharesOnDividend = dividend.ex_date ? calcSharesOnDate(state.trades || [], dividend.ex_date) : 0;
+  const estimated54c = sharesOnDividend * Number(dividend.estimated_54c_per_share || 0);
+  const beneficiaryRows = (state.data?.monthly_history || state.data?.monthly_size || [])
+    .filter((row) => row.month && isFiniteValue(row.beneficiary_count))
+    .sort((a, b) => String(a.month).localeCompare(String(b.month)));
+  const latestBeneficiary = beneficiaryRows[beneficiaryRows.length - 1] || {};
+  return {
+    premium: {
+      value: isFiniteValue(latest?.premium_discount_pct) ? fmt.pct(Number(latest.premium_discount_pct)) : "--",
+      threshold: `黃燈 ≥ ${fmt.pct(Number(settings.premiumDiscountYellowPct ?? 1))}，紅燈 ≥ ${fmt.pct(Number(settings.premiumDiscountRedPct ?? 2))}`,
+      status: calcDailySignal(latest).level,
+    },
+    navLag: {
+      value: latestMarket?.date && latest?.date ? `市價 ${latestMarket.date} / 淨值 ${latest.date}` : "--",
+      threshold: "落後 1 個交易日內正常；2 個交易日以上提醒",
+      status: Number.isFinite(navLagBusinessDays) && navLagBusinessDays >= 2 ? "yellow" : "green",
+    },
+    top10: {
+      value: top10.length ? fmt.pct(top10Total) : "--",
+      threshold: Number(settings.top10ConcentrationYellowPct ?? 75) > 0
+        ? `黃燈 ≥ ${fmt.pct(Number(settings.top10ConcentrationYellowPct ?? 75))}`
+        : "已停用集中度提醒",
+      status: top10.length && Number(settings.top10ConcentrationYellowPct ?? 75) > 0 && top10Total >= Number(settings.top10ConcentrationYellowPct ?? 75) ? "yellow" : "green",
+    },
+    top10Rotation: {
+      value: (() => {
+        const info = getTop10RotationInfo(top10, holdings, state.data?.holdings_history || []);
+        return info.hasPrevious ? `${info.count} 檔` : "尚無前期比較";
+      })(),
+      threshold: Number(settings.top10RotationWarningCount ?? 1) > 0
+        ? `汰換 ≥ ${Math.round(Number(settings.top10RotationWarningCount ?? 1))} 檔提醒`
+        : "已停用汰換提醒",
+      status: (() => {
+        const info = getTop10RotationInfo(top10, holdings, state.data?.holdings_history || []);
+        const threshold = Math.round(Number(settings.top10RotationWarningCount ?? 1));
+        return threshold > 0 && info.hasPrevious && info.count >= threshold ? "yellow" : "green";
+      })(),
+    },
+    beneficiary: {
+      value: latestBeneficiary.month ? `${latestBeneficiary.month}：${fmt.money(Number(latestBeneficiary.beneficiary_count))} 人` : "--",
+      threshold: `連續下降 ${Math.max(1, Math.round(Number(settings.beneficiaryDeclineMonths ?? 3)))} 個月提醒`,
+      status: calcBeneficiarySignalForSummary().level,
+    },
+    tax: {
+      value: dividend.ex_date ? `估算 54C $${fmt.money(estimated54c)}` : "--",
+      threshold: `單次 54C ≥ $${fmt.money(Number(settings.single54cThreshold ?? HEALTH_PREMIUM_THRESHOLD))}`,
+      status: calcTaxSignalForSummary().level,
+    },
+  };
+}
+
+function renderSignalDiagnostics(model = calcCurrentSignalDiagnostics()) {
+  const target = $("signalDiagnosticsBody");
+  if (!target) return;
+  const rows = [
+    ["折溢價", model.premium],
+    ["淨值 / 折溢價日期", model.navLag],
+    ["前十大集中度", model.top10],
+    ["前十大汰換", model.top10Rotation],
+    ["受益人數", model.beneficiary],
+    ["54C / 補充保費", model.tax],
+  ];
+  target.innerHTML = rows.map(([label, item]) => `
+    <tr data-status="${item.status || "green"}">
+      <td>${label}</td>
+      <td>${item.value || "--"}</td>
+      <td>${item.threshold || "--"}</td>
+      <td>${signalText(item.status || "green")}</td>
+    </tr>
+  `).join("");
 }
 
 function isFiniteValue(value) {
@@ -230,6 +371,40 @@ function daysBetweenDates(startDate, endDate) {
   return Math.floor((end.getTime() - start.getTime()) / 86400000);
 }
 
+function businessDaysBetweenDates(startDate, endDate) {
+  if (!startDate || !endDate) return NaN;
+  const start = new Date(`${startDate}T00:00:00Z`);
+  const end = new Date(`${endDate}T00:00:00Z`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return NaN;
+  if (end < start) return 0;
+  let count = 0;
+  const cursor = new Date(start);
+  cursor.setUTCDate(cursor.getUTCDate() + 1);
+  while (cursor <= end) {
+    const day = cursor.getUTCDay();
+    if (day !== 0 && day !== 6) count += 1;
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return count;
+}
+
+function getLatestCompleteDailyRow(rows = state.data?.daily || []) {
+  const latestDaily = state.data?.latest_daily || {};
+  if (
+    latestDaily.date &&
+    isFiniteValue(latestDaily.market_price) &&
+    isFiniteValue(latestDaily.nav) &&
+    isFiniteValue(latestDaily.premium_discount_pct)
+  ) {
+    return latestDaily;
+  }
+  return [...rows].reverse().find((row) =>
+    isFiniteValue(row.market_price) &&
+    isFiniteValue(row.nav) &&
+    isFiniteValue(row.premium_discount_pct)
+  ) || latestDaily || rows[rows.length - 1] || {};
+}
+
 function collectDataIntegrityWarnings(latest = {}, dividend = {}, latestMonthly = {}, holdings = {}) {
   const warnings = [];
   const add = (level, label, impact) => warnings.push({ level, label, impact });
@@ -246,12 +421,12 @@ function collectDataIntegrityWarnings(latest = {}, dividend = {}, latestMonthly 
   if (!isFiniteValue(latest.volume_lots)) add("yellow", "成交量", "成交量觀察會缺資料");
 
   const latestMarket = getLatestMarketRow(dailyRows);
-  const navLagDays = daysBetweenDates(latest.date, latestMarket.date);
-  if (Number.isFinite(navLagDays) && navLagDays >= 2) {
+  const navLagBusinessDays = businessDaysBetweenDates(latest.date, latestMarket.date);
+  if (Number.isFinite(navLagBusinessDays) && navLagBusinessDays >= 2) {
     add(
       "yellow",
       "淨值/折溢價更新落後",
-      `市價已到 ${latestMarket.date}，但淨值與折溢價只到 ${latest.date}，已落後 ${navLagDays} 天，折溢價圖會停在完整資料日`
+      `市價已到 ${latestMarket.date}，但淨值與折溢價只到 ${latest.date}，已落後 ${navLagBusinessDays} 個交易日，折溢價圖會停在完整資料日`
     );
   }
 
@@ -277,12 +452,23 @@ function collectDataIntegrityWarnings(latest = {}, dividend = {}, latestMonthly 
 
 function calcDataIntegrityStatus(latest, dividend, latestMonthly, holdings) {
   const warnings = collectDataIntegrityWarnings(latest, dividend, latestMonthly, holdings);
+  const latestMarket = getLatestMarketRow();
+  const navLagBusinessDays = businessDaysBetweenDates(latest?.date, latestMarket?.date);
+  const navDelayNote = latestMarket?.date && latest?.date && latestMarket.date > latest.date
+    ? `市價 ${latestMarket.date}；淨值/折溢價 ${latest.date}，落後 ${Number.isFinite(navLagBusinessDays) ? navLagBusinessDays : "?"} 個交易日`
+    : "關鍵欄位完整";
+
   if (!warnings.length) {
     return {
-      status: { label: "正常", className: "green", note: "關鍵欄位完整" },
+      status: {
+        label: "正常",
+        className: "green",
+        note: navDelayNote,
+      },
       warnings,
     };
   }
+
   const hasRed = warnings.some((warning) => warning.level === "red");
   const firstItems = warnings.slice(0, 2).map((warning) => warning.label).join("、");
   return {
@@ -313,44 +499,35 @@ function calcDataIntegritySignalForSummary(latest) {
 }
 
 function calcDashboardSignal(latest) {
+  // UI26: 主燈號重新納入「燈號設定」中可調整的核心觀察項。
+  // 市價與淨值/折溢價差 1 個交易日仍視為正常；落後 2 個交易日以上才提醒。
   const checks = [
     {
       ...calcDailySignal(latest),
-      summaryReason: (signal) => `每日總覽：${signal.reason}，請看每日圖表的折溢價與成交量。`,
+      summaryReason: (signal) => `折溢價：${signal.reason}`,
+    },
+    {
+      ...calcHoldingSignalForSummary(),
+      summaryReason: (signal) => signal.reason,
+    },
+    {
+      ...calcBeneficiarySignalForSummary(),
+      summaryReason: (signal) => signal.reason,
+    },
+    {
+      ...calcTaxSignalForSummary(),
+      summaryReason: (signal) => signal.reason,
     },
   ];
 
-  checks.push({
-    ...calcDataIntegritySignalForSummary(latest),
-    summaryReason: (signal) => signal.reason,
-  });
-
-  if (typeof calcMonthlyReturnRows === "function" && typeof calcMonthlySignal === "function") {
-    const monthlyRows = calcMonthlyReturnRows(
-      state.data.monthly_history || [],
-      state.data.daily || [],
-      state.trades || [],
-      state.data.dividends || []
-    );
+  const integrity = calcDataIntegritySignalForSummary(latest);
+  // 資料完整性只有「紅燈等級」才拉動主燈號；一般黃燈提醒留在資料更新狀態區。
+  if (integrity.level === "red") {
     checks.push({
-      ...calcMonthlySignal(monthlyRows),
-      summaryReason: (signal) => `每月：${signal.reason} 請到每月頁查看含息報酬與 ETF 規模健康。`,
+      ...integrity,
+      summaryReason: (signal) => signal.reason,
     });
   }
-
-  if (typeof calcYearlyTaxRows === "function" && typeof calcYearlyTaxSignal === "function") {
-    const yearlyRows = calcYearlyTaxRows(state.data.dividends || [], state.trades || []);
-    checks.push({
-      ...calcYearlyTaxSignal(yearlyRows),
-      summaryReason: (signal) => `每年：${signal.reason} 請到每年頁查看 54C 與補充保費。`,
-    });
-  }
-
-  const holdingSignal = calcHoldingSignalForSummary();
-  checks.push({
-    ...holdingSignal,
-    summaryReason: (signal) => signal.reason,
-  });
 
   const abnormal = checks
     .filter((item) => signalSeverity(item.level) > 0)
@@ -362,7 +539,7 @@ function calcDashboardSignal(latest) {
 
   const level = abnormal.some((item) => item.level === "red") ? "red" : "yellow";
   const reason = abnormal
-    .slice(0, 3)
+    .slice(0, 2)
     .map((item) => (typeof item.summaryReason === "function" ? item.summaryReason(item) : item.reason))
     .join("；");
   return { level, reason };
@@ -454,11 +631,11 @@ function bindQuickModuleActions() {
       const target = targetHash ? document.querySelector(targetHash) : null;
       if (!target) return;
       event.preventDefault();
+      if (typeof window.showDashboardPage === "function") {
+        window.showDashboardPage(targetHash);
+        return;
+      }
       target.scrollIntoView({ behavior: "smooth", block: "start" });
-      history.pushState(null, "", targetHash);
-      document.querySelectorAll(".nav a[href^='#']").forEach((link) => {
-        link.classList.toggle("active", link.getAttribute("href") === targetHash);
-      });
     });
   });
 }
@@ -624,7 +801,7 @@ async function refreshDashboardData() {
 function render() {
   if (!state.data) return;
 
-  const latest = state.data.latest_daily || {};
+  const latest = getLatestCompleteDailyRow();
   const latestMarket = getLatestMarketRow();
   const latestForPrice = latestMarket.date ? { ...latest, ...latestMarket } : latest;
   const dividend = state.data.latest_dividend || {};
@@ -668,6 +845,7 @@ function render() {
   const freshnessModel = getFreshnessModel(latest, dividend, latestForPrice);
   renderDataFreshness(latest, dividend, freshnessModel);
   renderHomeFocus(position, latestForPrice, dividend, totalReturn, totalCost);
+  renderSignalDiagnostics();
   const renderModel = {
     latest,
     latestForPrice,
@@ -1165,6 +1343,8 @@ function renderHomeFocus(position, latest, dividend, totalReturn, totalCost) {
 }
 
 function bindTradeForm() {
+  const tradeForm = $("tradeForm");
+
   document.querySelectorAll(".side-toggle button").forEach((button) => {
     button.addEventListener("click", () => {
       state.tradeAction = button.dataset.action;
@@ -1173,53 +1353,55 @@ function bindTradeForm() {
     });
   });
 
-  $("tradeForm").addEventListener("submit", (event) => {
-    event.preventDefault();
-    const trade = {
-      id: state.editingTradeId || `trade-${Date.now()}`,
-      client_request_id: createClientRequestId(),
-      trade_date: normalizeTradeDate($("tradeDateInput").value),
-      action: state.tradeAction,
-      shares: Number($("tradeSharesInput").value || 0),
-      price: Number($("tradePriceInput").value || 0),
-      fee: 0,
-      tax: 0,
-      note_type: $("tradeNoteTypeInput").value,
-      note: $("tradeNoteInput").value.trim(),
-    };
-    if (!trade.trade_date || !trade.shares || !trade.price) return;
-    const isEditing = Boolean(state.editingTradeId);
-    if (window.__00919_STREAMLIT_EMBED && !isEditing) {
-      console.info("[00919] HTML trade form submit ignored; use Streamlit native Google Sheets form.");
-      return;
-    }
-    if (isEditing) {
-      state.trades = state.trades.map((item) => (item.id === state.editingTradeId ? trade : item));
-      state.editingTradeId = "";
-      setText("tradeSubmitButton", "新增交易");
-    } else {
-      if (requestStreamlitTradeAppend(trade)) {
-        const submitButton = $("tradeSubmitButton");
-        if (submitButton) {
-          submitButton.disabled = false;
-          submitButton.classList.remove("is-loading");
-          submitButton.textContent = "新增交易";
-        }
+  if (tradeForm) {
+    tradeForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const trade = {
+        id: state.editingTradeId || `trade-${Date.now()}`,
+        client_request_id: createClientRequestId(),
+        trade_date: normalizeTradeDate($("tradeDateInput")?.value),
+        action: state.tradeAction,
+        shares: Number($("tradeSharesInput")?.value || 0),
+        price: Number($("tradePriceInput")?.value || 0),
+        fee: 0,
+        tax: 0,
+        note_type: $("tradeNoteTypeInput")?.value || "其他",
+        note: ($("tradeNoteInput")?.value || "").trim(),
+      };
+      if (!trade.trade_date || !trade.shares || !trade.price) return;
+      const isEditing = Boolean(state.editingTradeId);
+      if (window.__00919_STREAMLIT_EMBED && !isEditing) {
+        console.info("[00919] HTML trade form disabled in embedded mode; use the independent Streamlit trade entry page.");
         return;
       }
-      state.trades = [...state.trades, trade];
-    }
-    state.trades = state.trades.sort((a, b) => String(a.trade_date).localeCompare(String(b.trade_date)));
-    saveTrades({ syncRemote: false, reason: isEditing ? "trade-edit" : "trade-add" });
-    $("tradeForm").reset();
-    state.tradeAction = "buy";
-    document.querySelectorAll(".side-toggle button").forEach((item) => item.classList.remove("active"));
-    document.querySelector('.side-toggle button[data-action="buy"]').classList.add("active");
-    render();
-  });
+      if (isEditing) {
+        state.trades = state.trades.map((item) => (item.id === state.editingTradeId ? trade : item));
+        state.editingTradeId = "";
+        setText("tradeSubmitButton", "新增交易");
+      } else {
+        if (requestStreamlitTradeAppend(trade)) {
+          const submitButton = $("tradeSubmitButton");
+          if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.classList.remove("is-loading");
+            submitButton.textContent = "新增交易";
+          }
+          return;
+        }
+        state.trades = [...state.trades, trade];
+      }
+      state.trades = state.trades.sort((a, b) => String(a.trade_date).localeCompare(String(b.trade_date)));
+      saveTrades({ syncRemote: false, reason: isEditing ? "trade-edit" : "trade-add" });
+      tradeForm.reset();
+      state.tradeAction = "buy";
+      document.querySelectorAll(".side-toggle button").forEach((item) => item.classList.remove("active"));
+      document.querySelector('.side-toggle button[data-action="buy"]')?.classList.add("active");
+      render();
+    });
+  }
 
-  $("exportTradesButton").addEventListener("click", exportTradesCsv);
-  $("importTradesInput").addEventListener("change", importTrades);
+  $("exportTradesButton")?.addEventListener("click", exportTradesCsv);
+  $("importTradesInput")?.addEventListener("change", importTrades);
   $("syncTradesButton")?.addEventListener("click", () => {
     const button = $("syncTradesButton");
     if (button) {
@@ -1236,7 +1418,7 @@ function bindTradeForm() {
       alert("目前環境無法直接同步到雲端，請先匯出資料備份。");
     }
   });
-  $("downloadTemplateButton").addEventListener("click", downloadTradeTemplate);
+  $("downloadTemplateButton")?.addEventListener("click", downloadTradeTemplate);
 }
 
 function saveTrades(options = {}) {
@@ -1266,16 +1448,14 @@ function renderTradeTable(position, latest) {
           <td>${escapeHtml(trade.note_type || "")}</td>
           <td>${escapeHtml(trade.note || "")}</td>
           <td>
-            <div class="row-actions">
-              <button class="edit-trade" type="button" data-id="${trade.id || ""}">編輯</button>
-              <button class="delete-trade" type="button" data-id="${trade.id || ""}">刪除</button>
-            </div>
+            ${window.__00919_STREAMLIT_EMBED ? `<span class="row-readonly">正式資料</span>` : `<div class="row-actions"><button class="edit-trade" type="button" data-id="${trade.id || ""}">編輯</button><button class="delete-trade" type="button" data-id="${trade.id || ""}">刪除</button></div>`}
           </td>
         </tr>
       `;
     })
     .join("");
 
+  if (!window.__00919_STREAMLIT_EMBED) {
   body.querySelectorAll(".edit-trade").forEach((button) => {
     button.addEventListener("click", () => {
       const target = state.trades.find((trade) => trade.id === button.dataset.id);
@@ -1302,6 +1482,7 @@ function renderTradeTable(position, latest) {
       render();
     });
   });
+  }
 
   const marketPrice = Number(latest.market_price || 0);
   const marketValue = position.holdingShares * marketPrice;

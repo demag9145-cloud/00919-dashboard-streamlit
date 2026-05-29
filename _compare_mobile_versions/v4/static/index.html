@@ -1,0 +1,997 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>00919 監控儀表板</title>
+    <link rel="stylesheet" href="assets/styles.css?v=20260522-1730" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="brand-mark">919</span>
+          <div>
+            <h1>00919 監控</h1>
+            <p>高股息現金流儀表板</p>
+          </div>
+        </div>
+        <nav class="nav">
+          <a class="active" href="#home">每日總覽</a>
+          <a href="#trades">交易紀錄</a>
+          <a href="#monthly">每月</a>
+          <a href="#quarterly">每季</a>
+          <a href="#holdings">持股</a>
+          <a href="#yearly">每年</a>
+          <a href="#signal-settings">燈號設定</a>
+          <a href="#manual">使用說明</a>
+        </nav>
+        <div class="source-card">
+          <span>資料來源</span>
+          <strong>MoneyDJ / TWSE e添富 / TWSE</strong>
+          <small id="fetchedAt">更新中...</small>
+        </div>
+      </aside>
+
+      <main class="content" id="home">
+        <header class="page-header">
+          <div>
+            <p class="eyebrow">Capital High Dividend ETF</p>
+            <h2>00919 群益台灣精選高息</h2>
+          </div>
+          <div class="header-actions">
+            <button class="icon-button" id="refreshButton" type="button" title="重新讀取資料">↻</button>
+          </div>
+        </header>
+
+        <section class="mobile-home" aria-label="00919 手機首頁">
+          <section class="mobile-home__hero hero-banner">
+            <div class="hero-banner__glow"></div>
+            <div class="hero-status-orb" id="mobileSignalOrb">
+              <span id="mobileSignalLabel">綠燈</span>
+              <small id="mobileSignalReason">所有數據正常</small>
+            </div>
+            <div class="hero-meta">
+              <p>CAPITAL HIGH DIVIDEND ETF</p>
+              <h2>00919 群益台灣精選高息</h2>
+              <span class="ui-status-chip hero-time-chip" id="mobileFetchedAt">目前資料抓取時間 --</span>
+              <span class="ui-status-chip hero-premium-chip" id="mobileHeroPremium">折溢價 --</span>
+            </div>
+            <div class="hero-actions">
+              <button class="hero-action-button" id="mobileRefreshButton" type="button">↻ 更新資料</button>
+              <button class="hero-more-button" type="button" aria-label="更多">•••</button>
+            </div>
+          </section>
+
+          <section class="core-status-card">
+            <div class="mobile-section-head">
+              <div class="mobile-section-title">
+                <span class="mobile-section-icon teal">▰</span>
+                <h3>核心數據與更新狀態</h3>
+              </div>
+              <span class="ui-status-chip ui-status-chip--green" id="mobileCoreUpdateCount">-- 已更新</span>
+            </div>
+            <div class="core-status-grid">
+              <article class="core-metric-tile" data-status="green">
+                <span class="metric-icon green">▱</span>
+                <span class="metric-label">目前股數</span>
+                <strong id="mobileShares">--</strong>
+                <small class="metric-status-line" id="mobileSharesStatus">● 正常　--</small>
+              </article>
+              <article class="core-metric-tile" data-status="green">
+                <span class="metric-icon cyan">$</span>
+                <span class="metric-label">平均成本</span>
+                <strong id="mobileAvgCost">--</strong>
+                <small class="metric-status-line" id="mobileAvgCostStatus">● 正常　--</small>
+              </article>
+              <article class="core-metric-tile" data-status="green">
+                <span class="metric-icon purple">□</span>
+                <span class="metric-label">最早買進日</span>
+                <strong id="mobileFirstTradeDate">--</strong>
+                <small class="metric-status-line" id="mobileFirstTradeStatus">● 正常　--</small>
+              </article>
+              <article class="core-metric-tile" data-status="green">
+                <span class="metric-icon green">↗</span>
+                <span class="metric-label">目前市值</span>
+                <strong id="mobileMarketValue">--</strong>
+                <small class="metric-status-line" id="mobileMarketValueStatus">● 正常　--</small>
+              </article>
+              <article class="core-metric-tile" data-status="green">
+                <span class="metric-icon blue">▣</span>
+                <span class="metric-label">投入本金</span>
+                <strong id="mobileTotalCost">--</strong>
+                <small class="metric-status-line" id="mobileTotalCostStatus">● 正常　--</small>
+              </article>
+              <article class="core-metric-tile" data-status="green">
+                <span class="metric-icon orange">◔</span>
+                <span class="metric-label">未實現損益</span>
+                <strong id="mobileUnrealizedPnl">--</strong>
+                <small class="metric-status-line" id="mobileUnrealizedPnlStatus">● 正常　--</small>
+              </article>
+              <article class="core-metric-tile" data-status="green">
+                <span class="metric-icon amber">◎</span>
+                <span class="metric-label">預估年配息</span>
+                <strong id="mobileAnnualDividend">--</strong>
+                <small class="metric-status-line" id="mobileAnnualDividendStatus">● 正常　--</small>
+              </article>
+              <article class="core-metric-tile" data-status="green">
+                <span class="metric-icon pink">⌁</span>
+                <span class="metric-label">含息損益估算</span>
+                <strong id="mobileTotalReturn">--</strong>
+                <small class="metric-status-line" id="mobileTotalReturnStatus">● 正常　--</small>
+              </article>
+              <article class="core-metric-tile" data-status="green">
+                <span class="metric-icon violet">▤</span>
+                <span class="metric-label">累積配息估算</span>
+                <strong id="mobileCumulativeDividend">--</strong>
+                <small class="metric-status-line" id="mobileCumulativeDividendStatus">● 正常　--</small>
+              </article>
+            </div>
+          </section>
+
+          <section class="home-focus-card">
+            <div class="mobile-section-head">
+              <div class="mobile-section-title">
+                <span class="mobile-section-icon green">★</span>
+                <h3>首頁重點總覽</h3>
+              </div>
+            </div>
+            <div class="mobile-focus-grid">
+              <article class="mobile-focus-tile focus-return">
+                <span>含息報酬</span>
+                <strong id="mobileFocusTotalReturn">--</strong>
+                <small id="mobileFocusTotalReturnRate">--</small>
+              </article>
+              <article class="mobile-focus-tile focus-dividend">
+                <span>最新配息</span>
+                <strong id="mobileFocusDividend">--</strong>
+                <small id="mobileFocusDividendNote">--</small>
+              </article>
+              <article class="mobile-focus-tile focus-people">
+                <span>受益人數</span>
+                <strong id="mobileFocusBeneficiaries">--</strong>
+                <small id="mobileFocusBeneficiariesNote">--</small>
+              </article>
+              <article class="mobile-focus-tile focus-aum">
+                <span>AUM 規模</span>
+                <strong id="mobileFocusAum">--</strong>
+                <small id="mobileFocusAumNote">--</small>
+              </article>
+              <article class="mobile-focus-tile focus-top10">
+                <span>前十大集中度</span>
+                <strong id="mobileFocusTop10">--</strong>
+                <small id="mobileFocusTop10Note">--</small>
+              </article>
+              <article class="mobile-focus-tile focus-holding">
+                <span>第一大持股</span>
+                <strong id="mobileFocusTopHolding">--</strong>
+                <small id="mobileFocusTopHoldingNote">--</small>
+              </article>
+            </div>
+          </section>
+
+          <section class="trend-card">
+            <div class="trend-card__head">
+              <div class="mobile-section-title">
+                <span class="mobile-section-icon teal">▧</span>
+                <div>
+                  <h3>走勢總覽</h3>
+                  <p>市價、淨值、折溢價與成交量</p>
+                </div>
+              </div>
+              <div class="trend-actions">
+                <select id="mobileRangeSelect" aria-label="手機圖表顯示區間">
+                  <option value="week">近 1 週</option>
+                  <option value="month" selected>近 1 月</option>
+                  <option value="year">近 1 年</option>
+                  <option value="all">全部</option>
+                </select>
+                <button class="trend-expand-button" type="button" aria-label="展開圖表">↗</button>
+              </div>
+            </div>
+            <div class="mobile-chart-legend">
+              <span><i class="dot price"></i>市價</span>
+              <span><i class="dot navline"></i>淨值</span>
+              <span><i class="dot discount"></i>折溢價 %</span>
+              <span><i class="dot volume"></i>成交量</span>
+            </div>
+            <div id="mobileMainChart" class="mobile-chart"></div>
+          </section>
+        </section>
+
+        <section class="hero-grid">
+          <div class="position-panel">
+            <div class="panel-title">
+              <span>倉位資訊</span>
+              <small>由交易紀錄自動計算</small>
+            </div>
+            <div class="position-summary">
+              <div>
+                <span>目前股數</span>
+                <strong id="holdingShares">--</strong>
+              </div>
+              <div>
+                <span>平均成本</span>
+                <strong id="avgCost">--</strong>
+              </div>
+              <div>
+                <span>最早買進日</span>
+                <strong id="firstTradeDate">--</strong>
+              </div>
+            </div>
+            <div class="metric-grid">
+              <div class="metric primary">
+                <span>目前市值</span>
+                <strong id="marketValue">--</strong>
+              </div>
+              <div class="metric">
+                <span>投入本金</span>
+                <strong id="totalCost">--</strong>
+              </div>
+              <div class="metric">
+                <span>未實現損益</span>
+                <strong id="unrealizedPnl">--</strong>
+              </div>
+              <div class="metric">
+                <span>預估年配息</span>
+                <strong id="annualDividend">--</strong>
+              </div>
+              <div class="metric">
+                <span>累積配息估算</span>
+                <strong id="cumulativeDividend">--</strong>
+              </div>
+              <div class="metric">
+                <span>含息損益估算</span>
+                <strong id="totalReturn">--</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="status-panel">
+            <div class="panel-title">
+              <span>總燈號及股價資訊</span>
+              <small id="latestDate">--</small>
+            </div>
+            <div class="signal-wrap">
+              <div class="signal-light" id="signalLight"></div>
+              <div>
+                <strong id="signalLabel">讀取中</strong>
+                <p id="signalReason">正在載入最新資料。</p>
+              </div>
+            </div>
+            <div class="snapshot">
+              <div>
+                <span>市價</span>
+                <strong id="latestPrice">--</strong>
+              </div>
+              <div>
+                <span>淨值</span>
+                <strong id="latestNav">--</strong>
+              </div>
+              <div>
+                <span>折溢價</span>
+                <strong id="latestDiscount">--</strong>
+              </div>
+              <div>
+                <span>成交量 最新交易日</span>
+                <strong id="latestVolume">--</strong>
+              </div>
+            </div>
+          </div>
+          <section class="data-freshness-section">
+          <div class="section-head compact">
+            <div>
+              <p class="eyebrow">Data Update</p>
+              <h3>資料更新狀態</h3>
+            </div>
+            <button class="refresh-action" id="homeRefreshButton" type="button">更新資料</button>
+          </div>
+          <div class="freshness-grid">
+            <article class="freshness-card">
+              <span>每日價格</span>
+              <strong id="freshDailyStatus">--</strong>
+              <small id="freshDailyDate">--</small>
+            </article>
+            <article class="freshness-card">
+              <span>每月規模</span>
+              <strong id="freshMonthlyStatus">--</strong>
+              <small id="freshMonthlyDate">--</small>
+            </article>
+            <article class="freshness-card">
+              <span>配息 / 54C</span>
+              <strong id="freshDividendStatus">--</strong>
+              <small id="freshDividendDate">--</small>
+            </article>
+            <article class="freshness-card">
+              <span>前十大持股</span>
+              <strong id="freshHoldingsStatus">--</strong>
+              <small id="freshHoldingsDate">--</small>
+            </article>
+            <article class="freshness-card">
+              <span>整體抓取</span>
+              <strong id="freshFetchedStatus">--</strong>
+              <small id="freshFetchedAt">--</small>
+            </article>
+            <article class="freshness-card">
+              <span>資料完整性</span>
+              <strong id="freshIntegrityStatus">--</strong>
+              <small id="freshIntegrityNote">--</small>
+            </article>
+          </div>
+          </section>
+        </section>
+
+        <section class="home-focus-section">
+          <div class="section-head compact">
+            <div>
+              <p class="eyebrow">Home Focus</p>
+              <h3>首頁重點總覽</h3>
+            </div>
+            <small>把各分頁最需要掃一眼的數字集中到首頁</small>
+          </div>
+          <div class="home-focus-grid">
+            <article class="focus-card primary">
+              <span>含息報酬</span>
+              <strong id="homeTotalReturn">--</strong>
+              <small id="homeTotalReturnRate">--</small>
+            </article>
+            <article class="focus-card">
+              <span>最新配息</span>
+              <strong id="homeLatestDividend">--</strong>
+              <small id="homeLatestDividendDate">--</small>
+            </article>
+            <article class="focus-card">
+              <span>本次 54C</span>
+              <strong id="homeLatest54c">--</strong>
+              <small id="homeLatest54cNote">--</small>
+            </article>
+            <article class="focus-card">
+              <span>補充保費觀察</span>
+              <strong id="homePremiumWatch">--</strong>
+              <small id="homePremiumNote">--</small>
+            </article>
+            <article class="focus-card">
+              <span>AUM 規模</span>
+              <strong id="homeAum">--</strong>
+              <small id="homeAumMonth">--</small>
+            </article>
+            <article class="focus-card">
+              <span>受益人數</span>
+              <strong id="homeBeneficiaries">--</strong>
+              <small id="homeBeneficiaryChange">--</small>
+            </article>
+            <article class="focus-card">
+              <span>前十大集中度</span>
+              <strong id="homeTop10Total">--</strong>
+              <small id="homeTop10Date">--</small>
+            </article>
+            <article class="focus-card">
+              <span>第一大持股</span>
+              <strong id="homeTopHolding">--</strong>
+              <small id="homeTopHoldingWeight">--</small>
+            </article>
+          </div>
+        </section>
+
+        <section class="chart-section" id="daily">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Daily Watch</p>
+              <h3>市價、淨值、折溢價與成交量</h3>
+            </div>
+            <div class="chart-tools">
+              <label class="range-label">
+                顯示區間
+                <select id="rangeSelect">
+                  <option value="week">近 1 週</option>
+                  <option value="month" selected>近 1 月</option>
+                  <option value="year">近 1 年</option>
+                  <option value="all">全部</option>
+                </select>
+              </label>
+              <div class="legend">
+                <span><i class="line price"></i>市價</span>
+                <span><i class="line navline"></i>淨值</span>
+                <span><i class="line discount"></i>折溢價 %</span>
+                <span><i class="bar"></i>成交量</span>
+              </div>
+            </div>
+          </div>
+          <div id="mainChart" class="chart"></div>
+          <p class="chart-note">折溢價使用右側百分比軸；線條位置與市價/淨值上下交錯不代表溢價或折價，請以百分比數字判斷。</p>
+        </section>
+
+        <section class="trade-section" id="trades">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Trade Log</p>
+              <h3>交易紀錄</h3>
+            </div>
+            <small>交易紀錄會驅動首頁股數、成本與含息損益</small>
+          </div>
+
+          <div class="trade-stats trade-summary-stats">
+            <div>
+              <span>目前股數</span>
+              <strong id="tradeStatShares">--</strong>
+            </div>
+            <div>
+              <span>平均成本</span>
+              <strong id="tradeStatAvgCost">--</strong>
+            </div>
+            <div>
+              <span>投入本金</span>
+              <strong id="tradeStatCost">--</strong>
+            </div>
+            <div>
+              <span>累積配息估算</span>
+              <strong id="tradeStatDividend">--</strong>
+            </div>
+            <div>
+              <span>目前市值</span>
+              <strong id="tradeStatMarketValue">--</strong>
+            </div>
+            <div>
+              <span>未實現損益</span>
+              <strong id="tradeStatPnl">--</strong>
+            </div>
+            <div>
+              <span>含息損益估算</span>
+              <strong id="tradeStatTotalReturn">--</strong>
+            </div>
+          </div>
+
+          <div class="trade-layout">
+            <form class="trade-form" id="tradeForm">
+              <div class="side-toggle" role="group" aria-label="買賣別">
+                <button class="active" type="button" data-action="buy">買入</button>
+                <button type="button" data-action="sell">賣出</button>
+              </div>
+              <label>
+                交易日期
+                <input id="tradeDateInput" type="date" required />
+              </label>
+              <label>
+                交易股數（股）
+                <input id="tradeSharesInput" type="number" min="1" step="1" required />
+              </label>
+              <label>
+                買入 / 賣出價位
+                <input id="tradePriceInput" type="number" min="0" step="0.01" required />
+              </label>
+              <label>
+                資金來源 / 備註分類
+                <select id="tradeNoteTypeInput">
+                  <option value="股息再投入">股息再投入</option>
+                  <option value="薪資投入">薪資投入</option>
+                  <option value="年終投入">年終投入</option>
+                  <option value="定期投入">定期投入</option>
+                  <option value="閒置資金投入">閒置資金投入</option>
+                  <option value="再平衡調整">再平衡調整</option>
+                  <option value="部位調整">部位調整</option>
+                  <option value="其他">其他</option>
+                </select>
+              </label>
+              <label class="trade-note">
+                備註
+                <input id="tradeNoteInput" type="text" placeholder="可留空或補充說明" />
+              </label>
+              <button class="submit-trade" id="tradeSubmitButton" type="submit">新增交易</button>
+            </form>
+          </div>
+
+          <div class="table-wrap trade-table-wrap">
+            <table class="trade-table">
+              <thead>
+                <tr>
+                  <th>買 / 賣</th>
+                  <th>交易日期</th>
+                  <th>交易股數</th>
+                  <th>成交價位</th>
+                  <th>交易金額</th>
+                  <th>分類</th>
+                  <th>自訂備註</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="tradeTableBody"></tbody>
+            </table>
+          </div>
+
+          <div class="trade-actions">
+            <button type="button" id="exportTradesButton">匯出資料</button>
+            <label class="import-button">
+              匯入資料
+              <input id="importTradesInput" type="file" accept=".csv,text/csv" />
+            </label>
+            <button type="button" id="downloadTemplateButton">下載範本</button>
+          </div>
+        </section>
+
+        <section class="monthly-section" id="monthly">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Monthly Health Check</p>
+              <h3>每月健康檢查</h3>
+            </div>
+            <small>每月模組燈號會回饋到首頁總燈號，首頁仍是唯一總判斷</small>
+          </div>
+
+          <div class="monthly-signal-card">
+            <div class="mini-signal-light" id="monthlySignalLight"></div>
+            <div>
+              <strong id="monthlySignalLabel">讀取中</strong>
+              <p id="monthlySignalReason">等待月度資料整理。</p>
+            </div>
+          </div>
+
+          <div class="monthly-chart-grid">
+            <article class="monthly-chart-card">
+              <div class="panel-title">
+                <span>我的含息報酬</span>
+                <small>成本 / 市值 / 含息總值</small>
+              </div>
+              <div class="monthly-legend">
+                <span><i class="line cost"></i>投入成本</span>
+                <span><i class="line market"></i>月底市值</span>
+                <span><i class="line total"></i>含息總值</span>
+              </div>
+              <div id="monthlyReturnChart" class="monthly-chart"></div>
+            </article>
+
+            <article class="monthly-chart-card">
+              <div class="panel-title">
+                <span>ETF 規模健康</span>
+                <small>AUM / 受益人數</small>
+              </div>
+              <div class="monthly-legend">
+                <span><i class="line aum"></i>AUM 規模</span>
+                <span><i class="line beneficiary"></i>受益人數</span>
+              </div>
+              <div id="monthlyEtfHealthChart" class="monthly-chart etf-health-empty"></div>
+            </article>
+          </div>
+
+          <div class="monthly-table-grid">
+            <div class="table-wrap monthly-table-wrap">
+              <table class="trade-table monthly-table">
+                <thead>
+                  <tr>
+                    <th>月份</th>
+                    <th>月底股數</th>
+                    <th>投入成本</th>
+                    <th>月均市值</th>
+                    <th>累積配息</th>
+                    <th>含息總值</th>
+                    <th>含息損益</th>
+                    <th>含息報酬率</th>
+                  </tr>
+                </thead>
+                <tbody id="monthlyReturnTableBody"></tbody>
+              </table>
+            </div>
+            <div class="table-wrap monthly-table-wrap">
+              <table class="trade-table monthly-table">
+                <thead>
+                  <tr>
+                    <th>月份</th>
+                    <th>AUM</th>
+                    <th>受益人數</th>
+                    <th>月變化</th>
+                  </tr>
+                </thead>
+                <tbody id="monthlyEtfTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="quarterly-section" id="quarterly">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Quarterly Dividend</p>
+              <h3>每季配息與 54C 估算</h3>
+            </div>
+            <small>依歷史配息與除息日持股估算，正式報稅仍以券商與稅務資料為準</small>
+          </div>
+
+          <div class="dividend-summary-grid">
+            <article class="dividend-card accent">
+              <span>最近除息日</span>
+              <strong id="latestDividendExDate">--</strong>
+              <small id="latestDividendPayDate">發放日 --</small>
+            </article>
+            <article class="dividend-card">
+              <span>每股配息</span>
+              <strong id="latestDividendPerShare">--</strong>
+              <small>00919 單次配息</small>
+            </article>
+            <article class="dividend-card">
+              <span>除息日持股估算</span>
+              <strong id="latestDividendShares">--</strong>
+              <small>由交易紀錄回推</small>
+            </article>
+            <article class="dividend-card">
+              <span>本次配息估算</span>
+              <strong id="latestDividendCash">--</strong>
+              <small>每股配息 × 當時股數</small>
+            </article>
+            <article class="dividend-card">
+              <span>本次 54C 估算</span>
+              <strong id="latestDividend54c">--</strong>
+              <small id="latestDividend54cNote">股利所得比例 --</small>
+            </article>
+            <article class="dividend-card">
+              <span>補充保費觀察</span>
+              <strong id="latestDividendHealth">--</strong>
+              <small>暫以 54C 估算值觀察門檻</small>
+            </article>
+          </div>
+
+          <div class="quarterly-layout">
+            <div class="table-wrap dividend-table-wrap">
+              <table class="trade-table dividend-table">
+                <thead>
+                  <tr>
+                    <th>除息日</th>
+                    <th>發放日</th>
+                    <th>每股配息</th>
+                    <th>股利所得</th>
+                    <th>收益平準金</th>
+                    <th>資本利得</th>
+                    <th>當時股數</th>
+                    <th>配息估算</th>
+                    <th>54C 估算</th>
+                    <th>補充保費</th>
+                  </tr>
+                </thead>
+                <tbody id="dividendTableBody"></tbody>
+              </table>
+            </div>
+
+            <aside class="yearly-dividend-card">
+              <div class="panel-title">
+                <span>年度配息統計</span>
+                <small>依除息年度彙總</small>
+              </div>
+              <div id="dividendYearChart" class="dividend-bar-chart"></div>
+              <div id="dividendYearStats" class="yearly-stat-list"></div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="holdings-section" id="holdings">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Holdings Review</p>
+              <h3>前十大持股與占比變化</h3>
+            </div>
+            <small id="holdingsDataDate">等待持股資料</small>
+          </div>
+
+          <div class="holdings-summary-grid">
+            <article class="dividend-card accent">
+              <span>最新持股資料日</span>
+              <strong id="holdingsLatestDate">--</strong>
+              <small>MoneyDJ 持股明細</small>
+            </article>
+            <article class="dividend-card">
+              <span>前十大合計</span>
+              <strong id="top10TotalWeight">--</strong>
+              <small>觀察集中度</small>
+            </article>
+            <article class="dividend-card">
+              <span>第一大持股</span>
+              <strong id="topHoldingName">--</strong>
+              <small id="topHoldingWeight">--</small>
+            </article>
+            <article class="dividend-card">
+              <span>前十大汰換</span>
+              <strong id="holdingRotationCount">--</strong>
+              <small id="holdingRotationSummary">等待下一次快照</small>
+            </article>
+          </div>
+
+          <div class="holding-rotation-card">
+            <div class="panel-title">
+              <span>前十大汰換紀錄</span>
+              <small id="holdingRotationPeriod">需要至少兩次持股快照才會顯示變動</small>
+            </div>
+            <div id="holdingRotationList" class="holding-rotation-list"></div>
+          </div>
+
+          <div class="holdings-grid">
+            <article class="monthly-chart-card">
+              <div class="panel-title">
+                <span>前十大持股占比</span>
+                <small>股票名稱已整合代號，滑過橫條可看持有股數</small>
+              </div>
+              <div id="topHoldingsChart" class="holdings-chart large"></div>
+            </article>
+            <article class="monthly-chart-card">
+              <div class="panel-title">
+                <span>產業分布</span>
+                <small>用來看金融、半導體、航運等配置重心</small>
+              </div>
+              <div id="industryChart" class="holdings-chart large"></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="yearly-section" id="yearly">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Yearly Tax Review</p>
+              <h3>年度配息與稅務總覽</h3>
+            </div>
+            <small>年度金額依除息日持股估算，正式報稅仍以券商與稅務資料為準</small>
+          </div>
+
+          <div class="monthly-signal-card yearly-signal-card">
+            <div class="mini-signal-light" id="yearlySignalLight"></div>
+            <div>
+              <strong id="yearlySignalLabel">讀取中</strong>
+              <p id="yearlySignalReason">等待年度配息資料整理。</p>
+            </div>
+          </div>
+
+          <div class="yearly-summary-grid">
+            <article class="dividend-card accent">
+              <span>年度配息總額</span>
+              <strong id="yearlyLatestCash">--</strong>
+              <small id="yearlyLatestStatus">--</small>
+            </article>
+            <article class="dividend-card">
+              <span>年度 54C 估算</span>
+              <strong id="yearlyLatest54c">--</strong>
+              <small>依股利所得比例估算</small>
+            </article>
+            <article class="dividend-card">
+              <span>補充保費觀察</span>
+              <strong id="yearlyLatestPremium">--</strong>
+              <small>暫以單次 54C 門檻判斷</small>
+            </article>
+            <article class="dividend-card">
+              <span>配息次數</span>
+              <strong id="yearlyLatestCount">--</strong>
+              <small>四季齊全才是完整年度</small>
+            </article>
+          </div>
+
+          <article class="monthly-chart-card yearly-chart-card">
+            <div class="panel-title">
+              <span>年度配息、54C 與補充保費</span>
+              <small>柱狀圖為配息總額，其中深色段為 54C；折線用右軸顯示 54C 占比</small>
+            </div>
+            <div class="monthly-legend">
+              <span><i class="legend-dot yearly-non54c"></i>配息總額</span>
+              <span><i class="legend-dot yearly-54c"></i>54C 金額</span>
+              <span><i class="line yearly-premium"></i>54C 占比</span>
+            </div>
+            <div id="yearlyTaxChart" class="yearly-tax-chart"></div>
+          </article>
+
+          <div class="table-wrap yearly-tax-table-wrap">
+            <table class="trade-table yearly-tax-table">
+              <thead>
+                <tr>
+                  <th>年度</th>
+                  <th>配息次數</th>
+                  <th>年度配息總額</th>
+                  <th>年度 54C 估算</th>
+                  <th>補充保費估算</th>
+                  <th>54C 占比</th>
+                  <th>狀態</th>
+                </tr>
+              </thead>
+              <tbody id="yearlyTaxTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="settings-section" id="signal-settings">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Signal Settings</p>
+              <h3>燈號設定</h3>
+            </div>
+            <small>設定會儲存在目前瀏覽器，儲存後各頁燈號會重新計算。</small>
+          </div>
+
+          <div class="settings-intro">
+            <div>
+              <strong>總燈號先看每日折溢價，再把每月含息報酬、年度 54C 與補充保費納入觀察。</strong>
+              <p>這裡只放會常調整的數字。預設值沿用目前討論版本，之後如果覺得太嚴或太鬆，直接改數字即可。</p>
+            </div>
+            <span id="signalSettingsMessage" class="settings-message"></span>
+          </div>
+
+          <form id="signalSettingsForm" class="settings-form">
+            <article class="settings-card">
+              <div class="panel-title">
+                <span>每日總覽</span>
+                <small>折溢價偏離淨值時提醒</small>
+              </div>
+              <div class="settings-fields">
+                <label>
+                  折溢價黃燈門檻 (%)
+                  <input id="settingPremiumDiscountYellowPct" type="number" step="0.1" min="1" max="10" />
+                </label>
+                <label>
+                  折溢價紅燈門檻 (%)
+                  <input id="settingPremiumDiscountRedPct" type="number" step="0.1" min="2" max="10" />
+                </label>
+              </div>
+            </article>
+
+            <article class="settings-card">
+              <div class="panel-title">
+                <span>每月健康</span>
+                <small>含息報酬與受益人數</small>
+              </div>
+              <div class="settings-fields">
+                <label>
+                  含息報酬紅燈門檻 (%)
+                  <input id="settingMonthlyReturnRedPct" type="number" step="0.1" min="-100" max="100" />
+                </label>
+                <label>
+                  受益人連續下降月數
+                  <input id="settingBeneficiaryDeclineMonths" type="number" step="1" min="1" max="12" />
+                </label>
+              </div>
+            </article>
+
+            <article class="settings-card">
+              <div class="panel-title">
+                <span>54C 與補充保費</span>
+                <small>年度稅務觀察</small>
+              </div>
+              <div class="settings-fields">
+                <label>
+                  單次 54C 觀察門檻
+                  <input id="settingSingle54cThreshold" type="number" step="1000" min="0" />
+                </label>
+                <label>
+                  補充保費費率 (%)
+                  <input id="settingSupplementalPremiumRatePct" type="number" step="0.01" min="0" max="10" />
+                </label>
+                <label>
+                  補充保費黃燈門檻
+                  <input id="settingSupplementalPremiumWarningAmount" type="number" step="100" min="0" />
+                </label>
+              </div>
+            </article>
+
+            <article class="settings-card">
+              <div class="panel-title">
+                <span>前十大持股</span>
+                <small>換股與集中度觀察</small>
+              </div>
+              <div class="settings-fields">
+                <label>
+                  前十大汰換黃燈檔數
+                  <input id="settingTop10RotationWarningCount" type="number" step="1" min="0" max="10" />
+                </label>
+                <label>
+                  前十大集中度黃燈 (%)
+                  <input id="settingTop10ConcentrationYellowPct" type="number" step="0.1" min="0" max="100" />
+                </label>
+              </div>
+            </article>
+
+            <div class="settings-actions">
+              <button class="submit-trade" type="submit">儲存設定</button>
+              <button id="resetSignalSettingsButton" type="button">恢復預設</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="manual-section" id="manual">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">User Guide</p>
+              <h3>使用說明</h3>
+            </div>
+            <small>忘記欄位、燈號或更新邏輯時，先回到這頁確認。</small>
+          </div>
+
+          <div class="manual-hero">
+            <div>
+              <span>設計目的</span>
+              <strong>用一個首頁掌握 00919 是否仍適合持有</strong>
+              <p>
+                00919 是高股息 ETF，不需要每天盯盤。本儀表板把每日價格、月度規模、
+                季度配息與 54C、前十大持股變化整合起來，讓首頁成為手機端也能快速判斷的總覽。
+              </p>
+            </div>
+            <div>
+              <span>核心原則</span>
+              <strong>首頁看結論，子頁查原因</strong>
+              <p>
+                首頁只保留最需要一眼確認的資訊；若燈號變黃或紅，再依文字提醒前往每日、每月、
+                每季、持股或每年頁查看細節。
+              </p>
+            </div>
+          </div>
+
+          <div class="manual-grid">
+            <article class="manual-card">
+              <h4>首頁怎麼看</h4>
+              <ul>
+                <li><strong>倉位資訊：</strong>由交易紀錄自動計算股數、成本、市值、未實現損益、預估年配息、累積配息與含息損益。</li>
+                <li><strong>總燈號及股價資訊：</strong>正常時只顯示「所有數據正常」；異常時會說明哪個分頁、哪個數據需要檢查。</li>
+                <li><strong>資料更新狀態：</strong>確認價格、月規模、配息/54C、前十大持股、整體抓取與資料完整性是否正常。</li>
+                <li><strong>首頁重點總覽：</strong>放每個子分頁最值得回頭看的數字，例如含息報酬、最新配息、54C、AUM、受益人數、前十大集中度。</li>
+              </ul>
+            </article>
+
+            <article class="manual-card">
+              <h4>資料更新 SOP</h4>
+              <ol>
+                <li>開啟 `啟動00919儀表板.bat`，本機會先執行 `fetch_data.py` 抓取最新資料。</li>
+                <li>進入首頁後，也可以按「更新資料」手動補抓。</li>
+                <li>更新範圍包含每日價格/淨值/折溢價/成交量、每月 AUM/受益人數、配息與 54C、前十大持股與產業配置。</li>
+                <li>若日後搬到雲端，按鈕會改成呼叫雲端後端或雲端函式，邏輯不變。</li>
+                <li>如果某幾天沒有開網頁，更新流程應補抓缺漏資料，而不是只抓當天。</li>
+              </ol>
+            </article>
+
+            <article class="manual-card warning">
+              <h4>資料完整性警示</h4>
+              <p>這是防止「資料沒抓到卻被拿去計算」的保護機制。</p>
+              <ul>
+                <li><strong>市價缺漏：</strong>目前市值、未實現損益、含息報酬會失真，總燈號會轉紅。</li>
+                <li><strong>淨值或折溢價缺漏：</strong>折溢價圖表與每日燈號會失真，通常轉黃或紅。</li>
+                <li><strong>成交量缺漏：</strong>成交量觀察會缺資料，通常轉黃。</li>
+                <li><strong>AUM / 受益人數缺漏：</strong>ETF 規模健康與月度燈號會失真。</li>
+                <li><strong>配息 / 54C 缺漏：</strong>每季配息、年度 54C、補充保費估算會失真。</li>
+                <li><strong>前十大持股缺漏：</strong>集中度、第一大持股與汰換紀錄會缺資料。</li>
+              </ul>
+            </article>
+
+            <article class="manual-card">
+              <h4>燈號規則</h4>
+              <ul>
+                <li><strong>綠燈：</strong>目前沒有超過設定門檻，首頁顯示「所有數據正常」。</li>
+                <li><strong>黃燈：</strong>有需要觀察的項目，例如折溢價偏大、月度含息報酬轉弱、前十大集中度偏高、資料稍微過期。</li>
+                <li><strong>紅燈：</strong>關鍵資料缺漏，或異常已經會明顯影響市值、損益、含息報酬等核心計算。</li>
+                <li><strong>門檻設定：</strong>折溢價、54C、補充保費、受益人數、前十大集中度等可到「燈號設定」調整。</li>
+              </ul>
+            </article>
+
+            <article class="manual-card">
+              <h4>各分頁用途</h4>
+              <ul>
+                <li><strong>每日總覽：</strong>看市價、淨值、折溢價與成交量，主要用來判斷價格是否偏離淨值太多。</li>
+                <li><strong>交易紀錄：</strong>手動輸入買入/賣出日期、股數、價格與分類，首頁所有倉位資訊都由這裡計算。</li>
+                <li><strong>每月：</strong>看 AUM、受益人數與自己的含息報酬，確認是否越抱越不健康。</li>
+                <li><strong>每季：</strong>看配息、54C、收益平準金、資本利得與補充保費估算。</li>
+                <li><strong>持股：</strong>看前十大持股、產業分布、集中度與新增/淘汰紀錄。</li>
+                <li><strong>每年：</strong>看年度配息總額、年度 54C、補充保費觀察與報稅季整理。</li>
+              </ul>
+            </article>
+
+            <article class="manual-card">
+              <h4>雲端版規劃</h4>
+              <ul>
+                <li>手機端以首頁為主，電腦端保留完整分頁。</li>
+                <li>資料更新採「手動更新按鈕 + 缺漏補抓 + 資料新鮮度提醒」。</li>
+                <li>不優先依賴排程，避免免費雲端額度被用光。</li>
+                <li>只要雲端提供同樣格式的資料檔，前端燈號與完整性警示可以直接沿用。</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <script src="assets/signal_settings.js?v=20260522-1315"></script>
+    <script src="assets/app.js?v=20260522-1645"></script>
+    <script src="assets/dividend_quarterly_overrides.js?v=20260521-1555"></script>
+    <script src="assets/monthly_health.js?v=20260522-1245"></script>
+    <script src="assets/holdings.js?v=20260522-0915"></script>
+    <script src="assets/yearly_tax.js?v=20260522-1245"></script>
+    <script src="assets/navigation.js?v=20260522-1730"></script>
+  </body>
+</html>

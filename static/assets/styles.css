@@ -98,6 +98,7 @@ input {
 }
 
 .nav a.active,
+.nav a.is-active,
 .nav a:hover {
   color: #fff;
   background: rgba(255, 255, 255, 0.1);
@@ -149,12 +150,14 @@ input {
 }
 
 .nav a.active,
+.nav a.is-active,
 .nav a:hover {
   background: linear-gradient(90deg, rgba(16, 185, 129, 0.24), rgba(255, 255, 255, 0.08));
   box-shadow: inset 3px 0 0 #10b981;
 }
 
 .nav a.active .icon-box,
+.nav a.is-active .icon-box,
 .nav a:hover .icon-box {
   background: rgba(16, 185, 129, 0.16);
   color: #34d399;
@@ -211,6 +214,17 @@ input {
 .content > section,
 .page-header {
   scroll-margin-top: 24px;
+}
+
+.dashboard-page-hidden,
+.dashboard-page-hidden[hidden] {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
 }
 
 .page-header,
@@ -2795,6 +2809,137 @@ select {
   }
 }
 
+@media (min-width: 761px) {
+  .app-shell {
+    align-items: flex-start;
+    min-height: auto;
+  }
+
+  .sidebar {
+    align-self: flex-start;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+  }
+
+  .content {
+    width: 100%;
+    max-width: 1680px;
+    min-height: auto;
+    align-content: flex-start;
+    margin: 0 auto;
+    padding: 14px 16px 28px;
+    gap: 14px;
+  }
+
+  .content > .page-header:not(.dashboard-page-hidden),
+  .content > .desktop-home:not(.dashboard-page-hidden),
+  .content > section:not(.dashboard-page-hidden) {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  body:not([data-active-page="home"]) .content > section:not(.dashboard-page-hidden) {
+    max-width: 1440px;
+    padding-top: 16px;
+    padding-bottom: 20px;
+  }
+
+  body[data-active-page="home"] .desktop-home {
+    width: 100%;
+    max-width: 1680px;
+    margin: 0 auto;
+    gap: 12px;
+  }
+
+  .monthly-section,
+  .quarterly-section,
+  .holdings-section,
+  .yearly-section,
+  .settings-section,
+  .manual-section,
+  .trade-section {
+    gap: 14px;
+  }
+
+  .monthly-grid,
+  .quarterly-grid,
+  .holdings-grid,
+  .yearly-grid,
+  .settings-grid,
+  .manual-grid {
+    gap: 14px;
+  }
+
+  .desktop-hero {
+    min-height: 168px !important;
+    grid-template-columns: 132px minmax(320px, 1fr) minmax(360px, 0.68fr) !important;
+    gap: 18px !important;
+    padding: 18px 20px 18px 26px !important;
+  }
+
+  .desktop-hero__orb {
+    width: 112px !important;
+    height: 112px !important;
+    border-width: 5px !important;
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.16), 0 0 28px rgba(16, 185, 129, 0.42) !important;
+  }
+
+  .desktop-hero__orb.yellow {
+    box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.16), 0 0 28px rgba(245, 158, 11, 0.48) !important;
+  }
+
+  .desktop-hero__orb span {
+    font-size: 26px !important;
+  }
+
+  .desktop-hero__orb small {
+    font-size: 12px !important;
+  }
+
+  .desktop-hero__meta h2 {
+    font-size: clamp(28px, 2.3vw, 38px) !important;
+    line-height: 1.08 !important;
+  }
+
+  .desktop-hero__meta p {
+    margin: 6px 0 10px !important;
+    font-size: 15px !important;
+  }
+
+  .desktop-hero__actions {
+    top: 16px !important;
+    right: 16px !important;
+  }
+
+  .desktop-hero-button {
+    min-height: 38px !important;
+    padding: 0 14px !important;
+  }
+
+  .desktop-more-button,
+  .desktop-icon-button {
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  .desktop-hero-summary {
+    gap: 10px !important;
+    padding-top: 34px !important;
+  }
+
+  .desktop-hero-summary-card {
+    min-height: 82px !important;
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+    gap: 10px !important;
+    padding: 12px 14px !important;
+  }
+
+  .desktop-hero-summary-card strong {
+    font-size: 22px !important;
+  }
+}
+
 @media (max-width: 760px), (max-height: 520px) and (orientation: landscape), (hover: none) and (pointer: coarse) {
   :root {
     --mobile-bg: #f8fafc;
@@ -3363,3 +3508,1539 @@ select {
     display: none !important;
   }
 }
+
+/* === 2026-05-28 UI stabilization pack: desktop sticky hero, clean page switching, responsive fill === */
+@media (min-width: 761px) {
+  html,
+  body {
+    min-height: 100%;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+
+  .app-shell {
+    grid-template-columns: clamp(240px, 16vw, 280px) minmax(0, 1fr) !important;
+    min-height: 100vh !important;
+    align-items: flex-start !important;
+  }
+
+  .sidebar {
+    position: sticky !important;
+    top: 0 !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow-y: auto !important;
+  }
+
+  .content {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    min-height: 100vh !important;
+    margin: 0 !important;
+    padding: 10px clamp(12px, 1.15vw, 22px) 14px !important;
+    gap: 12px !important;
+    align-content: flex-start !important;
+  }
+
+  .desktop-home {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    gap: 12px !important;
+    align-content: flex-start !important;
+  }
+
+  .desktop-hero {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 80 !important;
+    min-height: 122px !important;
+    grid-template-columns: 92px minmax(260px, 1fr) minmax(320px, 0.72fr) !important;
+    gap: 14px !important;
+    padding: 14px 18px 14px 20px !important;
+    border-radius: 16px !important;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12) !important;
+  }
+
+  .desktop-hero__orb {
+    width: 78px !important;
+    height: 78px !important;
+    border-width: 4px !important;
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.15), 0 0 22px rgba(16, 185, 129, 0.38) !important;
+  }
+
+  .desktop-hero__orb.yellow {
+    box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.16), 0 0 22px rgba(245, 158, 11, 0.38) !important;
+  }
+
+  .desktop-hero__orb.red {
+    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.15), 0 0 22px rgba(239, 68, 68, 0.36) !important;
+  }
+
+  .desktop-hero__orb span {
+    font-size: 21px !important;
+  }
+
+  .desktop-hero__orb small {
+    max-width: 62px !important;
+    font-size: 10px !important;
+    line-height: 1.15 !important;
+  }
+
+  .desktop-hero__meta h2 {
+    font-size: clamp(24px, 2vw, 32px) !important;
+    line-height: 1.08 !important;
+  }
+
+  .desktop-hero__meta p {
+    margin: 4px 0 8px !important;
+    font-size: 12px !important;
+  }
+
+  .desktop-hero__meta .ui-status-chip {
+    min-height: 26px !important;
+    padding: 4px 10px !important;
+    font-size: 11px !important;
+  }
+
+  .desktop-hero-summary {
+    gap: 8px !important;
+    padding-top: 0 !important;
+    align-self: center !important;
+  }
+
+  .desktop-hero-summary-card {
+    min-height: 72px !important;
+    grid-template-columns: 34px minmax(0, 1fr) !important;
+    gap: 8px !important;
+    padding: 10px 12px !important;
+    border-radius: 12px !important;
+  }
+
+  .desktop-hero-summary-card .icon-box {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    border-radius: 11px !important;
+  }
+
+  .desktop-hero-summary-card .icon-box svg {
+    width: 19px !important;
+    height: 19px !important;
+  }
+
+  .desktop-hero-summary-card strong {
+    font-size: 19px !important;
+  }
+
+  .desktop-hero-summary-card small {
+    display: none !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-home {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 90 !important;
+    gap: 0 !important;
+    padding-bottom: 2px !important;
+    background: var(--desktop-bg) !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-home > :not(.desktop-hero) {
+    display: none !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero {
+    position: relative !important;
+    top: auto !important;
+    min-height: 78px !important;
+    grid-template-columns: 58px minmax(220px, 1fr) auto !important;
+    padding: 9px 14px 9px 15px !important;
+    gap: 12px !important;
+    border-radius: 15px !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero__orb {
+    width: 54px !important;
+    height: 54px !important;
+    border-width: 3px !important;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.14), 0 0 16px rgba(16, 185, 129, 0.32) !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero__orb.yellow {
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.14), 0 0 16px rgba(245, 158, 11, 0.32) !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero__orb.red {
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.14), 0 0 16px rgba(239, 68, 68, 0.3) !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero__orb span {
+    font-size: 16px !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero__orb small {
+    display: none !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero__meta h2 {
+    font-size: clamp(20px, 1.55vw, 25px) !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero__meta p {
+    display: none !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero-summary,
+  body:not([data-active-page="home"]) .desktop-hero__actions {
+    display: none !important;
+  }
+
+  body:not([data-active-page="home"]) .content > section:not(.dashboard-page-hidden) {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 16px clamp(16px, 1.35vw, 24px) 18px !important;
+  }
+
+  body:not([data-active-page="home"]) .section-head {
+    margin-bottom: 12px;
+  }
+
+  .monthly-section,
+  .quarterly-section,
+  .holdings-section,
+  .yearly-section,
+  .settings-section,
+  .manual-section,
+  .trade-section {
+    width: 100% !important;
+    max-width: none !important;
+    border-radius: 16px !important;
+  }
+
+  .table-wrap,
+  .monthly-table-wrap,
+  .dividend-table-wrap,
+  .yearly-tax-table-wrap {
+    max-width: 100% !important;
+  }
+
+  .dashboard-page-hidden,
+  .dashboard-page-hidden[hidden],
+  [hidden] {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    overflow: hidden !important;
+  }
+
+  body[data-active-page="home"] .content {
+    padding-bottom: 12px !important;
+  }
+
+  body[data-active-page="home"] .desktop-home {
+    max-width: none !important;
+  }
+}
+
+@media (min-width: 1181px) and (max-width: 1420px) {
+  .desktop-core-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .desktop-focus-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1180px) {
+  .app-shell {
+    grid-template-columns: 1fr !important;
+  }
+
+  .sidebar {
+    position: static !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  .desktop-home,
+  body:not([data-active-page="home"]) .desktop-home {
+    position: relative !important;
+    top: auto !important;
+  }
+}
+
+@media (max-width: 760px), (max-height: 520px) and (orientation: landscape), (hover: none) and (pointer: coarse) {
+  .mobile-home {
+    display: grid !important;
+  }
+
+  .page-header,
+  .hero-grid,
+  .data-freshness-section,
+  .desktop-home,
+  .home-focus-section,
+  .chart-section,
+  #daily,
+  #trades,
+  #monthly,
+  #quarterly,
+  #holdings,
+  #yearly,
+  #signal-settings,
+  #manual,
+  form,
+  .trade-form,
+  .native-trade-log,
+  .streamlit-trade-form-shell {
+    display: none !important;
+  }
+
+  .mobile-home .hero-actions,
+  .mobile-home .hero-action-button,
+  .mobile-home .hero-more-button {
+    display: none !important;
+  }
+
+  .content {
+    padding-bottom: 6px !important;
+  }
+}
+
+
+/* === 2026-05-28 UI2 patch: nav active sync, iframe-safe height, page title bar polish === */
+@media (min-width: 761px) {
+  body[data-active-page] .nav a[href^="#"] {
+    color: rgba(255, 255, 255, 0.78) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  body[data-active-page] .nav a[href^="#"] .icon-box {
+    background: rgba(255, 255, 255, 0.06) !important;
+    color: rgba(255, 255, 255, 0.78) !important;
+  }
+
+  body[data-active-page="home"] .nav a[href="#home"],
+  body[data-active-page="trades"] .nav a[href="#trades"],
+  body[data-active-page="monthly"] .nav a[href="#monthly"],
+  body[data-active-page="quarterly"] .nav a[href="#quarterly"],
+  body[data-active-page="holdings"] .nav a[href="#holdings"],
+  body[data-active-page="yearly"] .nav a[href="#yearly"],
+  body[data-active-page="signal-settings"] .nav a[href="#signal-settings"],
+  body[data-active-page="manual"] .nav a[href="#manual"],
+  .nav a:hover {
+    color: #fff !important;
+    background: linear-gradient(90deg, rgba(16, 185, 129, 0.24), rgba(255, 255, 255, 0.08)) !important;
+    box-shadow: inset 3px 0 0 #10b981 !important;
+  }
+
+  body[data-active-page="home"] .nav a[href="#home"] .icon-box,
+  body[data-active-page="trades"] .nav a[href="#trades"] .icon-box,
+  body[data-active-page="monthly"] .nav a[href="#monthly"] .icon-box,
+  body[data-active-page="quarterly"] .nav a[href="#quarterly"] .icon-box,
+  body[data-active-page="holdings"] .nav a[href="#holdings"] .icon-box,
+  body[data-active-page="yearly"] .nav a[href="#yearly"] .icon-box,
+  body[data-active-page="signal-settings"] .nav a[href="#signal-settings"] .icon-box,
+  body[data-active-page="manual"] .nav a[href="#manual"] .icon-box,
+  .nav a:hover .icon-box {
+    background: rgba(16, 185, 129, 0.16) !important;
+    color: #34d399 !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-home {
+    margin-bottom: 10px !important;
+  }
+
+  body:not([data-active-page="home"]) .content > section:not(.dashboard-page-hidden) {
+    overflow: visible !important;
+    padding-bottom: 26px !important;
+  }
+
+  body:not([data-active-page="home"]):not([data-active-page="trades"]) .content > section:not(.dashboard-page-hidden) > .section-head {
+    align-items: center !important;
+    margin: 0 0 14px !important;
+    padding: 14px 18px !important;
+    border: 1px solid rgba(20, 184, 166, 0.22) !important;
+    border-radius: 16px !important;
+    background:
+      radial-gradient(circle at 3% 0%, rgba(16, 185, 129, 0.12), transparent 34%),
+      linear-gradient(135deg, #ffffff 0%, #f8fffc 56%, #f0f9ff 100%) !important;
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06) !important;
+  }
+
+  body:not([data-active-page="home"]):not([data-active-page="trades"]) .content > section:not(.dashboard-page-hidden) > .section-head > div:first-child {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+
+  body:not([data-active-page="home"]):not([data-active-page="trades"]) .content > section:not(.dashboard-page-hidden) > .section-head > div:first-child::before {
+    content: "";
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    border-radius: 14px;
+    background:
+      radial-gradient(circle at 38% 36%, rgba(255, 255, 255, 0.9) 0 3px, transparent 4px),
+      linear-gradient(135deg, rgba(16, 185, 129, 0.22), rgba(14, 165, 233, 0.22));
+    box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.14);
+  }
+
+  body:not([data-active-page="home"]):not([data-active-page="trades"]) .content > section:not(.dashboard-page-hidden) > .section-head .eyebrow {
+    color: #047857 !important;
+    letter-spacing: 0.02em !important;
+  }
+
+  body:not([data-active-page="home"]):not([data-active-page="trades"]) .content > section:not(.dashboard-page-hidden) > .section-head h3 {
+    color: #0f172a !important;
+    font-size: clamp(20px, 1.45vw, 25px) !important;
+    line-height: 1.15 !important;
+  }
+
+  body:not([data-active-page="home"]):not([data-active-page="trades"]) .content > section:not(.dashboard-page-hidden) > .section-head small,
+  body:not([data-active-page="home"]):not([data-active-page="trades"]) .content > section:not(.dashboard-page-hidden) > .section-head .chart-tools {
+    color: #64748b !important;
+  }
+}
+
+/* === 2026-05-28 UI3 patch: active-page height model / remove fixed iframe blank === */
+@media (min-width: 761px) {
+  :root,
+  body {
+    --dashboard-shell-min-height: 720px;
+  }
+
+  html,
+  body.streamlit-embedded {
+    min-height: 0 !important;
+    overflow-x: hidden !important;
+  }
+
+  body.streamlit-embedded .app-shell {
+    min-height: var(--dashboard-shell-min-height) !important;
+    grid-template-rows: auto !important;
+    align-items: stretch !important;
+  }
+
+  body.streamlit-embedded .sidebar {
+    height: auto !important;
+    min-height: var(--dashboard-shell-min-height) !important;
+    max-height: none !important;
+    align-self: stretch !important;
+  }
+
+  body.streamlit-embedded .content {
+    min-height: 0 !important;
+    align-content: start !important;
+    grid-auto-rows: max-content !important;
+    padding-bottom: 10px !important;
+  }
+
+  body.streamlit-embedded:not([data-active-page="home"]) .content {
+    gap: 10px !important;
+  }
+
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-home {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  body.streamlit-embedded:not([data-active-page="home"]) .content > section:not(.dashboard-page-hidden) {
+    margin-bottom: 0 !important;
+    padding-bottom: 14px !important;
+  }
+
+  body.streamlit-embedded .dashboard-page-hidden,
+  body.streamlit-embedded .dashboard-page-hidden[hidden],
+  body.streamlit-embedded [hidden] {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+  }
+
+  body.streamlit-embedded .trade-table-wrap,
+  body.streamlit-embedded .monthly-table-wrap,
+  body.streamlit-embedded .dividend-table-wrap,
+  body.streamlit-embedded .yearly-tax-table-wrap {
+    max-height: none !important;
+  }
+}
+
+/* === 2026-05-28 UI4 patch: unified hero height + internal page/table scroll === */
+@media (min-width: 761px) {
+  :root,
+  body {
+    --dashboard-hero-height: 168px;
+    --dashboard-page-scroll-height: calc(var(--dashboard-shell-min-height, 720px) - var(--dashboard-hero-height) - 42px);
+    --dashboard-table-scroll-height: clamp(220px, 30vh, 340px);
+  }
+
+  /* 所有桌機分頁共用同一個 00919 Hero 尺寸，避免切頁時上方標題列跳動 */
+  body[data-active-page] .desktop-hero,
+  body:not([data-active-page="home"]) .desktop-hero {
+    min-height: var(--dashboard-hero-height) !important;
+    grid-template-columns: 132px minmax(320px, 1fr) minmax(360px, 0.68fr) !important;
+    gap: 18px !important;
+    align-items: center !important;
+    padding: 18px 20px 18px 26px !important;
+    border-radius: 18px !important;
+  }
+
+  body[data-active-page] .desktop-hero__orb,
+  body:not([data-active-page="home"]) .desktop-hero__orb {
+    width: 112px !important;
+    height: 112px !important;
+    border-width: 5px !important;
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.16), 0 0 28px rgba(16, 185, 129, 0.42) !important;
+  }
+
+  body[data-active-page] .desktop-hero__orb.yellow,
+  body:not([data-active-page="home"]) .desktop-hero__orb.yellow {
+    box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.16), 0 0 28px rgba(245, 158, 11, 0.48) !important;
+  }
+
+  body[data-active-page] .desktop-hero__orb.red,
+  body:not([data-active-page="home"]) .desktop-hero__orb.red {
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.16), 0 0 28px rgba(239, 68, 68, 0.44) !important;
+  }
+
+  body[data-active-page] .desktop-hero__orb span,
+  body:not([data-active-page="home"]) .desktop-hero__orb span {
+    font-size: 26px !important;
+  }
+
+  body[data-active-page] .desktop-hero__orb small,
+  body:not([data-active-page="home"]) .desktop-hero__orb small {
+    display: block !important;
+    font-size: 12px !important;
+  }
+
+  body[data-active-page] .desktop-hero__meta h2,
+  body:not([data-active-page="home"]) .desktop-hero__meta h2 {
+    font-size: clamp(28px, 2.3vw, 38px) !important;
+    line-height: 1.08 !important;
+    white-space: nowrap !important;
+  }
+
+  body[data-active-page] .desktop-hero__meta p,
+  body:not([data-active-page="home"]) .desktop-hero__meta p {
+    display: block !important;
+    margin: 6px 0 10px !important;
+    font-size: 15px !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero-summary {
+    display: grid !important;
+    grid-column: 3 !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    align-self: center !important;
+    padding-top: 0 !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero-summary-card {
+    min-height: 82px !important;
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+    gap: 10px !important;
+    padding: 12px 14px !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    border-radius: 14px !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box svg {
+    width: 23px !important;
+    height: 23px !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero-summary-card strong {
+    font-size: 22px !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero-summary-card small {
+    display: block !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero__actions {
+    display: none !important;
+  }
+
+  /* 首頁核心卡片：日期型數字縮小並禁止換行 */
+  #desktopFirstTradeDate {
+    font-size: clamp(20px, 1.65vw, 26px) !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.02em !important;
+    white-space: nowrap !important;
+    word-break: keep-all !important;
+  }
+
+  .desktop-core-grid .core-metric-tile .metric-label {
+    word-break: keep-all !important;
+  }
+
+  /* Streamlit iframe 內：左側導覽以一頁高為基準，長內容改在分頁內部捲動 */
+  body.streamlit-embedded:not([data-active-page="home"]) .content {
+    height: var(--dashboard-shell-min-height) !important;
+    max-height: var(--dashboard-shell-min-height) !important;
+    overflow: hidden !important;
+    grid-template-rows: auto minmax(0, 1fr) !important;
+  }
+
+  body.streamlit-embedded:not([data-active-page="home"]) .content > section:not(.dashboard-page-hidden):not([hidden]) {
+    max-height: var(--dashboard-page-scroll-height) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: contain !important;
+    scrollbar-gutter: stable both-edges;
+    padding-right: clamp(16px, 1.35vw, 24px) !important;
+  }
+
+  /* 表格資料越來越多時，用表格自己的捲軸承接，不再撐長整張 Dashboard */
+  body.streamlit-embedded .trade-table-wrap,
+  body.streamlit-embedded .monthly-table-wrap,
+  body.streamlit-embedded .dividend-table-wrap,
+  body.streamlit-embedded .holdings-table-wrap,
+  body.streamlit-embedded .yearly-tax-table-wrap {
+    max-height: var(--dashboard-table-scroll-height) !important;
+    overflow: auto !important;
+    overscroll-behavior: contain !important;
+    scrollbar-gutter: stable both-edges;
+  }
+
+  body.streamlit-embedded .monthly-table-wrap {
+    max-height: clamp(220px, 28vh, 320px) !important;
+  }
+
+  body.streamlit-embedded .dividend-table-wrap,
+  body.streamlit-embedded .yearly-tax-table-wrap {
+    max-height: clamp(240px, 32vh, 360px) !important;
+  }
+
+  body.streamlit-embedded .trade-table-wrap,
+  body.streamlit-embedded .holdings-table-wrap {
+    max-height: clamp(240px, 34vh, 380px) !important;
+  }
+
+  body.streamlit-embedded .table-wrap thead th,
+  body.streamlit-embedded .trade-table-wrap thead th,
+  body.streamlit-embedded .monthly-table-wrap thead th,
+  body.streamlit-embedded .dividend-table-wrap thead th,
+  body.streamlit-embedded .holdings-table-wrap thead th,
+  body.streamlit-embedded .yearly-tax-table-wrap thead th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 3 !important;
+    background: #f2f5f6 !important;
+  }
+
+  body.streamlit-embedded .monthly-table-grid,
+  body.streamlit-embedded .holdings-grid {
+    align-items: start !important;
+  }
+
+  body.streamlit-embedded .monthly-chart,
+  body.streamlit-embedded .holdings-chart,
+  body.streamlit-embedded .yearly-tax-chart,
+  body.streamlit-embedded .dividend-composition-chart {
+    overscroll-behavior: contain !important;
+  }
+
+  @media (max-width: 1300px) {
+    body[data-active-page] .desktop-hero,
+    body:not([data-active-page="home"]) .desktop-hero {
+      grid-template-columns: 112px minmax(260px, 1fr) !important;
+      min-height: 168px !important;
+    }
+
+    body:not([data-active-page="home"]) .desktop-hero-summary,
+    body[data-active-page] .desktop-hero-summary {
+      grid-column: 1 / -1 !important;
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+  }
+}
+
+
+
+/* UI11: embedded fallback shown only if the native Streamlit trade route is blocked. */
+.native-trades-fallback-card {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 16px;
+  padding: 16px 18px;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(236, 253, 245, 0.98), rgba(240, 249, 255, 0.98));
+  color: #0f172a;
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08);
+}
+.native-trades-fallback-card strong {
+  font-size: 1rem;
+  font-weight: 950;
+}
+.native-trades-fallback-card span {
+  color: #475569;
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+.native-trades-fallback-card a {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 10px;
+  background: #059669;
+  color: #ffffff !important;
+  font-weight: 900;
+  text-decoration: none;
+}
+body.streamlit-embedded #trades .native-trades-fallback-card ~ .trade-layout,
+body.streamlit-embedded #trades .native-trades-fallback-card ~ .trade-actions {
+  display: none !important;
+}
+
+
+/* UI17: keep the original HTML dashboard. Only trade entry/import opens a separate Streamlit page. */
+.streamlit-embedded .trade-layout.trade-entry-launcher {
+  display: block !important;
+}
+.trade-entry-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 20px;
+  border: 1px solid rgba(16, 185, 129, 0.26);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(236, 253, 245, 0.98), rgba(240, 249, 255, 0.98));
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.06);
+}
+.trade-entry-card h4 {
+  margin: 2px 0 6px;
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 950;
+}
+.trade-entry-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+.trade-entry-card__actions {
+  min-width: 260px;
+  display: grid;
+  gap: 8px;
+  justify-items: stretch;
+}
+.trade-entry-card__actions small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+.trade-entry-open,
+.trade-entry-secondary {
+  text-decoration: none !important;
+  justify-content: center;
+  background: #059669 !important;
+  color: #ffffff !important;
+  border-color: #059669 !important;
+  box-shadow: 0 10px 22px rgba(5, 150, 105, 0.22);
+}
+.trade-entry-open:hover,
+.trade-entry-secondary:hover {
+  background: #047857 !important;
+  border-color: #047857 !important;
+  color: #ffffff !important;
+}
+.row-readonly {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+@media (max-width: 960px) {
+  .trade-entry-card {
+    display: grid;
+  }
+  .trade-entry-card__actions {
+    min-width: 0;
+  }
+}
+@media (max-width: 760px), (hover: none) and (pointer: coarse) {
+  .trade-entry-card,
+  .trade-entry-secondary {
+    display: none !important;
+  }
+}
+
+/* === UI18: clean trade log + consistent hero title bar === */
+@media (min-width: 761px) {
+  body.streamlit-embedded .content {
+    padding-top: 10px !important;
+  }
+
+  body.streamlit-embedded .desktop-home,
+  body.streamlit-embedded .content > section:not(.dashboard-page-hidden):not([hidden]) {
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  body.streamlit-embedded body[data-active-page] .desktop-hero,
+  body.streamlit-embedded .desktop-hero,
+  body.streamlit-embedded body:not([data-active-page="home"]) .desktop-hero {
+    width: 100% !important;
+    min-height: 154px !important;
+    grid-template-columns: 118px minmax(340px, 1fr) minmax(360px, 0.68fr) !important;
+    gap: 18px !important;
+    padding: 18px 22px 18px 26px !important;
+    border-radius: 18px !important;
+    margin: 0 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__orb,
+  body.streamlit-embedded body[data-active-page] .desktop-hero__orb,
+  body.streamlit-embedded body:not([data-active-page="home"]) .desktop-hero__orb {
+    width: 96px !important;
+    height: 96px !important;
+    border-width: 5px !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__orb span,
+  body.streamlit-embedded body[data-active-page] .desktop-hero__orb span,
+  body.streamlit-embedded body:not([data-active-page="home"]) .desktop-hero__orb span {
+    font-size: 24px !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__orb small,
+  body.streamlit-embedded body[data-active-page] .desktop-hero__orb small,
+  body.streamlit-embedded body:not([data-active-page="home"]) .desktop-hero__orb small {
+    font-size: 11px !important;
+    line-height: 1.18 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__meta h2,
+  body.streamlit-embedded body[data-active-page] .desktop-hero__meta h2,
+  body.streamlit-embedded body:not([data-active-page="home"]) .desktop-hero__meta h2 {
+    font-size: clamp(29px, 2.25vw, 36px) !important;
+    line-height: 1.08 !important;
+    white-space: nowrap !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__meta p,
+  body.streamlit-embedded body[data-active-page] .desktop-hero__meta p,
+  body.streamlit-embedded body:not([data-active-page="home"]) .desktop-hero__meta p {
+    font-size: 14px !important;
+    margin: 6px 0 10px !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary,
+  body.streamlit-embedded body:not([data-active-page="home"]) .desktop-hero-summary {
+    grid-column: 3 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    align-self: center !important;
+    padding-top: 0 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary-card,
+  body.streamlit-embedded body:not([data-active-page="home"]) .desktop-hero-summary-card {
+    min-height: 76px !important;
+    grid-template-columns: 38px minmax(0, 1fr) !important;
+    gap: 10px !important;
+    padding: 11px 13px !important;
+    border-radius: 14px !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary-card .icon-box,
+  body.streamlit-embedded body:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary-card strong,
+  body.streamlit-embedded body:not([data-active-page="home"]) .desktop-hero-summary-card strong {
+    font-size: 20px !important;
+  }
+
+  .trade-section-head {
+    align-items: center !important;
+    margin-bottom: 14px !important;
+  }
+
+  .trade-title-block {
+    display: grid !important;
+    gap: 4px !important;
+  }
+
+  .trade-title-line {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .trade-title-line h3 {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin: 0 !important;
+  }
+
+  .trade-entry-chip {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 34px !important;
+    padding: 0 14px !important;
+    border-radius: 10px !important;
+    background: #059669 !important;
+    color: #ffffff !important;
+    font-size: 13px !important;
+    font-weight: 900 !important;
+    text-decoration: none !important;
+    box-shadow: 0 10px 20px rgba(5, 150, 105, 0.18) !important;
+    white-space: nowrap !important;
+  }
+
+  .trade-entry-chip:hover {
+    background: #047857 !important;
+    color: #ffffff !important;
+  }
+
+  .trade-entry-launcher,
+  .trade-entry-card,
+  .trade-actions {
+    display: none !important;
+  }
+
+  #trades .trade-table-wrap {
+    margin-top: 14px !important;
+  }
+
+  #trades .trade-summary-stats {
+    margin-top: 12px !important;
+  }
+
+  @media (max-width: 1300px) {
+    body.streamlit-embedded .desktop-hero,
+    body.streamlit-embedded body[data-active-page] .desktop-hero,
+    body.streamlit-embedded body:not([data-active-page="home"]) .desktop-hero {
+      min-height: 154px !important;
+      grid-template-columns: 104px minmax(240px, 1fr) !important;
+    }
+
+    body.streamlit-embedded .desktop-hero-summary,
+    body.streamlit-embedded body:not([data-active-page="home"]) .desktop-hero-summary {
+      grid-column: 1 / -1 !important;
+    }
+  }
+}
+
+
+/* === UI19: final HTML dashboard spacing + consistent hero sizing === */
+@media (min-width: 761px) {
+  body.streamlit-embedded {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  body.streamlit-embedded .content {
+    padding-top: 0 !important;
+  }
+
+  body.streamlit-embedded .desktop-home {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  /* Force the 00919 Hero to use one shared size on Home and all desktop pages. */
+  body.streamlit-embedded .desktop-hero,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero,
+  body[data-active-page] .desktop-hero,
+  body:not([data-active-page="home"]) .desktop-hero {
+    width: 100% !important;
+    min-height: 154px !important;
+    height: 154px !important;
+    max-height: 154px !important;
+    display: grid !important;
+    grid-template-columns: 104px minmax(320px, 1fr) minmax(380px, 0.72fr) !important;
+    align-items: center !important;
+    gap: 18px !important;
+    padding: 18px 22px 18px 24px !important;
+    margin: 0 0 12px !important;
+    border-radius: 18px !important;
+    position: relative !important;
+    top: auto !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__orb,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__orb,
+  body[data-active-page] .desktop-hero__orb,
+  body:not([data-active-page="home"]) .desktop-hero__orb {
+    width: 92px !important;
+    height: 92px !important;
+    min-width: 92px !important;
+    border-width: 5px !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__orb span,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__orb span,
+  body[data-active-page] .desktop-hero__orb span,
+  body:not([data-active-page="home"]) .desktop-hero__orb span {
+    font-size: 24px !important;
+    line-height: 1.05 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__orb small,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__orb small,
+  body[data-active-page] .desktop-hero__orb small,
+  body:not([data-active-page="home"]) .desktop-hero__orb small {
+    display: block !important;
+    max-width: 72px !important;
+    font-size: 11px !important;
+    line-height: 1.15 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__meta,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__meta,
+  body[data-active-page] .desktop-hero__meta,
+  body:not([data-active-page="home"]) .desktop-hero__meta {
+    min-width: 0 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__meta h2,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__meta h2,
+  body[data-active-page] .desktop-hero__meta h2,
+  body:not([data-active-page="home"]) .desktop-hero__meta h2 {
+    font-size: clamp(30px, 2.25vw, 36px) !important;
+    line-height: 1.08 !important;
+    letter-spacing: 0.02em !important;
+    white-space: nowrap !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__meta p,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__meta p,
+  body[data-active-page] .desktop-hero__meta p,
+  body:not([data-active-page="home"]) .desktop-hero__meta p {
+    display: block !important;
+    margin: 6px 0 10px !important;
+    font-size: 14px !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__actions,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__actions,
+  body:not([data-active-page="home"]) .desktop-hero__actions {
+    display: none !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary,
+  body[data-active-page] .desktop-hero-summary,
+  body:not([data-active-page="home"]) .desktop-hero-summary {
+    display: grid !important;
+    grid-column: 3 !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    align-self: center !important;
+    padding: 0 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary-card,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card,
+  body[data-active-page] .desktop-hero-summary-card,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card {
+    min-height: 76px !important;
+    height: 76px !important;
+    grid-template-columns: 38px minmax(0, 1fr) !important;
+    gap: 10px !important;
+    padding: 11px 13px !important;
+    border-radius: 14px !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary-card .icon-box,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box,
+  body[data-active-page] .desktop-hero-summary-card .icon-box,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    border-radius: 13px !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary-card strong,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card strong,
+  body[data-active-page] .desktop-hero-summary-card strong,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card strong {
+    font-size: 20px !important;
+    line-height: 1.15 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary-card small,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card small,
+  body[data-active-page] .desktop-hero-summary-card small,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card small {
+    display: block !important;
+  }
+
+  @media (max-width: 1300px) {
+    body.streamlit-embedded .desktop-hero,
+    body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero,
+    body[data-active-page] .desktop-hero,
+    body:not([data-active-page="home"]) .desktop-hero {
+      min-height: 142px !important;
+      height: 142px !important;
+      max-height: 142px !important;
+      grid-template-columns: 92px minmax(260px, 1fr) minmax(330px, 0.75fr) !important;
+    }
+  }
+}
+
+/* === UI21: final page sync + hero hard-normalize + home quick cards stretch === */
+@media (min-width: 761px) {
+  /* The hero is the same visual object on Home and every sub page.  Older
+     compact/non-home rules are intentionally neutralized here. */
+  body.streamlit-embedded .desktop-home,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-home,
+  body.streamlit-embedded[data-active-page="home"] .desktop-home {
+    position: relative !important;
+    top: auto !important;
+    z-index: 1 !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 0 12px 0 !important;
+    padding: 0 !important;
+    gap: 12px !important;
+    background: transparent !important;
+  }
+
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-home > :not(.desktop-hero) {
+    display: none !important;
+  }
+
+  body.streamlit-embedded .desktop-hero,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-height: 154px !important;
+    height: 154px !important;
+    max-height: 154px !important;
+    display: grid !important;
+    grid-template-columns: 104px minmax(320px, 1fr) minmax(380px, 0.72fr) !important;
+    align-items: center !important;
+    gap: 18px !important;
+    padding: 18px 22px 18px 24px !important;
+    margin: 0 !important;
+    border-radius: 18px !important;
+    overflow: hidden !important;
+    position: relative !important;
+    top: auto !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__orb,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero__orb,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__orb {
+    width: 92px !important;
+    height: 92px !important;
+    min-width: 92px !important;
+    border-width: 5px !important;
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.16), 0 0 28px rgba(16, 185, 129, 0.42) !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__orb.yellow,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero__orb.yellow,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__orb.yellow {
+    box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.16), 0 0 28px rgba(245, 158, 11, 0.44) !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__orb span,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero__orb span,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__orb span {
+    display: block !important;
+    font-size: 24px !important;
+    line-height: 1.05 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__orb small,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero__orb small,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__orb small {
+    display: block !important;
+    max-width: 72px !important;
+    font-size: 11px !important;
+    line-height: 1.15 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__meta,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero__meta,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__meta {
+    min-width: 0 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__meta h2,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero__meta h2,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__meta h2 {
+    font-size: clamp(30px, 2.25vw, 36px) !important;
+    line-height: 1.08 !important;
+    letter-spacing: 0.02em !important;
+    white-space: nowrap !important;
+    margin: 0 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__meta p,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero__meta p,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__meta p {
+    display: block !important;
+    margin: 6px 0 10px !important;
+    font-size: 14px !important;
+    line-height: 1.25 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__actions,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero__actions,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__actions {
+    display: none !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary {
+    display: grid !important;
+    grid-column: 3 !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    align-self: center !important;
+    padding: 0 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary-card,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card {
+    box-sizing: border-box !important;
+    min-height: 76px !important;
+    height: 76px !important;
+    grid-template-columns: 38px minmax(0, 1fr) !important;
+    gap: 10px !important;
+    padding: 11px 13px !important;
+    border-radius: 14px !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary-card .icon-box,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card .icon-box,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    border-radius: 13px !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary-card strong,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card strong,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card strong {
+    font-size: 20px !important;
+    line-height: 1.15 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary-card small,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card small,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card small {
+    display: block !important;
+    font-size: 11px !important;
+  }
+
+  /* Enlarge the five quick-view cards and make the right column bottom line up
+     with the left trend card more naturally. */
+  body.streamlit-embedded[data-active-page="home"] .desktop-lower-grid {
+    align-items: stretch !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-chart-panel,
+  body.streamlit-embedded[data-active-page="home"] .desktop-side-stack {
+    height: 100% !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-side-stack {
+    display: grid !important;
+    grid-template-rows: minmax(250px, 1fr) auto !important;
+    gap: 14px !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-module-panel {
+    min-height: 252px !important;
+    display: grid !important;
+    grid-template-rows: auto 1fr !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-module-grid {
+    height: 100% !important;
+    min-height: 188px !important;
+    align-items: stretch !important;
+    grid-auto-rows: 1fr !important;
+    gap: 12px !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-module-card {
+    min-height: 196px !important;
+    height: 100% !important;
+    display: grid !important;
+    grid-template-rows: auto auto auto 1fr auto !important;
+    align-content: stretch !important;
+    justify-items: center !important;
+    padding: 18px 14px 14px !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-module-card > .icon-box {
+    width: 60px !important;
+    height: 60px !important;
+    min-width: 60px !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-module-card h4 {
+    font-size: 18px !important;
+    margin-top: 8px !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-module-card strong {
+    font-size: 25px !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-action-button {
+    align-self: end !important;
+    min-height: 42px !important;
+  }
+
+  @media (max-width: 1300px) {
+    body.streamlit-embedded .desktop-hero,
+    body.streamlit-embedded[data-active-page="home"] .desktop-hero,
+    body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero {
+      min-height: 154px !important;
+      height: 154px !important;
+      max-height: 154px !important;
+      grid-template-columns: 104px minmax(260px, 1fr) minmax(330px, 0.75fr) !important;
+    }
+
+    body.streamlit-embedded .desktop-hero-summary,
+    body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary,
+    body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary {
+      grid-column: 3 !important;
+    }
+  }
+}
+
+/* === UI23: Home Focus panel stretch only (based on UI21) === */
+@media (min-width: 761px) {
+  body.streamlit-embedded[data-active-page="home"] .desktop-main-grid {
+    align-items: stretch !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-core-panel,
+  body.streamlit-embedded[data-active-page="home"] .desktop-focus-panel {
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-focus-panel {
+    display: grid !important;
+    grid-template-rows: auto 1fr !important;
+    align-content: stretch !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-focus-grid {
+    height: 100% !important;
+    min-height: 336px !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(2, minmax(162px, 1fr)) !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-focus-card {
+    min-height: 162px !important;
+    height: 100% !important;
+    padding: 20px 116px 18px 18px !important;
+    align-content: space-between !important;
+    gap: 9px !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-focus-card > .icon-box {
+    width: 88px !important;
+    height: 88px !important;
+    min-width: 88px !important;
+    right: 18px !important;
+    border-radius: 26px !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-focus-card > .icon-box svg {
+    width: 48px !important;
+    height: 48px !important;
+    stroke-width: 2.55 !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-focus-card > span:not(.icon-box) {
+    font-size: 18px !important;
+    line-height: 1.25 !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-focus-card strong {
+    font-size: 36px !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-focus-card small {
+    font-size: 15px !important;
+    line-height: 1.25 !important;
+  }
+
+  @media (max-width: 1380px) {
+    body.streamlit-embedded[data-active-page="home"] .desktop-focus-grid {
+      min-height: 316px !important;
+      grid-template-rows: repeat(2, minmax(152px, 1fr)) !important;
+    }
+
+    body.streamlit-embedded[data-active-page="home"] .desktop-focus-card {
+      min-height: 152px !important;
+      padding-right: 106px !important;
+    }
+
+    body.streamlit-embedded[data-active-page="home"] .desktop-focus-card > .icon-box {
+      width: 80px !important;
+      height: 80px !important;
+      min-width: 80px !important;
+    }
+
+    body.streamlit-embedded[data-active-page="home"] .desktop-focus-card strong {
+      font-size: 32px !important;
+    }
+  }
+}
+
+/* UI26 signal diagnostics */
+.settings-intro strong {
+  display: block;
+  line-height: 1.5;
+}
+.signal-diagnostics-card {
+  margin: 16px 0 18px;
+  border-color: rgba(16, 185, 129, 0.22);
+  background: linear-gradient(135deg, rgba(236, 253, 245, 0.92), #ffffff);
+}
+.settings-diagnostics-table-wrap {
+  overflow-x: auto;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.86);
+}
+.settings-diagnostics-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+  font-size: 0.94rem;
+}
+.settings-diagnostics-table th,
+.settings-diagnostics-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.95);
+  text-align: left;
+  vertical-align: middle;
+}
+.settings-diagnostics-table th {
+  color: #475569;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: rgba(248, 250, 252, 0.95);
+}
+.settings-diagnostics-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.settings-diagnostics-table tr[data-status="green"] td:last-child {
+  color: #059669;
+  font-weight: 800;
+}
+.settings-diagnostics-table tr[data-status="yellow"] td:last-child {
+  color: #d97706;
+  font-weight: 800;
+}
+.settings-diagnostics-table tr[data-status="red"] td:last-child {
+  color: #dc2626;
+  font-weight: 800;
+}
+.settings-diagnostics-table tr[data-status="unknown"] td:last-child {
+  color: #64748b;
+  font-weight: 800;
+}
+
+/* UI29 mobile refresh button restore */
+@media (max-width: 760px) {
+  .mobile-home .hero-actions {
+    display: flex !important;
+    position: static !important;
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    margin-top: 8px !important;
+    padding: 0 !important;
+    justify-content: stretch !important;
+    align-items: stretch !important;
+    gap: 0 !important;
+    z-index: 3 !important;
+  }
+
+  .mobile-home .hero-action-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    min-height: 48px !important;
+    padding: 0 18px !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(16, 185, 129, 0.95) !important;
+    background: linear-gradient(90deg, #047857, #059669, #10b981) !important;
+    color: #ffffff !important;
+    font-size: 15px !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.03em !important;
+    box-shadow: 0 14px 28px rgba(4, 120, 87, 0.26) !important;
+  }
+
+  .mobile-home .hero-more-button {
+    display: none !important;
+  }
+
+  .mobile-home__hero.hero-banner,
+  .mobile-home .hero-banner {
+    padding-bottom: 18px !important;
+  }
+}
+

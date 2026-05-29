@@ -1,10 +1,10 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-Hant">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>00919 監控儀表板</title>
-    <link rel="stylesheet" href="assets/styles.css?v=20260522-1730" />
+    <link rel="stylesheet" href="assets/styles.css?v=20260528-ui5" />
   </head>
   <body>
     <div class="app-shell">
@@ -18,7 +18,6 @@
         </div>
         <nav class="nav">
           <a class="active" href="#home"><span data-icon="home" data-icon-color="green"></span>首頁總覽</a>
-          <a href="#daily"><span data-icon="barChart" data-icon-color="cyan"></span>每日總覽</a>
           <a href="#trades"><span data-icon="briefcase" data-icon-color="blue"></span>交易紀錄</a>
           <a href="#monthly"><span data-icon="activity" data-icon-color="green"></span>每月健康檢查</a>
           <a href="#quarterly"><span data-icon="coins" data-icon-color="orange"></span>每季 / 54C 檢視</a>
@@ -677,12 +676,15 @@
         </section>
 
         <section class="trade-section" id="trades">
-          <div class="section-head">
-            <div>
+          <div class="section-head trade-section-head">
+            <div class="trade-title-block">
               <p class="eyebrow">Trade Log</p>
-              <h3>交易紀錄</h3>
+              <div class="trade-title-line">
+                <h3>交易紀錄</h3>
+                <a class="trade-entry-chip" href="/?native_page=trade_entry" target="_blank" rel="noopener noreferrer" data-trade-entry-link="true">＋ 新增交易</a>
+              </div>
             </div>
-            <small>交易紀錄會驅動首頁股數、成本與含息損益</small>
+            <small>只顯示正式交易紀錄；新增、匯入、匯出與下載範本集中在獨立交易頁。</small>
           </div>
 
           <div class="trade-stats trade-summary-stats">
@@ -716,44 +718,6 @@
             </div>
           </div>
 
-          <div class="trade-layout">
-            <form class="trade-form" id="tradeForm">
-              <div class="side-toggle" role="group" aria-label="買賣別">
-                <button class="active" type="button" data-action="buy">買入</button>
-                <button type="button" data-action="sell">賣出</button>
-              </div>
-              <label>
-                交易日期
-                <input id="tradeDateInput" type="date" required />
-              </label>
-              <label>
-                交易股數（股）
-                <input id="tradeSharesInput" type="number" min="1" step="1" required />
-              </label>
-              <label>
-                買入 / 賣出價位
-                <input id="tradePriceInput" type="number" min="0" step="0.01" required />
-              </label>
-              <label>
-                資金來源 / 備註分類
-                <select id="tradeNoteTypeInput">
-                  <option value="股息再投入">股息再投入</option>
-                  <option value="薪資投入">薪資投入</option>
-                  <option value="年終投入">年終投入</option>
-                  <option value="定期投入">定期投入</option>
-                  <option value="閒置資金投入">閒置資金投入</option>
-                  <option value="再平衡調整">再平衡調整</option>
-                  <option value="部位調整">部位調整</option>
-                  <option value="其他">其他</option>
-                </select>
-              </label>
-              <label class="trade-note">
-                備註
-                <input id="tradeNoteInput" type="text" placeholder="可留空或補充說明" />
-              </label>
-              <button class="submit-trade" id="tradeSubmitButton" type="submit">新增交易</button>
-            </form>
-          </div>
 
           <div class="table-wrap trade-table-wrap">
             <table class="trade-table">
@@ -773,15 +737,6 @@
             </table>
           </div>
 
-          <div class="trade-actions">
-            <button type="button" id="exportTradesButton">匯出資料</button>
-            <label class="import-button">
-              匯入資料
-              <input id="importTradesInput" type="file" accept=".csv,text/csv" />
-            </label>
-            <button type="button" id="syncTradesButton">同步到雲端</button>
-            <button type="button" id="downloadTemplateButton">下載範本</button>
-          </div>
         </section>
 
         <section class="monthly-section" id="monthly">
@@ -1076,11 +1031,33 @@
 
           <div class="settings-intro">
             <div>
-              <strong>總燈號先看每日折溢價，再把每月含息報酬、年度 54C 與補充保費納入觀察。</strong>
-              <p>這裡只放會常調整的數字。預設值沿用目前討論版本，之後如果覺得太嚴或太鬆，直接改數字即可。</p>
+              <strong>總燈號會依照下方門檻重新計算：折溢價、受益人、54C / 補充保費與前十大持股觀察都會納入。</strong>
+              <p>市價與淨值 / 折溢價差 1 個交易日視為正常；落後 2 個交易日以上才提醒。前十大集中度只看「過度集中」：高於或等於門檻才黃燈，降低不會警報；門檻設 0 可停用集中度提醒。</p>
             </div>
             <span id="signalSettingsMessage" class="settings-message"></span>
           </div>
+
+          <article class="settings-card signal-diagnostics-card">
+            <div class="panel-title">
+              <span>目前燈號診斷</span>
+              <small>用目前資料對照你的設定門檻；儲存設定後會立即重算。</small>
+            </div>
+            <div class="settings-diagnostics-table-wrap">
+              <table class="settings-diagnostics-table">
+                <thead>
+                  <tr>
+                    <th>項目</th>
+                    <th>目前數值</th>
+                    <th>門檻</th>
+                    <th>狀態</th>
+                  </tr>
+                </thead>
+                <tbody id="signalDiagnosticsBody">
+                  <tr><td colspan="4">等待資料載入...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
 
           <form id="signalSettingsForm" class="settings-form">
             <article class="settings-card">
@@ -1145,11 +1122,11 @@
               </div>
               <div class="settings-fields">
                 <label>
-                  前十大汰換黃燈檔數
+                  前十大汰換黃燈檔數（0 = 停用）
                   <input id="settingTop10RotationWarningCount" type="number" step="1" min="0" max="10" />
                 </label>
                 <label>
-                  前十大集中度黃燈 (%)
+                  前十大集中度黃燈 (%)（0 = 停用）
                   <input id="settingTop10ConcentrationYellowPct" type="number" step="0.1" min="0" max="100" />
                 </label>
               </div>
@@ -1264,12 +1241,12 @@
     </div>
 
     <script src="assets/signal_settings.js?v=20260522-1315"></script>
-    <script src="assets/app.js?v=20260522-1645"></script>
+    <script src="assets/app.js?v=20260528-ui5"></script>
     <script src="assets/dividend_quarterly_overrides.js?v=20260521-1555"></script>
     <script src="assets/monthly_health.js?v=20260522-1245"></script>
     <script src="assets/holdings.js?v=20260522-0915"></script>
     <script src="assets/yearly_tax.js?v=20260522-1245"></script>
-    <script src="assets/navigation.js?v=20260522-1730"></script>
+    <script src="assets/navigation.js?v=20260528-ui5"></script>
   </body>
 </html>
 
