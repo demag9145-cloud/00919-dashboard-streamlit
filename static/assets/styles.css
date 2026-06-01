@@ -5167,3 +5167,17 @@ body.streamlit-embedded #trades .native-trades-fallback-card ~ .trade-actions {
     font-size: 15px !important;
   }
 }
+
+/* UI31: keep only the Streamlit top refresh button. Hide embedded title/hero refresh buttons. */
+#mobileRefreshButton,
+#desktopRefreshButton,
+#desktopStatusRefreshButton,
+#homeRefreshButton,
+#refreshButton,
+.mobile-home .hero-actions,
+.desktop-hero__actions,
+.desktop-data-status-compact .desktop-mini-button,
+.data-freshness-section .refresh-action,
+.header-actions {
+  display: none !important;
+}

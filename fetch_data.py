@@ -50,10 +50,43 @@ def clean_text(value):
 
 
 def parse_number(value):
-    value = clean_text(str(value)).replace(",", "").replace("(台幣)", "")
-    if not value or value == "-":
+    """Parse a numeric value from scraped table text.
+
+    MoneyDJ occasionally returns merged cell text such as
+    "-4.4N/A 2026/041317373-0.83" when the page layout changes or
+    hidden/mobile cells are included.  Older versions called float() on the
+    whole cleaned string and crashed during manual refresh.  This parser keeps
+    the first meaningful number before an N/A marker and returns None for empty
+    or non-numeric cells.
+    """
+    text = clean_text(str(value)).replace(",", "").replace("(台幣)", "").replace("%", "").strip()
+    if not text:
         return None
-    return float(value)
+
+    upper = text.upper()
+    if upper in {"-", "--", "N/A", "NA", "NONE", "NULL"}:
+        return None
+
+    # If N/A appears after a real number, keep the value before it; if N/A is
+    # the only meaningful content, treat the cell as missing.
+    na_pos = upper.find("N/A")
+    if na_pos >= 0:
+        before_na = text[:na_pos].strip()
+        text = before_na if before_na else ""
+    if not text:
+        return None
+
+    # Ignore pure date-like strings such as 2026/04.
+    if re.fullmatch(r"\d{4}[/-]\d{1,2}(?:[/-]\d{1,2})?", text):
+        return None
+
+    match = re.search(r"[-+]?\d+(?:\.\d+)?", text)
+    if not match:
+        return None
+    try:
+        return float(match.group(0))
+    except ValueError:
+        return None
 
 
 def roc_date_to_iso(value):
@@ -100,27 +133,34 @@ def fetch_moneydj_nav_rows():
 
 def fetch_moneydj_monthly_size_rows():
     html = fetch_text(MONEYDJ_MONTHLY_SIZE_URL)
-    pattern = re.compile(
-        r'<tr class="(?:even|odd)">\s*'
-        r'<td class="col01">\s*(\d{4}/\d{2})\s*</td>\s*'
-        r'<td class="col02">\s*([0-9,]+)\s*</td>\s*'
-        r'<td class="col03">\s*(.*?)\s*</td>\s*'
-        r'<td class="col04">\s*([0-9,.]+)\s*</td>',
-        re.S,
-    )
     rows = []
     seen = set()
-    for month, beneficiaries, beneficiary_change_pct, aum_million_twd in pattern.findall(html):
+
+    # Parse row by row instead of one large regex.  MoneyDJ may insert hidden
+    # columns or N/A text, and a greedy cell pattern can accidentally merge
+    # multiple cells into a string like "-4.4N/A 2026/041317373-0.83".
+    for block in re.findall(r'<tr[^>]*class="(?:even|odd)"[^>]*>(.*?)</tr>', html, flags=re.S):
+        cells = re.findall(r"<td[^>]*>(.*?)</td>", block, flags=re.S)
+        if len(cells) < 4:
+            continue
+
+        month = clean_text(cells[0])
+        if not re.fullmatch(r"\d{4}/\d{2}", month):
+            continue
+
         month_key = month.replace("/", "-")
         if month_key in seen:
             continue
         seen.add(month_key)
-        aum = parse_number(aum_million_twd)
+
+        beneficiaries = parse_number(cells[1])
+        beneficiary_change_pct = parse_number(cells[2])
+        aum = parse_number(cells[3])
         rows.append(
             {
                 "month": month_key,
-                "beneficiary_count": int(parse_number(beneficiaries) or 0),
-                "beneficiary_change_pct": parse_number(beneficiary_change_pct),
+                "beneficiary_count": int(beneficiaries or 0),
+                "beneficiary_change_pct": beneficiary_change_pct,
                 "aum_million_twd": aum,
                 "aum_100m_twd": round(aum / 100, 4) if aum is not None else None,
                 "source": "MoneyDJ",
