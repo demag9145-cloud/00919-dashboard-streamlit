@@ -115,6 +115,43 @@ function hydrateDesktopIcons() {
     if (!card || card.querySelector(":scope > .icon-box")) return;
     card.insertAdjacentHTML("afterbegin", renderIcon(iconName, colorClass));
   });
+
+  [
+    ["tradeStatShares", "layers", "green"],
+    ["tradeStatAvgCost", "circleDollar", "blue"],
+    ["tradeStatCost", "wallet", "blue"],
+    ["tradeStatDividend", "coins", "orange"],
+    ["tradeStatMarketValue", "trendingUp", "green"],
+    ["tradeStatPnl", "pieChart", "orange"],
+    ["tradeStatTotalReturn", "lineChart", "pink"],
+  ].forEach(([valueId, iconName, colorClass]) => {
+    const card = $(valueId)?.closest(".trade-stats > div");
+    if (!card || card.querySelector(":scope > .icon-box")) return;
+    card.classList.add("stat-icon-card");
+    card.insertAdjacentHTML("afterbegin", renderIcon(iconName, colorClass));
+  });
+
+  [
+    ["latestDividendExDate", "calendarDays", "purple"],
+    ["latestDividendPerShare", "coins", "orange"],
+    ["latestDividendShares", "layers", "green"],
+    ["latestDividendCash", "wallet", "blue"],
+    ["latestDividend54c", "calculator", "pink"],
+    ["latestDividendHealth", "activity", "orange"],
+    ["holdingsLatestDate", "calendarDays", "purple"],
+    ["top10TotalWeight", "pieChart", "cyan"],
+    ["topHoldingName", "cpu", "pink"],
+    ["holdingRotationCount", "activity", "orange"],
+    ["yearlyLatestCash", "coins", "orange"],
+    ["yearlyLatest54c", "calculator", "pink"],
+    ["yearlyLatestPremium", "activity", "orange"],
+    ["yearlyLatestCount", "calendarDays", "purple"],
+  ].forEach(([valueId, iconName, colorClass]) => {
+    const card = $(valueId)?.closest(".dividend-card");
+    if (!card || card.querySelector(":scope > .icon-box")) return;
+    card.classList.add("stat-icon-card");
+    card.insertAdjacentHTML("afterbegin", renderIcon(iconName, colorClass));
+  });
 }
 
 function signalText(level) {
@@ -359,6 +396,26 @@ function asNumber(value) {
   return isFiniteValue(value) ? Number(value) : NaN;
 }
 
+function getAum100mValue(row) {
+  if (!row) return NaN;
+  const direct = Number(row.aum_100m_twd);
+  if (Number.isFinite(direct) && direct > 0) return direct;
+  const million = Number(row.aum_million_twd);
+  if (!Number.isFinite(million) || million <= 0) return NaN;
+  // Normal data stores AUM in NT$ million, but some scraped tables already
+  // provide the value in 億.  Treat values below 20,000 as 億 to avoid
+  // showing 3,633 億 as 36.33 億 or 0 億.
+  return million < 20000 ? million : million / 100;
+}
+
+function hasValidAum(row) {
+  return Number.isFinite(getAum100mValue(row));
+}
+
+function latestRowWithValidAum(rows = []) {
+  return [...rows].reverse().find((row) => hasValidAum(row)) || {};
+}
+
 function getLatestMarketRow(rows = state.data?.daily || []) {
   return [...rows].reverse().find((row) => isFiniteValue(row.market_price)) || {};
 }
@@ -405,9 +462,74 @@ function getLatestCompleteDailyRow(rows = state.data?.daily || []) {
   ) || latestDaily || rows[rows.length - 1] || {};
 }
 
+
+function normalizeIntegrityWarning(warning = {}) {
+  const label = String(warning.label || "資料欄位").trim() || "資料欄位";
+  const sourceMap = {
+    "日價格歷史": "Yahoo 每日價格歷史資料",
+    "最新交易日": "Yahoo 每日價格最新交易日",
+    "市價": "Yahoo 每日價格 / 即時市價",
+    "淨值": "MoneyDJ 每日淨值 / 折溢價",
+    "折溢價": "MoneyDJ 每日淨值 / 折溢價",
+    "成交量": "Yahoo 每日成交量",
+    "淨值/折溢價更新落後": "MoneyDJ 每日淨值 / 折溢價尚未更新到最新市價交易日",
+    "每月規模歷史": "MoneyDJ 每月規模 / 受益人歷史資料尚未取得",
+    "最新月資料": "MoneyDJ 每月規模 / 受益人尚未更新最新月份資料",
+    "AUM": "MoneyDJ 每月規模 / 受益人尚未更新最新月份資料或 AUM 欄位缺值",
+    "受益人數": "MoneyDJ 每月規模 / 受益人尚未更新最新月份資料或受益人數欄位缺值",
+    "配息歷史": "TWSE ETF 配息公告 / 54C 歷史資料",
+    "最新除息日": "TWSE ETF 配息公告尚未更新最新除息日",
+    "每股配息": "TWSE ETF 配息公告每股配息欄位",
+    "54C 組成": "TWSE ETF 配息公告 / 54C 組成欄位",
+    "持股資料日": "MoneyDJ 持股 / 前十大資料日尚未更新",
+    "前十大持股": "MoneyDJ 持股 / 前十大持股明細",
+  };
+  const impactMap = {
+    "日價格歷史": "折溢價圖表、月報酬與首頁市值都無法可靠計算",
+    "最新交易日": "無法判斷每日價格是否過期",
+    "市價": "目前市值、未實現損益、含息報酬會失真",
+    "淨值": "折溢價與淨值線會失真",
+    "折溢價": "每日燈號與折溢價警示會失真",
+    "成交量": "成交量觀察會缺資料",
+    "淨值/折溢價更新落後": "折溢價圖會停在最近完整資料日；落後 1 個交易日不列警示，2 個交易日以上才提醒",
+    "每月規模歷史": "AUM、受益人數與月度健康檢查無法判斷趨勢",
+    "最新月資料": "ETF 規模健康與受益人數趨勢會停在上一個有效月份",
+    "AUM": "ETF 規模健康、AUM 長期趨勢與首頁 AUM 欄位會失真或停留在上一筆有效資料",
+    "受益人數": "受益人數趨勢、月度燈號與首頁受益人數欄位會失真或停留在上一筆有效資料",
+    "配息歷史": "每季配息、年度配息與 54C 統計會缺資料",
+    "最新除息日": "無法判斷最新一季配息資料是否已公布",
+    "每股配息": "本次配息估算與年度配息會失真",
+    "54C 組成": "54C 與補充保費估算會失真",
+    "持股資料日": "無法判斷前十大持股資料是否過期",
+    "前十大持股": "集中度、第一大持股、產業分布與汰換紀錄會缺資料",
+  };
+  return {
+    level: warning.level === "red" ? "red" : "yellow",
+    label,
+    source: warning.source || sourceMap[label] || "整體抓取流程",
+    impact: warning.impact || impactMap[label] || "可能影響相關欄位判斷",
+  };
+}
+
+function formatIntegritySummary(warnings = [], maxItems = 3) {
+  const normalized = (warnings || []).map(normalizeIntegrityWarning);
+  if (!normalized.length) return "關鍵欄位完整";
+  const labels = normalized.slice(0, maxItems).map((warning) => warning.label).join("、");
+  const extra = normalized.length > maxItems ? ` 等 ${normalized.length} 項` : "";
+  return `需檢查：${labels}${extra}`;
+}
+
+function formatIntegrityFullDetail(warnings = []) {
+  const normalized = (warnings || []).map(normalizeIntegrityWarning);
+  if (!normalized.length) return "資料完整性正常：所有關鍵欄位可用。";
+  return normalized
+    .map((warning, index) => `${index + 1}. ${warning.label}｜來源：${warning.source}｜影響：${warning.impact}`)
+    .join("\n");
+}
+
 function collectDataIntegrityWarnings(latest = {}, dividend = {}, latestMonthly = {}, holdings = {}) {
   const warnings = [];
-  const add = (level, label, impact) => warnings.push({ level, label, impact });
+  const add = (level, label, impact, source = null) => warnings.push(normalizeIntegrityWarning({ level, label, impact, source }));
   const dailyRows = state.data?.daily || [];
   const dividendRows = state.data?.dividends || [];
   const monthlyRows = state.data?.monthly_history || state.data?.monthly_size || [];
@@ -464,18 +586,19 @@ function calcDataIntegrityStatus(latest, dividend, latestMonthly, holdings) {
         label: "正常",
         className: "green",
         note: navDelayNote,
+        detail: "資料完整性正常：所有關鍵欄位可用。",
       },
       warnings,
     };
   }
 
   const hasRed = warnings.some((warning) => warning.level === "red");
-  const firstItems = warnings.slice(0, 2).map((warning) => warning.label).join("、");
   return {
     status: {
       label: hasRed ? "嚴重缺漏" : "需檢查",
       className: hasRed ? "red" : "yellow",
-      note: `${warnings.length} 項：${firstItems}`,
+      note: formatIntegritySummary(warnings),
+      detail: formatIntegrityFullDetail(warnings),
     },
     warnings,
   };
@@ -491,10 +614,10 @@ function calcDataIntegritySignalForSummary(latest) {
   const integrity = calcDataIntegrityStatus(latest, dividend, latestMonthly, holdings);
   if (!integrity.warnings.length) return { level: "green", reason: "資料完整性正常" };
   const level = integrity.warnings.some((warning) => warning.level === "red") ? "red" : "yellow";
-  const firstWarning = integrity.warnings[0];
+  const firstWarning = normalizeIntegrityWarning(integrity.warnings[0]);
   return {
     level,
-    reason: `資料完整性：缺少 ${firstWarning.label}，${firstWarning.impact}，請看首頁資料更新狀態。`,
+    reason: `資料完整性：${firstWarning.label} 需檢查（${firstWarning.source}），${firstWarning.impact}。`,
   };
 }
 
@@ -989,6 +1112,13 @@ function renderDataFreshness(latest, dividend, model = getFreshnessModel(latest,
   setText("freshFetchedAt", model.fetchedAt ? `${model.fetchedAtDisplay} / ${model.fetched.note}` : "--");
   setFreshness("freshIntegrity", model.integrity.status);
   setText("freshIntegrityNote", model.integrity.status.note);
+  const integrityDetail = model.integrity.status.detail || formatIntegrityFullDetail(model.integrity.warnings);
+  const mobileIntegrity = $("mobileIntegrityDetail");
+  if (mobileIntegrity) {
+    mobileIntegrity.textContent = integrityDetail;
+    mobileIntegrity.dataset.status = model.integrity.status.className || "green";
+    mobileIntegrity.hidden = false;
+  }
 }
 
 function statusRank(status) {
@@ -1103,12 +1233,16 @@ function renderMobileFocusCards({ position, dividend, totalReturn, totalCost, fr
   setText("mobileFocusDividend", dividendPerShare ? `${fmt.money(dividendPerShare, 2)} 元` : "--");
   setText("mobileFocusDividendNote", dividend.ex_date ? `除息 ${dividend.ex_date} / 估 $${fmt.money(estimatedDividendCash)}` : "--");
 
-  const latestSize = freshnessModel.latestMonthly || {};
-  const aumMillion = Number(latestSize.aum_million_twd || Number(latestSize.aum_100m_twd) * 100);
+  const monthlySizeRows = (state.data?.monthly_history || state.data?.monthly_size || [])
+    .filter((row) => row.month && (row.aum_million_twd != null || row.aum_100m_twd != null || row.beneficiary_count != null))
+    .sort((a, b) => String(a.month).localeCompare(String(b.month)));
+  const latestSize = freshnessModel.latestMonthly || monthlySizeRows[monthlySizeRows.length - 1] || {};
+  const latestAum = latestRowWithValidAum(monthlySizeRows);
+  const aum100m = getAum100mValue(latestAum);
   setText("mobileFocusBeneficiaries", Number.isFinite(Number(latestSize.beneficiary_count)) ? `${fmt.money(Number(latestSize.beneficiary_count))} 人` : "--");
   setText("mobileFocusBeneficiariesNote", Number.isFinite(Number(latestSize.beneficiary_change_pct)) ? `月變化 ${fmt.pct(Number(latestSize.beneficiary_change_pct))}` : "--");
-  setText("mobileFocusAum", Number.isFinite(aumMillion) ? `${fmt.money(aumMillion / 100)} 億` : "--");
-  setText("mobileFocusAumNote", latestSize.month || "--");
+  setText("mobileFocusAum", Number.isFinite(aum100m) ? `${fmt.money(aum100m)} 億` : "--");
+  setText("mobileFocusAumNote", latestAum.month || latestSize.month || "--");
 
   const holdings = freshnessModel.holdingsData || {};
   const top10 = holdings.top10 || [];
@@ -1197,12 +1331,16 @@ function renderDesktopFocusCards({ position, dividend, totalReturn, totalCost, f
   setText("desktopFocusDividend", dividendPerShare ? `${fmt.money(dividendPerShare, 2)} 元` : "--");
   setText("desktopFocusDividendNote", dividend.ex_date ? `除息 ${dividend.ex_date} / 估 $${fmt.money(estimatedDividendCash)}` : "--");
 
-  const latestSize = freshnessModel.latestMonthly || {};
-  const aumMillion = Number(latestSize.aum_million_twd || Number(latestSize.aum_100m_twd) * 100);
+  const monthlySizeRows = (state.data?.monthly_history || state.data?.monthly_size || [])
+    .filter((row) => row.month && (row.aum_million_twd != null || row.aum_100m_twd != null || row.beneficiary_count != null))
+    .sort((a, b) => String(a.month).localeCompare(String(b.month)));
+  const latestSize = freshnessModel.latestMonthly || monthlySizeRows[monthlySizeRows.length - 1] || {};
+  const latestAum = latestRowWithValidAum(monthlySizeRows);
+  const aum100m = getAum100mValue(latestAum);
   setText("desktopFocusBeneficiaries", Number.isFinite(Number(latestSize.beneficiary_count)) ? `${fmt.money(Number(latestSize.beneficiary_count))} 人` : "--");
   setText("desktopFocusBeneficiariesNote", Number.isFinite(Number(latestSize.beneficiary_change_pct)) ? `月變化 ${fmt.pct(Number(latestSize.beneficiary_change_pct))}` : "--");
-  setText("desktopFocusAum", Number.isFinite(aumMillion) ? `${fmt.money(aumMillion / 100)} 億` : "--");
-  setText("desktopFocusAumNote", latestSize.month || "--");
+  setText("desktopFocusAum", Number.isFinite(aum100m) ? `${fmt.money(aum100m)} 億` : "--");
+  setText("desktopFocusAumNote", latestAum.month || latestSize.month || "--");
 
   const holdings = freshnessModel.holdingsData || {};
   const top10 = holdings.top10 || [];
@@ -1279,11 +1417,19 @@ function desktopCompactStatusLabel(status) {
   return formatStatusShort(status);
 }
 
-function setDesktopStatusRow(prefix, status, detail) {
+function setDesktopStatusRow(prefix, status, detail, fullDetail = "") {
   const row = $(`${prefix}Status`)?.closest(".desktop-status-row");
-  if (row) row.dataset.status = status.className || "unknown";
+  if (row) {
+    row.dataset.status = status.className || "unknown";
+    if (fullDetail) row.title = fullDetail;
+  }
   setText(`${prefix}Status`, desktopCompactStatusLabel(status));
-  setText(`${prefix}Date`, detail || status.note || "--");
+  const noteNode = $(`${prefix}Date`);
+  const note = detail || status.note || "--";
+  if (noteNode) {
+    noteNode.textContent = note;
+    if (fullDetail) noteNode.title = fullDetail;
+  }
 }
 
 function renderDesktopDataStatusCompact(latest, dividend, model) {
@@ -1294,7 +1440,14 @@ function renderDesktopDataStatusCompact(latest, dividend, model) {
   setDesktopStatusRow("desktopFreshDividend", model.dividend, dividend.ex_date ? model.dividend.note : "--");
   setDesktopStatusRow("desktopFreshHoldings", model.holdings, model.holdingsData.data_date || "--");
   setDesktopStatusRow("desktopFreshFetched", model.fetched, model.fetchedAtDisplay || "--");
-  setDesktopStatusRow("desktopFreshIntegrity", model.integrity.status, warningCount ? `${warningCount} 項` : "關鍵欄位完整");
+  const integrityDetail = model.integrity.status.detail || formatIntegrityFullDetail(model.integrity.warnings);
+  setDesktopStatusRow("desktopFreshIntegrity", model.integrity.status, warningCount ? formatIntegritySummary(model.integrity.warnings, 2) : "關鍵欄位完整", integrityDetail);
+  const detailPanel = $("desktopIntegrityDetail");
+  if (detailPanel) {
+    detailPanel.textContent = integrityDetail;
+    detailPanel.dataset.status = model.integrity.status.className || "green";
+    detailPanel.hidden = false;
+  }
 }
 
 function renderHomeFocus(position, latest, dividend, totalReturn, totalCost) {
@@ -1324,9 +1477,10 @@ function renderHomeFocus(position, latest, dividend, totalReturn, totalCost) {
     .filter((row) => row.month && (row.aum_million_twd != null || row.aum_100m_twd != null || row.beneficiary_count != null))
     .sort((a, b) => String(a.month).localeCompare(String(b.month)));
   const latestSize = sizeRows[sizeRows.length - 1] || {};
-  const aumMillion = Number(latestSize.aum_million_twd || Number(latestSize.aum_100m_twd) * 100);
-  setText("homeAum", Number.isFinite(aumMillion) ? `${fmt.money(aumMillion / 100)} 億` : "--");
-  setText("homeAumMonth", latestSize.month || "--");
+  const latestAum = latestRowWithValidAum(sizeRows);
+  const aum100m = getAum100mValue(latestAum);
+  setText("homeAum", Number.isFinite(aum100m) ? `${fmt.money(aum100m)} 億` : "--");
+  setText("homeAumMonth", latestAum.month || latestSize.month || "--");
   setText("homeBeneficiaries", Number.isFinite(Number(latestSize.beneficiary_count)) ? `${fmt.money(Number(latestSize.beneficiary_count))} 人` : "--");
   setText(
     "homeBeneficiaryChange",

@@ -131,42 +131,115 @@ def fetch_moneydj_nav_rows():
     return sorted(rows, key=lambda row: row["date"])
 
 
+def extract_numeric_tokens(text):
+    """Return numeric tokens from scraped text, excluding date/month tokens.
+
+    MoneyDJ's ETF size page sometimes concatenates hidden/mobile cells at month
+    boundaries, for example: "-4.4N/A 2026/041317373-0.83".  A cell-based
+    parser can then miss the month or mistake the merged text for one value.
+    Tokenising the whole row is more resilient.
+    """
+    cleaned = clean_text(str(text)).replace("，", ",")
+    # Add a separator when MoneyDJ glues a month and the next numeric cell,
+    # e.g. 2026/041317373-0.83 -> 2026/04 1317373-0.83.
+    cleaned = re.sub(r"(20\d{2}[/-](?:0[1-9]|1[0-2]))(?=\d)", r"\1 ", cleaned)
+    cleaned = re.sub(r"20\d{2}[/-]\d{1,2}(?!\d)(?:[/-]\d{1,2}(?!\d))?", " ", cleaned)
+    cleaned = re.sub(r"N\s*/\s*A|NA|--|—", " ", cleaned, flags=re.I)
+    tokens = []
+    for match in re.finditer(r"[-+]?\d{1,3}(?:,\d{3})+(?:\.\d+)?|[-+]?\d+(?:\.\d+)?", cleaned):
+        raw = match.group(0)
+        value = parse_number(raw)
+        if value is None:
+            continue
+        tokens.append({"raw": raw, "value": value})
+    return tokens
+
+
 def fetch_moneydj_monthly_size_rows():
     html = fetch_text(MONEYDJ_MONTHLY_SIZE_URL)
-    rows = []
-    seen = set()
+    rows_by_month = {}
 
-    # Parse row by row instead of one large regex.  MoneyDJ may insert hidden
-    # columns or N/A text, and a greedy cell pattern can accidentally merge
-    # multiple cells into a string like "-4.4N/A 2026/041317373-0.83".
-    for block in re.findall(r'<tr[^>]*class="(?:even|odd)"[^>]*>(.*?)</tr>', html, flags=re.S):
-        cells = re.findall(r"<td[^>]*>(.*?)</td>", block, flags=re.S)
-        if len(cells) < 4:
+    # Basic0019 tends to change at month boundaries: a new month can appear in
+    # price data before the AUM table has a clean complete row, and MoneyDJ may
+    # include hidden mobile cells that merge month / beneficiary / change pct.
+    # Parse every row by text tokens instead of fixed column positions.
+    for block in re.findall(r"<tr[^>]*>(.*?)</tr>", html, flags=re.S):
+        cells = [clean_text(cell) for cell in re.findall(r"<td[^>]*>(.*?)</td>", block, flags=re.S)]
+        row_text = " | ".join(cells) if cells else clean_text(block)
+        month_match = re.search(r"(20\d{2})[/-](0?[1-9]|1[0-2])", row_text)
+        if not month_match:
             continue
 
-        month = clean_text(cells[0])
-        if not re.fullmatch(r"\d{4}/\d{2}", month):
+        month_key = f"{int(month_match.group(1)):04d}-{int(month_match.group(2)):02d}"
+        tokens = extract_numeric_tokens(row_text)
+        if not tokens:
             continue
 
-        month_key = month.replace("/", "-")
-        if month_key in seen:
-            continue
-        seen.add(month_key)
+        values = [item["value"] for item in tokens]
 
-        beneficiaries = parse_number(cells[1])
-        beneficiary_change_pct = parse_number(cells[2])
-        aum = parse_number(cells[3])
-        rows.append(
-            {
-                "month": month_key,
-                "beneficiary_count": int(beneficiaries or 0),
-                "beneficiary_change_pct": beneficiary_change_pct,
-                "aum_million_twd": aum,
-                "aum_100m_twd": round(aum / 100, 4) if aum is not None else None,
-                "source": "MoneyDJ",
-            }
-        )
-    return sorted(rows, key=lambda row: row["month"])
+        # Beneficiary count: usually 6~7 digits. Avoid using AUM-in-million as
+        # beneficiary by preferring integer-like values with a comma pattern or
+        # the largest 100k~5m value not followed by a decimal raw token.
+        beneficiary_candidates = [
+            item for item in tokens
+            if 100_000 <= item["value"] <= 5_000_000 and "." not in item["raw"]
+        ]
+        beneficiaries = None
+        if beneficiary_candidates:
+            beneficiaries = max(beneficiary_candidates, key=lambda item: item["value"])["value"]
+
+        # AUM can be either NT$ million (e.g. 363300) or already in 100m TWD
+        # (e.g. 3633).  Prefer explicit large values first, then a 500~20000
+        # range value that is not the beneficiary count.
+        aum_million = None
+        aum_100m = None
+        for item in tokens:
+            value = item["value"]
+            if beneficiaries is not None and abs(value - beneficiaries) < 1e-6:
+                continue
+            if 50_000 <= value <= 2_000_000:
+                aum_million = value
+                aum_100m = round(value / 100, 4)
+                break
+        if aum_million is None:
+            for item in tokens:
+                value = item["value"]
+                if beneficiaries is not None and abs(value - beneficiaries) < 1e-6:
+                    continue
+                if 500 <= value <= 20_000:
+                    aum_100m = value
+                    aum_million = round(value * 100, 4)
+                    break
+
+        # Change pct is the last small signed/decimal number that is not 0/1 and
+        # not the month value.  This intentionally ignores AUM monthly change if
+        # a later beneficiary change is available.
+        pct_candidates = [
+            item["value"] for item in tokens
+            if -100 <= item["value"] <= 100 and item["value"] not in {0, 1}
+        ]
+        beneficiary_change_pct = pct_candidates[-1] if pct_candidates else None
+
+        # Skip rows that contain only an incomplete new-month stub.  This is the
+        # key month-boundary guard: the dashboard should keep showing the latest
+        # valid AUM row instead of creating a 0-AUM current month.
+        if aum_100m is None and beneficiaries is None and beneficiary_change_pct is None:
+            continue
+
+        existing = rows_by_month.get(month_key, {})
+        candidate = {
+            "month": month_key,
+            "beneficiary_count": int(beneficiaries) if beneficiaries is not None else existing.get("beneficiary_count"),
+            "beneficiary_change_pct": beneficiary_change_pct if beneficiary_change_pct is not None else existing.get("beneficiary_change_pct"),
+            "aum_million_twd": aum_million if aum_million is not None else existing.get("aum_million_twd"),
+            "aum_100m_twd": aum_100m if aum_100m is not None else existing.get("aum_100m_twd"),
+            "source": "MoneyDJ",
+        }
+        # Prefer the candidate with a valid AUM; otherwise keep the richer row.
+        if not existing or candidate.get("aum_100m_twd") or len([v for v in candidate.values() if v is not None]) > len([v for v in existing.values() if v is not None]):
+            rows_by_month[month_key] = candidate
+
+    return [rows_by_month[month] for month in sorted(rows_by_month)]
 
 
 def extract_table_section(html, table_id):
@@ -391,15 +464,29 @@ def update_monthly_history(daily_rows, monthly_size_rows, fetched_at):
         old = by_month.get(month, {})
         market = market_by_month.get(month, {})
         size = size_by_month.get(month, {})
+        def keep_valid(new_value, old_value, allow_zero=False):
+            if new_value is None or new_value == "":
+                return old_value
+            try:
+                numeric = float(new_value)
+            except (TypeError, ValueError):
+                return new_value
+            if not allow_zero and numeric <= 0:
+                return old_value
+            return new_value
+
         merged = {
             **old,
             "month": month,
             **market,
-            "aum_100m_twd": size.get("aum_100m_twd", old.get("aum_100m_twd")),
-            "aum_million_twd": size.get("aum_million_twd", old.get("aum_million_twd")),
-            "beneficiary_count": size.get("beneficiary_count", old.get("beneficiary_count")),
-            "beneficiary_change_pct": size.get(
-                "beneficiary_change_pct", old.get("beneficiary_change_pct")
+            # At the start of a new month MoneyDJ can expose an incomplete
+            # current-month row. Never overwrite a previously valid AUM /
+            # beneficiary value with None or 0.
+            "aum_100m_twd": keep_valid(size.get("aum_100m_twd"), old.get("aum_100m_twd")),
+            "aum_million_twd": keep_valid(size.get("aum_million_twd"), old.get("aum_million_twd")),
+            "beneficiary_count": keep_valid(size.get("beneficiary_count"), old.get("beneficiary_count")),
+            "beneficiary_change_pct": keep_valid(
+                size.get("beneficiary_change_pct"), old.get("beneficiary_change_pct"), allow_zero=True
             ),
             "sources": sorted(
                 set(old.get("sources", []))
@@ -517,7 +604,13 @@ def parse_dividend_rows():
             return parse_number(m.group(1)) if m else 0.0
 
         dividend_per_share = parse_number(cells[5])
+        # TWSE e添富在新配息尚未完全公告時，可能先出現日期或空白列，
+        # 但每股配息欄位仍是空值 / N/A。這種列不能拿來計算 54C，
+        # 否則會出現 dividend_per_share * pct 的 TypeError，造成更新失敗。
+        if dividend_per_share is None:
+            continue
         dividend_income_pct = pct(r"股利所得占比")
+        estimated_54c = round(dividend_per_share * dividend_income_pct / 100, 6)
         row = {
             "ex_date": roc_date_to_iso(cells[2]),
             "record_date": roc_date_to_iso(cells[3]),
@@ -528,9 +621,7 @@ def parse_dividend_rows():
             "equalization_pct": pct(r"收益平準金占比"),
             "capital_gain_pct": pct(r"已實現資本利得占比"),
             "other_income_pct": pct(r"其他所得占比"),
-            "estimated_54c_per_share": round(
-                dividend_per_share * dividend_income_pct / 100, 6
-            ),
+            "estimated_54c_per_share": estimated_54c,
             "source": "TWSE ETF e添富",
             "is_estimated": True,
         }

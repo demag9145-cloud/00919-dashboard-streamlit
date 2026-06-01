@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>00919 監控儀表板</title>
-    <link rel="stylesheet" href="assets/styles.css?v=20260528-ui5" />
+    <link rel="stylesheet" href="assets/styles.css?v=20260601-ui44" />
   </head>
   <body>
     <div class="app-shell">
@@ -466,8 +466,9 @@
                   <div class="desktop-status-row" data-status="green"><span>配息 / 54C</span><strong id="desktopFreshDividendStatus">--</strong><small id="desktopFreshDividendDate">--</small></div>
                   <div class="desktop-status-row" data-status="green"><span>前十大持股</span><strong id="desktopFreshHoldingsStatus">--</strong><small id="desktopFreshHoldingsDate">--</small></div>
                   <div class="desktop-status-row" data-status="green"><span>整體抓取</span><strong id="desktopFreshFetchedStatus">--</strong><small id="desktopFreshFetchedAt">--</small></div>
-                  <div class="desktop-status-row" data-status="green"><span>資料完整性</span><strong id="desktopFreshIntegrityStatus">--</strong><small id="desktopFreshIntegrityNote">--</small></div>
+                  <div class="desktop-status-row desktop-status-row--integrity" data-status="green"><span>資料完整性</span><strong id="desktopFreshIntegrityStatus">--</strong><small id="desktopFreshIntegrityNote">--</small></div>
                 </div>
+                <div class="desktop-integrity-detail" id="desktopIntegrityDetail" data-status="green">資料完整性正常：所有關鍵欄位可用。</div>
               </section>
             </aside>
           </div>
@@ -586,12 +587,13 @@
               <strong id="freshFetchedStatus">--</strong>
               <small id="freshFetchedAt">--</small>
             </article>
-            <article class="freshness-card">
+            <article class="freshness-card freshness-card--integrity">
               <span>資料完整性</span>
               <strong id="freshIntegrityStatus">--</strong>
               <small id="freshIntegrityNote">--</small>
             </article>
           </div>
+          <div class="mobile-integrity-detail" id="mobileIntegrityDetail" data-status="green">資料完整性正常：所有關鍵欄位可用。</div>
           </section>
         </section>
 
@@ -760,12 +762,12 @@
             <article class="monthly-chart-card">
               <div class="panel-title">
                 <span>我的含息報酬</span>
-                <small>成本 / 市值 / 含息總值</small>
+                <small>相對投入成本 / 市值損益 / 含息損益</small>
               </div>
               <div class="monthly-legend">
-                <span><i class="line cost"></i>投入成本</span>
-                <span><i class="line market"></i>月底市值</span>
-                <span><i class="line total"></i>含息總值</span>
+                <span><i class="line cost"></i>投入成本基準</span>
+                <span><i class="line market"></i>市值損益</span>
+                <span><i class="line total"></i>含息損益</span>
               </div>
               <div id="monthlyReturnChart" class="monthly-chart"></div>
             </article>
@@ -1241,12 +1243,12 @@
     </div>
 
     <script src="assets/signal_settings.js?v=20260522-1315"></script>
-    <script src="assets/app.js?v=20260528-ui5"></script>
+    <script src="assets/app.js?v=20260601-ui44"></script>
     <script src="assets/dividend_quarterly_overrides.js?v=20260521-1555"></script>
     <script src="assets/monthly_health.js?v=20260522-1245"></script>
     <script src="assets/holdings.js?v=20260522-0915"></script>
     <script src="assets/yearly_tax.js?v=20260522-1245"></script>
-    <script src="assets/navigation.js?v=20260528-ui5"></script>
+    <script src="assets/navigation.js?v=20260601-ui44"></script>
   </body>
 </html>
 

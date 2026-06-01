@@ -5181,3 +5181,1393 @@ body.streamlit-embedded #trades .native-trades-fallback-card ~ .trade-actions {
 .header-actions {
   display: none !important;
 }
+
+/* UI35: 資料完整性詳細說明 */
+@media (min-width: 761px) {
+  .desktop-status-row--integrity small {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.25;
+  }
+
+  .desktop-integrity-detail {
+    margin-top: 10px;
+    padding: 10px 12px 10px 34px;
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    border-radius: 12px;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 13px;
+    line-height: 1.55;
+    white-space: pre-line;
+    position: relative;
+  }
+
+  .desktop-integrity-detail::before {
+    content: "";
+    position: absolute;
+    top: 15px;
+    left: 14px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #10b981;
+  }
+
+  .desktop-integrity-detail[data-status="yellow"] {
+    background: #fffbeb;
+    border-color: rgba(245, 158, 11, 0.28);
+    color: #92400e;
+  }
+
+  .desktop-integrity-detail[data-status="yellow"]::before { background: #f59e0b; }
+
+  .desktop-integrity-detail[data-status="red"] {
+    background: #fef2f2;
+    border-color: rgba(239, 68, 68, 0.28);
+    color: #991b1b;
+  }
+
+  .desktop-integrity-detail[data-status="red"]::before { background: #ef4444; }
+}
+
+.mobile-integrity-detail {
+  margin: 12px 0 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 18px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 15px;
+  line-height: 1.65;
+  white-space: pre-line;
+}
+
+.mobile-integrity-detail[data-status="yellow"] {
+  background: #fffbeb;
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #92400e;
+}
+
+.mobile-integrity-detail[data-status="red"] {
+  background: #fef2f2;
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #991b1b;
+}
+
+
+/* UI39: 資料完整性說明補強 + 非首頁統計卡橫向排版 */
+@media (min-width: 761px) {
+  .desktop-integrity-detail {
+    font-size: 14px !important;
+    line-height: 1.7 !important;
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid,
+  body:not([data-active-page="home"]) .holdings-summary-grid,
+  body:not([data-active-page="home"]) .yearly-summary-grid {
+    align-items: stretch !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card {
+    min-height: 78px !important;
+    padding: 14px 18px !important;
+    display: grid !important;
+    grid-template-columns: minmax(92px, auto) minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 14px !important;
+    row-gap: 6px !important;
+    align-content: center !important;
+    align-items: baseline !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card > span,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card > span,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card > span {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card > strong,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card > strong,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card > strong {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    justify-self: start !important;
+    font-size: clamp(20px, 1.35vw, 28px) !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.02em !important;
+    white-space: nowrap !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card > small,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card > small,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card > small {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    font-size: 12.5px !important;
+    line-height: 1.35 !important;
+    margin-top: 0 !important;
+    white-space: normal !important;
+  }
+
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card > strong#topHoldingName {
+    white-space: normal !important;
+    font-size: clamp(18px, 1.15vw, 24px) !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-card.accent {
+    background: linear-gradient(135deg, rgba(236, 253, 245, 0.98), rgba(255,255,255,0.96)) !important;
+  }
+}
+
+
+/* UI40: 全分頁 icon 系統統一 + Hero 右側摘要卡放大 */
+@media (min-width: 761px) {
+  .desktop-hero-summary {
+    gap: 14px !important;
+    grid-template-columns: repeat(2, minmax(230px, 1fr)) !important;
+  }
+
+  .desktop-hero-summary-card {
+    min-height: 90px !important;
+    grid-template-columns: 50px minmax(0, 1fr) !important;
+    gap: 14px !important;
+    padding: 16px 18px !important;
+    border-radius: 16px !important;
+  }
+
+  .desktop-hero-summary-card .icon-box {
+    width: 50px !important;
+    height: 50px !important;
+    min-width: 50px !important;
+    border-radius: 16px !important;
+  }
+
+  .desktop-hero-summary-card .icon-box svg {
+    width: 27px !important;
+    height: 27px !important;
+  }
+
+  .desktop-hero-summary-card span:not(.icon-box) {
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    color: #64748b !important;
+  }
+
+  .desktop-hero-summary-card strong {
+    font-size: clamp(25px, 1.65vw, 34px) !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.03em !important;
+  }
+
+  .desktop-hero-summary-card small {
+    display: block !important;
+    font-size: 12px !important;
+    line-height: 1.25 !important;
+  }
+
+  .trade-stats > div.stat-icon-card {
+    min-height: 98px !important;
+    display: grid !important;
+    grid-template-columns: 48px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 14px !important;
+    row-gap: 4px !important;
+    align-content: center !important;
+    align-items: center !important;
+    padding: 16px 18px !important;
+  }
+
+  .trade-stats > div.stat-icon-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 / 3 !important;
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    border-radius: 16px !important;
+  }
+
+  .trade-stats > div.stat-icon-card > .icon-box svg {
+    width: 26px !important;
+    height: 26px !important;
+  }
+
+  .trade-stats > div.stat-icon-card > span {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    color: #64748b !important;
+  }
+
+  .trade-stats > div.stat-icon-card > strong {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    font-size: clamp(22px, 1.4vw, 30px) !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.02em !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card {
+    min-height: 92px !important;
+    padding: 14px 16px !important;
+    display: grid !important;
+    grid-template-columns: 46px minmax(88px, auto) minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 12px !important;
+    row-gap: 6px !important;
+    align-content: center !important;
+    align-items: center !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 / 3 !important;
+    width: 46px !important;
+    height: 46px !important;
+    min-width: 46px !important;
+    border-radius: 15px !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card > .icon-box svg {
+    width: 25px !important;
+    height: 25px !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > span,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > span,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > span {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    font-size: 14.5px !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > strong,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > strong,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > strong {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    justify-self: start !important;
+    font-size: clamp(22px, 1.45vw, 31px) !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.03em !important;
+    white-space: nowrap !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > small,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > small,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > small {
+    grid-column: 2 / 4 !important;
+    grid-row: 2 !important;
+    font-size: 13px !important;
+    line-height: 1.35 !important;
+    margin-top: 0 !important;
+    white-space: normal !important;
+  }
+
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > strong#topHoldingName {
+    white-space: normal !important;
+    font-size: clamp(19px, 1.22vw, 25px) !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card.accent {
+    background: linear-gradient(135deg, rgba(236, 253, 245, 0.98), rgba(255, 255, 255, 0.96)) !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid,
+  body:not([data-active-page="home"]) .holdings-summary-grid,
+  body:not([data-active-page="home"]) .yearly-summary-grid {
+    gap: 14px !important;
+  }
+}
+
+/* UI41: 非首頁統計卡 icon 與文字分離、icon 放大、依 icon 配色套用卡片淡色底 */
+@media (min-width: 761px) {
+  /* 交易紀錄統計卡：icon 左側大圖示，文字右側上下排列 */
+  .trade-stats > div.stat-icon-card {
+    min-height: 106px !important;
+    display: grid !important;
+    grid-template-columns: 62px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 18px !important;
+    row-gap: 6px !important;
+    align-content: center !important;
+    align-items: center !important;
+    padding: 18px 20px !important;
+    overflow: hidden !important;
+  }
+
+  .trade-stats > div.stat-icon-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 / 3 !important;
+    width: 58px !important;
+    height: 58px !important;
+    min-width: 58px !important;
+    border-radius: 18px !important;
+    justify-self: center !important;
+  }
+
+  .trade-stats > div.stat-icon-card > .icon-box svg {
+    width: 31px !important;
+    height: 31px !important;
+    stroke-width: 2.25 !important;
+  }
+
+  .trade-stats > div.stat-icon-card > span {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    font-size: 15px !important;
+    font-weight: 850 !important;
+    line-height: 1.2 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+  }
+
+  .trade-stats > div.stat-icon-card > strong {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    font-size: clamp(22px, 1.55vw, 32px) !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.025em !important;
+    white-space: nowrap !important;
+  }
+
+  /* 54C / 持股 / 年度等分頁統計卡：避免 icon、標題、數字擠成一排 */
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card {
+    min-height: 106px !important;
+    padding: 18px 20px !important;
+    display: grid !important;
+    grid-template-columns: 64px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto auto !important;
+    column-gap: 18px !important;
+    row-gap: 4px !important;
+    align-content: center !important;
+    align-items: center !important;
+    overflow: hidden !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 / 4 !important;
+    width: 60px !important;
+    height: 60px !important;
+    min-width: 60px !important;
+    border-radius: 19px !important;
+    justify-self: center !important;
+    align-self: center !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card > .icon-box svg {
+    width: 32px !important;
+    height: 32px !important;
+    stroke-width: 2.25 !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > span,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > span,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > span {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    font-size: 15px !important;
+    font-weight: 850 !important;
+    line-height: 1.22 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    margin: 0 !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > strong,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > strong,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > strong {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    justify-self: start !important;
+    font-size: clamp(22px, 1.55vw, 32px) !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.028em !important;
+    white-space: nowrap !important;
+    margin-top: 2px !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > small,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > small,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > small {
+    grid-column: 2 !important;
+    grid-row: 3 !important;
+    font-size: 13px !important;
+    line-height: 1.28 !important;
+    margin-top: 2px !important;
+    white-space: normal !important;
+    color: #64748b !important;
+  }
+
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > strong#topHoldingName {
+    white-space: normal !important;
+    font-size: clamp(21px, 1.45vw, 29px) !important;
+    line-height: 1.08 !important;
+  }
+
+  /* 依 icon 顏色給卡片淡色底，讓欄位類型更容易辨識 */
+  .trade-stats > div.stat-icon-card:has(.icon-box--green),
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card:has(.icon-box--green) {
+    background: linear-gradient(135deg, rgba(236, 253, 245, 0.98), rgba(255,255,255,0.98)) !important;
+    border-color: rgba(16, 185, 129, 0.24) !important;
+  }
+
+  .trade-stats > div.stat-icon-card:has(.icon-box--blue),
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card:has(.icon-box--blue) {
+    background: linear-gradient(135deg, rgba(239, 246, 255, 0.98), rgba(255,255,255,0.98)) !important;
+    border-color: rgba(59, 130, 246, 0.22) !important;
+  }
+
+  .trade-stats > div.stat-icon-card:has(.icon-box--cyan),
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card:has(.icon-box--cyan) {
+    background: linear-gradient(135deg, rgba(236, 254, 255, 0.98), rgba(255,255,255,0.98)) !important;
+    border-color: rgba(6, 182, 212, 0.23) !important;
+  }
+
+  .trade-stats > div.stat-icon-card:has(.icon-box--orange),
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card:has(.icon-box--orange) {
+    background: linear-gradient(135deg, rgba(255, 247, 237, 0.98), rgba(255,255,255,0.98)) !important;
+    border-color: rgba(245, 158, 11, 0.24) !important;
+  }
+
+  .trade-stats > div.stat-icon-card:has(.icon-box--pink),
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card:has(.icon-box--pink) {
+    background: linear-gradient(135deg, rgba(253, 242, 248, 0.98), rgba(255,255,255,0.98)) !important;
+    border-color: rgba(236, 72, 153, 0.22) !important;
+  }
+
+  .trade-stats > div.stat-icon-card:has(.icon-box--purple),
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card:has(.icon-box--purple) {
+    background: linear-gradient(135deg, rgba(245, 243, 255, 0.98), rgba(255,255,255,0.98)) !important;
+    border-color: rgba(139, 92, 246, 0.22) !important;
+  }
+
+  /* 統計卡列稍微加高並放鬆間距，避免內容貼在一起 */
+  body:not([data-active-page="home"]) .dividend-summary-grid,
+  body:not([data-active-page="home"]) .holdings-summary-grid,
+  body:not([data-active-page="home"]) .yearly-summary-grid,
+  .trade-stats {
+    gap: 16px !important;
+    align-items: stretch !important;
+  }
+}
+
+/* UI42: 統一左側大 icon + 上標題 / 中數值 / 下說明，並同步調整 Hero 右側兩張摘要卡 */
+@media (min-width: 761px) {
+  /* Hero 區右上兩張摘要卡：改為左 icon、右側三段式資訊 */
+  .desktop-hero-summary {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(260px, 1fr)) !important;
+    gap: 16px !important;
+    align-items: stretch !important;
+    align-self: stretch !important;
+    width: 100% !important;
+  }
+
+  .desktop-hero-summary-card,
+  body.streamlit-embedded .desktop-hero-summary-card,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card,
+  body[data-active-page] .desktop-hero-summary-card,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card {
+    box-sizing: border-box !important;
+    min-height: 96px !important;
+    height: auto !important;
+    display: grid !important;
+    grid-template-columns: 64px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto auto !important;
+    column-gap: 16px !important;
+    row-gap: 3px !important;
+    align-content: center !important;
+    align-items: center !important;
+    padding: 16px 18px !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+  }
+
+  .desktop-hero-summary-card .icon-box,
+  body.streamlit-embedded .desktop-hero-summary-card .icon-box,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card .icon-box,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box,
+  body[data-active-page] .desktop-hero-summary-card .icon-box,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 / 4 !important;
+    width: 58px !important;
+    height: 58px !important;
+    min-width: 58px !important;
+    border-radius: 18px !important;
+    justify-self: center !important;
+    align-self: center !important;
+  }
+
+  .desktop-hero-summary-card .icon-box svg,
+  body.streamlit-embedded .desktop-hero-summary-card .icon-box svg,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card .icon-box svg,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box svg,
+  body[data-active-page] .desktop-hero-summary-card .icon-box svg,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box svg {
+    width: 30px !important;
+    height: 30px !important;
+    stroke-width: 2.2 !important;
+  }
+
+  .desktop-hero-summary-card span:not(.icon-box),
+  body.streamlit-embedded .desktop-hero-summary-card span:not(.icon-box),
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card span:not(.icon-box),
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card span:not(.icon-box),
+  body[data-active-page] .desktop-hero-summary-card span:not(.icon-box),
+  body:not([data-active-page="home"]) .desktop-hero-summary-card span:not(.icon-box) {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    margin: 0 !important;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    line-height: 1.18 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+  }
+
+  .desktop-hero-summary-card strong,
+  body.streamlit-embedded .desktop-hero-summary-card strong,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card strong,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card strong,
+  body[data-active-page] .desktop-hero-summary-card strong,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card strong {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    margin: 1px 0 0 0 !important;
+    font-size: clamp(24px, 1.55vw, 31px) !important;
+    line-height: 1.02 !important;
+    letter-spacing: -0.025em !important;
+    white-space: nowrap !important;
+  }
+
+  .desktop-hero-summary-card small,
+  body.streamlit-embedded .desktop-hero-summary-card small,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card small,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card small,
+  body[data-active-page] .desktop-hero-summary-card small,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card small {
+    grid-column: 2 !important;
+    grid-row: 3 !important;
+    display: block !important;
+    margin: 1px 0 0 0 !important;
+    font-size: 11.5px !important;
+    line-height: 1.22 !important;
+    color: #64748b !important;
+    white-space: normal !important;
+  }
+
+  /* 非首頁統計卡：全部統一為左側大 icon，右側三段資訊 */
+  .trade-stats > div.stat-icon-card {
+    min-height: 108px !important;
+    display: grid !important;
+    grid-template-columns: 66px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto auto !important;
+    column-gap: 16px !important;
+    row-gap: 4px !important;
+    align-content: center !important;
+    align-items: center !important;
+    padding: 16px 18px !important;
+  }
+
+  .trade-stats > div.stat-icon-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 / 4 !important;
+    width: 60px !important;
+    height: 60px !important;
+    min-width: 60px !important;
+    border-radius: 18px !important;
+    justify-self: center !important;
+  }
+
+  .trade-stats > div.stat-icon-card > .icon-box svg {
+    width: 31px !important;
+    height: 31px !important;
+    stroke-width: 2.2 !important;
+  }
+
+  .trade-stats > div.stat-icon-card > span {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    margin: 0 !important;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+  }
+
+  .trade-stats > div.stat-icon-card > strong {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    margin: 1px 0 0 0 !important;
+    font-size: clamp(22px, 1.45vw, 30px) !important;
+    line-height: 1.04 !important;
+    letter-spacing: -0.022em !important;
+  }
+
+  .trade-stats > div.stat-icon-card > small {
+    grid-column: 2 !important;
+    grid-row: 3 !important;
+    display: block !important;
+    margin: 1px 0 0 0 !important;
+    font-size: 11.5px !important;
+    line-height: 1.22 !important;
+    color: #64748b !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card {
+    min-height: 108px !important;
+    padding: 16px 18px !important;
+    display: grid !important;
+    grid-template-columns: 66px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto auto !important;
+    column-gap: 16px !important;
+    row-gap: 4px !important;
+    align-content: center !important;
+    align-items: center !important;
+    overflow: hidden !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 / 4 !important;
+    width: 60px !important;
+    height: 60px !important;
+    min-width: 60px !important;
+    border-radius: 18px !important;
+    justify-self: center !important;
+    align-self: center !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card > .icon-box svg {
+    width: 31px !important;
+    height: 31px !important;
+    stroke-width: 2.2 !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > span,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > span,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > span {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    margin: 0 !important;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > strong,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > strong,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > strong {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    justify-self: start !important;
+    margin: 1px 0 0 0 !important;
+    font-size: clamp(22px, 1.5vw, 30px) !important;
+    line-height: 1.04 !important;
+    letter-spacing: -0.022em !important;
+    white-space: nowrap !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > small,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > small,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > small {
+    grid-column: 2 !important;
+    grid-row: 3 !important;
+    margin: 1px 0 0 0 !important;
+    font-size: 11.5px !important;
+    line-height: 1.22 !important;
+    color: #64748b !important;
+    white-space: normal !important;
+  }
+
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > strong#topHoldingName,
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > strong#latestDividendHealth,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > strong#yearlyLatestPremium {
+    white-space: normal !important;
+    line-height: 1.08 !important;
+  }
+}
+
+/* UI43: 卡片統一改為左 icon + 右側三段式，包含 Hero 右上兩張摘要卡 */
+@media (min-width: 761px) {
+  /* ===== 共同：所有非首頁摘要卡 ===== */
+  .trade-stats > div.stat-icon-card,
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card {
+    display: grid !important;
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto auto !important;
+    align-items: center !important;
+    align-content: center !important;
+    column-gap: 12px !important;
+    row-gap: 2px !important;
+    min-height: 88px !important;
+    padding: 12px 14px !important;
+  }
+
+  .trade-stats > div.stat-icon-card > .icon-box,
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 / 4 !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    border-radius: 12px !important;
+    align-self: center !important;
+    justify-self: start !important;
+    margin: 0 !important;
+    position: static !important;
+  }
+
+  .trade-stats > div.stat-icon-card > .icon-box svg,
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card > .icon-box svg {
+    width: 20px !important;
+    height: 20px !important;
+    stroke-width: 2.2 !important;
+  }
+
+  .trade-stats > div.stat-icon-card > span,
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > span,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > span,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > span {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    align-self: end !important;
+    justify-self: start !important;
+    margin: 0 !important;
+    font-size: 12px !important;
+    line-height: 1.15 !important;
+    font-weight: 800 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    position: static !important;
+  }
+
+  .trade-stats > div.stat-icon-card > strong,
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > strong,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > strong,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > strong {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    align-self: center !important;
+    justify-self: start !important;
+    margin: 0 !important;
+    font-size: clamp(15px, 1.18vw, 18px) !important;
+    line-height: 1.12 !important;
+    letter-spacing: -0.01em !important;
+    white-space: normal !important;
+    position: static !important;
+  }
+
+  .trade-stats > div.stat-icon-card > small,
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > small,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > small,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > small {
+    grid-column: 2 !important;
+    grid-row: 3 !important;
+    align-self: start !important;
+    justify-self: start !important;
+    display: block !important;
+    margin: 0 !important;
+    font-size: 10.5px !important;
+    line-height: 1.18 !important;
+    color: #64748b !important;
+    white-space: normal !important;
+    position: static !important;
+  }
+
+  /* 長文值避免過大 */
+  body:not([data-active-page="home"]) #latestDividendHealth,
+  body:not([data-active-page="home"]) #topHoldingName,
+  body:not([data-active-page="home"]) #yearlyLatestPremium {
+    font-size: clamp(14px, 1.02vw, 17px) !important;
+    line-height: 1.12 !important;
+  }
+
+  /* ===== Hero 右上兩張摘要卡 ===== */
+  .desktop-hero-summary {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(240px, 1fr)) !important;
+    gap: 12px !important;
+    align-items: stretch !important;
+  }
+
+  .desktop-hero-summary-card,
+  body.streamlit-embedded .desktop-hero-summary-card,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card,
+  body[data-active-page] .desktop-hero-summary-card,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card {
+    display: grid !important;
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto auto !important;
+    align-items: center !important;
+    align-content: center !important;
+    column-gap: 12px !important;
+    row-gap: 2px !important;
+    min-height: 88px !important;
+    height: auto !important;
+    padding: 12px 14px !important;
+    box-sizing: border-box !important;
+  }
+
+  .desktop-hero-summary-card .icon-box,
+  body.streamlit-embedded .desktop-hero-summary-card .icon-box,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card .icon-box,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box,
+  body[data-active-page] .desktop-hero-summary-card .icon-box,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 / 4 !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    border-radius: 12px !important;
+    justify-self: start !important;
+    align-self: center !important;
+    margin: 0 !important;
+    position: static !important;
+  }
+
+  .desktop-hero-summary-card .icon-box svg,
+  body.streamlit-embedded .desktop-hero-summary-card .icon-box svg,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card .icon-box svg,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box svg,
+  body[data-active-page] .desktop-hero-summary-card .icon-box svg,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box svg {
+    width: 20px !important;
+    height: 20px !important;
+    stroke-width: 2.2 !important;
+  }
+
+  .desktop-hero-summary-card span:not(.icon-box),
+  body.streamlit-embedded .desktop-hero-summary-card span:not(.icon-box),
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card span:not(.icon-box),
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card span:not(.icon-box),
+  body[data-active-page] .desktop-hero-summary-card span:not(.icon-box),
+  body:not([data-active-page="home"]) .desktop-hero-summary-card span:not(.icon-box) {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    margin: 0 !important;
+    align-self: end !important;
+    justify-self: start !important;
+    font-size: 12px !important;
+    line-height: 1.15 !important;
+    font-weight: 800 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    position: static !important;
+  }
+
+  .desktop-hero-summary-card strong,
+  body.streamlit-embedded .desktop-hero-summary-card strong,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card strong,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card strong,
+  body[data-active-page] .desktop-hero-summary-card strong,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card strong {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    margin: 0 !important;
+    align-self: center !important;
+    justify-self: start !important;
+    font-size: clamp(15px, 1.18vw, 18px) !important;
+    line-height: 1.12 !important;
+    letter-spacing: -0.01em !important;
+    white-space: normal !important;
+    position: static !important;
+  }
+
+  .desktop-hero-summary-card small,
+  body.streamlit-embedded .desktop-hero-summary-card small,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card small,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card small,
+  body[data-active-page] .desktop-hero-summary-card small,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card small {
+    grid-column: 2 !important;
+    grid-row: 3 !important;
+    display: block !important;
+    margin: 0 !important;
+    align-self: start !important;
+    justify-self: start !important;
+    font-size: 10.5px !important;
+    line-height: 1.18 !important;
+    color: #64748b !important;
+    white-space: normal !important;
+    position: static !important;
+  }
+}
+
+/* UI44: 真正套用到 static/assets。統計卡改成左側 ICON + 右側三段式，並修正 Hero 右側摘要卡 */
+@media (min-width: 761px) {
+  /* Hero 右側目前股數 / 含息報酬 */
+  .desktop-hero-summary {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(220px, 1fr)) !important;
+    gap: 14px !important;
+    align-items: stretch !important;
+  }
+
+  .desktop-hero-summary-card,
+  body.streamlit-embedded .desktop-hero-summary-card,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card,
+  body[data-active-page] .desktop-hero-summary-card,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card {
+    display: grid !important;
+    grid-template-columns: 50px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto auto !important;
+    align-items: center !important;
+    align-content: center !important;
+    column-gap: 12px !important;
+    row-gap: 2px !important;
+    min-height: 76px !important;
+    height: auto !important;
+    padding: 10px 14px !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+    overflow: hidden !important;
+  }
+
+  .desktop-hero-summary-card > .icon-box,
+  body.streamlit-embedded .desktop-hero-summary-card > .icon-box,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card > .icon-box,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card > .icon-box,
+  body[data-active-page] .desktop-hero-summary-card > .icon-box,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 / 4 !important;
+    position: static !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    border-radius: 14px !important;
+    justify-self: start !important;
+    align-self: center !important;
+    margin: 0 !important;
+    transform: none !important;
+  }
+
+  .desktop-hero-summary-card > .icon-box svg,
+  body.streamlit-embedded .desktop-hero-summary-card > .icon-box svg,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card > .icon-box svg,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card > .icon-box svg,
+  body[data-active-page] .desktop-hero-summary-card > .icon-box svg,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card > .icon-box svg {
+    width: 23px !important;
+    height: 23px !important;
+    stroke-width: 2.25 !important;
+  }
+
+  .desktop-hero-summary-card > span:not(.icon-box),
+  body.streamlit-embedded .desktop-hero-summary-card > span:not(.icon-box),
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card > span:not(.icon-box),
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card > span:not(.icon-box),
+  body[data-active-page] .desktop-hero-summary-card > span:not(.icon-box),
+  body:not([data-active-page="home"]) .desktop-hero-summary-card > span:not(.icon-box) {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    position: static !important;
+    justify-self: start !important;
+    align-self: end !important;
+    margin: 0 !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+  }
+
+  .desktop-hero-summary-card > strong,
+  body.streamlit-embedded .desktop-hero-summary-card > strong,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card > strong,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card > strong,
+  body[data-active-page] .desktop-hero-summary-card > strong,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card > strong {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    position: static !important;
+    justify-self: start !important;
+    align-self: center !important;
+    margin: 0 !important;
+    font-size: clamp(17px, 1.25vw, 22px) !important;
+    font-weight: 900 !important;
+    line-height: 1.08 !important;
+    letter-spacing: -0.02em !important;
+    white-space: nowrap !important;
+  }
+
+  .desktop-hero-summary-card > small,
+  body.streamlit-embedded .desktop-hero-summary-card > small,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card > small,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card > small,
+  body[data-active-page] .desktop-hero-summary-card > small,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card > small {
+    grid-column: 2 !important;
+    grid-row: 3 !important;
+    position: static !important;
+    justify-self: start !important;
+    align-self: start !important;
+    display: block !important;
+    margin: 0 !important;
+    font-size: 10.5px !important;
+    line-height: 1.15 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+  }
+
+  /* 各分頁上方統計卡：交易 / 54C / 持股 / 年度 */
+  .trade-stats > div.stat-icon-card,
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card {
+    display: grid !important;
+    grid-template-columns: 50px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto auto !important;
+    align-items: center !important;
+    align-content: center !important;
+    column-gap: 12px !important;
+    row-gap: 2px !important;
+    min-height: 82px !important;
+    height: auto !important;
+    padding: 10px 14px !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+    overflow: hidden !important;
+  }
+
+  .trade-stats > div.stat-icon-card > .icon-box,
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 / 4 !important;
+    position: static !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    border-radius: 14px !important;
+    justify-self: start !important;
+    align-self: center !important;
+    margin: 0 !important;
+    transform: none !important;
+  }
+
+  .trade-stats > div.stat-icon-card > .icon-box svg,
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card > .icon-box svg {
+    width: 23px !important;
+    height: 23px !important;
+    stroke-width: 2.25 !important;
+  }
+
+  .trade-stats > div.stat-icon-card > span,
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > span,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > span,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > span {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    position: static !important;
+    justify-self: start !important;
+    align-self: end !important;
+    margin: 0 !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+  }
+
+  .trade-stats > div.stat-icon-card > strong,
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > strong,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > strong,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > strong {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    position: static !important;
+    justify-self: start !important;
+    align-self: center !important;
+    margin: 0 !important;
+    font-size: clamp(17px, 1.25vw, 22px) !important;
+    font-weight: 900 !important;
+    line-height: 1.08 !important;
+    letter-spacing: -0.02em !important;
+    white-space: nowrap !important;
+  }
+
+  .trade-stats > div.stat-icon-card > small,
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > small,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > small,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > small {
+    grid-column: 2 !important;
+    grid-row: 3 !important;
+    position: static !important;
+    justify-self: start !important;
+    align-self: start !important;
+    display: block !important;
+    margin: 0 !important;
+    font-size: 10.5px !important;
+    line-height: 1.15 !important;
+    color: #64748b !important;
+    white-space: normal !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > strong#latestDividendHealth,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > strong#topHoldingName,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > strong#yearlyLatestPremium {
+    white-space: normal !important;
+    font-size: clamp(16px, 1.08vw, 20px) !important;
+    line-height: 1.08 !important;
+  }
+}
+
+/* UI45: final metric-card layout fix
+   目的：真正把統計卡改成「左側 icon + 右側三段式」。
+   修正 UI44 問題：舊 selector 會把 .icon-box 也當成 span 套到文字欄，導致 icon 跑到上方/與標題擠在一起。 */
+@media (min-width: 761px) {
+  /* Hero 右上：目前股數 / 含息報酬。HTML 文字區包在 div 內，所以要針對 > div 設定。 */
+  html body .desktop-hero-summary {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(220px, 1fr)) !important;
+    gap: 14px !important;
+    align-items: stretch !important;
+  }
+
+  html body .desktop-hero-summary-card {
+    display: grid !important;
+    grid-template-columns: 48px minmax(0, 1fr) !important;
+    column-gap: 12px !important;
+    align-items: center !important;
+    align-content: center !important;
+    min-height: 78px !important;
+    height: auto !important;
+    padding: 10px 14px !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+    overflow: hidden !important;
+  }
+
+  html body .desktop-hero-summary-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    position: static !important;
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    min-height: 42px !important;
+    border-radius: 14px !important;
+    justify-self: start !important;
+    align-self: center !important;
+    margin: 0 !important;
+    transform: none !important;
+  }
+
+  html body .desktop-hero-summary-card > .icon-box svg {
+    width: 22px !important;
+    height: 22px !important;
+    stroke-width: 2.25 !important;
+  }
+
+  html body .desktop-hero-summary-card > div {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    gap: 3px !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: static !important;
+    text-align: left !important;
+  }
+
+  html body .desktop-hero-summary-card > div > span {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    line-height: 1.12 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    position: static !important;
+    text-align: left !important;
+  }
+
+  html body .desktop-hero-summary-card > div > strong {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: clamp(18px, 1.28vw, 23px) !important;
+    font-weight: 900 !important;
+    line-height: 1.08 !important;
+    letter-spacing: -0.02em !important;
+    white-space: nowrap !important;
+    position: static !important;
+    text-align: left !important;
+  }
+
+  html body .desktop-hero-summary-card > div > small {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 10.5px !important;
+    line-height: 1.15 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    position: static !important;
+    text-align: left !important;
+  }
+
+  /* 各分頁摘要卡：不要依賴 body[data-active-page]，避免頁面切換狀態沒更新時 CSS 失效。 */
+  html body .trade-stats > div.stat-icon-card,
+  html body .dividend-summary-grid .dividend-card.stat-icon-card,
+  html body .holdings-summary-grid .dividend-card.stat-icon-card,
+  html body .yearly-summary-grid .dividend-card.stat-icon-card {
+    display: grid !important;
+    grid-template-columns: 48px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto auto !important;
+    column-gap: 12px !important;
+    row-gap: 2px !important;
+    align-items: center !important;
+    align-content: center !important;
+    min-height: 78px !important;
+    height: auto !important;
+    padding: 10px 14px !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+    overflow: hidden !important;
+  }
+
+  /* 必須放在 > span 規則之後也能壓過：icon 永遠固定在左側。 */
+  html body .trade-stats > div.stat-icon-card > .icon-box,
+  html body .dividend-summary-grid .dividend-card.stat-icon-card > .icon-box,
+  html body .holdings-summary-grid .dividend-card.stat-icon-card > .icon-box,
+  html body .yearly-summary-grid .dividend-card.stat-icon-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 / 4 !important;
+    position: static !important;
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    min-height: 42px !important;
+    border-radius: 14px !important;
+    justify-self: start !important;
+    align-self: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+  }
+
+  html body .trade-stats > div.stat-icon-card > .icon-box svg,
+  html body .dividend-summary-grid .dividend-card.stat-icon-card > .icon-box svg,
+  html body .holdings-summary-grid .dividend-card.stat-icon-card > .icon-box svg,
+  html body .yearly-summary-grid .dividend-card.stat-icon-card > .icon-box svg {
+    width: 22px !important;
+    height: 22px !important;
+    stroke-width: 2.25 !important;
+  }
+
+  /* 文字三段式：一定要排除 .icon-box，否則 icon 會被當成標題 span 擠到右側。 */
+  html body .trade-stats > div.stat-icon-card > span:not(.icon-box),
+  html body .dividend-summary-grid .dividend-card.stat-icon-card > span:not(.icon-box),
+  html body .holdings-summary-grid .dividend-card.stat-icon-card > span:not(.icon-box),
+  html body .yearly-summary-grid .dividend-card.stat-icon-card > span:not(.icon-box) {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    position: static !important;
+    justify-self: start !important;
+    align-self: end !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    line-height: 1.12 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+  }
+
+  html body .trade-stats > div.stat-icon-card > strong,
+  html body .dividend-summary-grid .dividend-card.stat-icon-card > strong,
+  html body .holdings-summary-grid .dividend-card.stat-icon-card > strong,
+  html body .yearly-summary-grid .dividend-card.stat-icon-card > strong {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    position: static !important;
+    justify-self: start !important;
+    align-self: center !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: clamp(18px, 1.28vw, 23px) !important;
+    font-weight: 900 !important;
+    line-height: 1.08 !important;
+    letter-spacing: -0.02em !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+  }
+
+  html body .trade-stats > div.stat-icon-card > small,
+  html body .dividend-summary-grid .dividend-card.stat-icon-card > small,
+  html body .holdings-summary-grid .dividend-card.stat-icon-card > small,
+  html body .yearly-summary-grid .dividend-card.stat-icon-card > small {
+    grid-column: 2 !important;
+    grid-row: 3 !important;
+    position: static !important;
+    justify-self: start !important;
+    align-self: start !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 10.5px !important;
+    line-height: 1.15 !important;
+    color: #64748b !important;
+    white-space: normal !important;
+    text-align: left !important;
+  }
+
+  html body .dividend-summary-grid .dividend-card.stat-icon-card > strong#latestDividendHealth,
+  html body .holdings-summary-grid .dividend-card.stat-icon-card > strong#topHoldingName,
+  html body .yearly-summary-grid .dividend-card.stat-icon-card > strong#yearlyLatestPremium {
+    white-space: normal !important;
+    font-size: clamp(17px, 1.12vw, 21px) !important;
+    line-height: 1.08 !important;
+  }
+}
+

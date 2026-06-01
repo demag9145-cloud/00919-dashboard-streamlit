@@ -9,6 +9,26 @@ render = function renderWithMonthlyHealth() {
   renderMonthlyHealth();
 };
 
+function getMonthlyAum100mValue(row) {
+  if (typeof getAum100mValue === "function") return getAum100mValue(row);
+  if (!row) return NaN;
+  const direct = Number(row.aum_100m_twd);
+  if (Number.isFinite(direct) && direct > 0) return direct;
+  const million = Number(row.aum_million_twd);
+  if (!Number.isFinite(million) || million <= 0) return NaN;
+  return million < 20000 ? million : million / 100;
+}
+
+function getPaddedDomain(values, minPaddingRatio = 0.08) {
+  const clean = values.filter((value) => Number.isFinite(value));
+  if (!clean.length) return [0, 1];
+  const rawMin = Math.min(...clean);
+  const rawMax = Math.max(...clean);
+  const span = Math.max(rawMax - rawMin, Math.abs(rawMax || 1) * minPaddingRatio, 1);
+  const pad = span * 0.18;
+  return [Math.max(0, rawMin - pad), rawMax + pad];
+}
+
 function renderMonthlyHealth() {
   if (!state?.data) return;
   const rows = calcMonthlyReturnRows(
@@ -164,37 +184,61 @@ function drawMonthlyReturnChart(rows) {
     chart.innerHTML = "<div class='empty'>尚無月度含息報酬資料</div>";
     return;
   }
-  const width = Math.max(980, rows.length * 46 + 140);
-  const height = 360;
-  const pad = { top: 26, right: 32, bottom: 48, left: 70 };
+
+  // UI34：這張圖改用「相對投入成本」顯示，而不是三條絕對金額直接疊在同一軸。
+  // 原因是投入本金、月底市值、含息總值金額很接近時，絕對值會讓線幾乎黏在一起。
+  // 這裡用 0 作為投入成本基準，月底市值 / 含息總值改畫相對投入成本的損益，表格仍保留原始金額。
+  const displayRows = rows.map((row) => ({
+    ...row,
+    costBase: 0,
+    marketReturnValue: row.marketValue - row.cost,
+    totalReturnValue: row.totalValue - row.cost,
+  }));
+
+  const width = Math.max(980, displayRows.length * 58 + 160);
+  const height = 380;
+  const pad = { top: 34, right: 38, bottom: 54, left: 82 };
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
-  const values = rows.flatMap((row) => [row.cost, row.marketValue, row.totalValue]);
-  const minValue = Math.min(0, ...values) * 0.98;
-  const maxValue = Math.max(...values, 1) * 1.08;
-  const x = (_, index) => pad.left + (index / Math.max(rows.length - 1, 1)) * plotW;
+  const values = displayRows.flatMap((row) => [row.costBase, row.marketReturnValue, row.totalReturnValue]);
+  const clean = values.filter((value) => Number.isFinite(value));
+  const rawMin = clean.length ? Math.min(...clean) : 0;
+  const rawMax = clean.length ? Math.max(...clean) : 1;
+  const rawSpan = Math.max(rawMax - rawMin, Math.abs(rawMax || rawMin || 1) * 0.18, 1000);
+  let minValue = rawMin - rawSpan * 0.18;
+  let maxValue = rawMax + rawSpan * 0.22;
+  // 讓 0 基準線一定留在圖中，正負報酬都能看清楚。
+  if (rawMin >= 0) minValue = Math.min(0, minValue);
+  if (rawMax <= 0) maxValue = Math.max(0, maxValue);
+
+  const x = (_, index) => pad.left + (index / Math.max(displayRows.length - 1, 1)) * plotW;
   const y = (value) => scale(value, minValue, maxValue, pad.top + plotH, pad.top);
-  const path = (key) => rows.map((row, index) => `${index ? "L" : "M"} ${x(row, index)} ${y(row[key])}`).join(" ");
+  const path = (key) => displayRows.map((row, index) => `${index ? "L" : "M"} ${x(row, index)} ${y(row[key])}`).join(" ");
+  const zeroY = y(0);
   const grid = [0, 1, 2, 3, 4].map((i) => {
     const yy = pad.top + (plotH / 4) * i;
     const value = maxValue - ((maxValue - minValue) / 4) * i;
-    return `<line class="grid-line" x1="${pad.left}" x2="${width - pad.right}" y1="${yy}" y2="${yy}" /><text class="axis-text" x="12" y="${yy + 4}">$${fmt.money(value)}</text>`;
+    const label = value < 0 ? `-$${fmt.money(Math.abs(value))}` : `$${fmt.money(value)}`;
+    return `<line class="grid-line" x1="${pad.left}" x2="${width - pad.right}" y1="${yy}" y2="${yy}" /><text class="axis-text" x="12" y="${yy + 4}">${label}</text>`;
   });
-  const labelStep = rows.length > 30 ? 4 : rows.length > 18 ? 3 : rows.length > 10 ? 2 : 1;
-  const labels = rows.map((row, index) => {
-    const show = index === 0 || index === rows.length - 1 || index % labelStep === 0;
-    return show ? `<text class="axis-text" text-anchor="middle" x="${x(row, index)}" y="${height - 20}">${row.month.slice(2)}</text>` : "";
+  const labelStep = displayRows.length > 30 ? 4 : displayRows.length > 18 ? 3 : displayRows.length > 10 ? 2 : 1;
+  const labels = displayRows.map((row, index) => {
+    const show = index === 0 || index === displayRows.length - 1 || index % labelStep === 0;
+    return show ? `<text class="axis-text" text-anchor="middle" x="${x(row, index)}" y="${height - 22}">${row.month.slice(2)}</text>` : "";
   });
+
   chart.innerHTML = `
-    <svg viewBox="0 0 ${width} ${height}" style="width:${width}px; max-width:none;" role="img" aria-label="每月含息報酬折線圖">
+    <svg viewBox="0 0 ${width} ${height}" style="width:${width}px; max-width:none;" role="img" aria-label="每月含息報酬相對投入成本折線圖">
       ${grid.join("")}
-      <path d="${path("cost")}" fill="none" stroke="#172124" stroke-width="2.5" />
-      <path d="${path("marketValue")}" fill="none" stroke="#1f5fbf" stroke-width="3" />
-      <path d="${path("totalValue")}" fill="none" stroke="#198754" stroke-width="3" />
-      ${rows.map((row, index) => `
-        <circle cx="${x(row, index)}" cy="${y(row.cost)}" r="3" fill="#172124" />
-        <circle cx="${x(row, index)}" cy="${y(row.marketValue)}" r="3" fill="#1f5fbf" />
-        <circle cx="${x(row, index)}" cy="${y(row.totalValue)}" r="3" fill="#198754" />
+      <line class="grid-line zero-line" x1="${pad.left}" x2="${width - pad.right}" y1="${zeroY}" y2="${zeroY}" stroke-dasharray="6 5" />
+      <text class="axis-text chart-note" x="${pad.left}" y="20">相對投入成本顯示，避免絕對金額過近時線條重疊</text>
+      <path d="${path("costBase")}" fill="none" stroke="#172124" stroke-width="2.5" stroke-dasharray="7 5" />
+      <path d="${path("marketReturnValue")}" fill="none" stroke="#1f5fbf" stroke-width="3.5" />
+      <path d="${path("totalReturnValue")}" fill="none" stroke="#198754" stroke-width="3.5" />
+      ${displayRows.map((row, index) => `
+        <circle cx="${x(row, index)}" cy="${y(row.costBase)}" r="3" fill="#172124" />
+        <circle cx="${x(row, index)}" cy="${y(row.marketReturnValue)}" r="3.5" fill="#1f5fbf" />
+        <circle cx="${x(row, index)}" cy="${y(row.totalReturnValue)}" r="3.5" fill="#198754" />
       `).join("")}
       ${labels.join("")}
     </svg>
@@ -231,10 +275,10 @@ function renderMonthlyEtfHealth() {
   body.innerHTML = rows.length
     ? [...rows].reverse().map((row, index, reversed) => {
       const newer = reversed[index - 1];
-      const rowAum = Number(row.aum_million_twd || Number(row.aum_100m_twd) * 100);
-      const newerAum = newer ? Number(newer.aum_million_twd || Number(newer.aum_100m_twd) * 100) : null;
-      const aumChangePct = newer && rowAum
-        ? ((newerAum - rowAum) / rowAum) * 100
+      const rowAum100m = getMonthlyAum100mValue(row);
+      const newerAum100m = newer ? getMonthlyAum100mValue(newer) : NaN;
+      const aumChangePct = newer && Number.isFinite(rowAum100m) && rowAum100m > 0 && Number.isFinite(newerAum100m)
+        ? ((newerAum100m - rowAum100m) / rowAum100m) * 100
         : null;
       const changeText = [
         Number.isFinite(Number(row.beneficiary_change_pct)) ? `受益人 ${fmt.pct(row.beneficiary_change_pct)}` : null,
@@ -243,7 +287,7 @@ function renderMonthlyEtfHealth() {
       return `
         <tr>
           <td>${row.month}</td>
-          <td>${fmt.money(rowAum / 100)} 億</td>
+          <td>${Number.isFinite(rowAum100m) ? `${fmt.money(rowAum100m)} 億` : "--"}</td>
           <td>${fmt.money(row.beneficiary_count)} 人</td>
           <td>${changeText || "--"}</td>
         </tr>
@@ -263,20 +307,22 @@ function drawMonthlyEtfHealthChart(chart, rows) {
   const pad = { top: 28, right: 76, bottom: 48, left: 70 };
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
-  const aumValues = rows.map((row) => Number(row.aum_million_twd || Number(row.aum_100m_twd) * 100) / 100);
-  const beneficiaryValues = rows.map((row) => Number(row.beneficiary_count || 0) / 10000);
-  const minAum = Math.min(...aumValues) * 0.96;
-  const maxAum = Math.max(...aumValues) * 1.04;
-  const minBeneficiary = Math.min(...beneficiaryValues) * 0.96;
-  const maxBeneficiary = Math.max(...beneficiaryValues) * 1.04;
+  const aumValues = rows.map(getMonthlyAum100mValue).filter((value) => Number.isFinite(value) && value > 0);
+  const beneficiaryValues = rows
+    .map((row) => Number(row.beneficiary_count) / 10000)
+    .filter((value) => Number.isFinite(value) && value > 0);
+  const [minAum, maxAum] = getPaddedDomain(aumValues, 0.08);
+  const [minBeneficiary, maxBeneficiary] = getPaddedDomain(beneficiaryValues, 0.08);
   const band = plotW / Math.max(rows.length, 1);
   const barW = Math.min(34, Math.max(16, band * 0.48));
   const x = (index) => pad.left + band * index + band / 2;
   const yAum = (value) => scale(value, minAum, maxAum, pad.top + plotH, pad.top);
   const yBeneficiary = (value) => scale(value, minBeneficiary, maxBeneficiary, pad.top + plotH, pad.top);
-  const linePath = rows.map((row, index) => {
-    const value = Number(row.beneficiary_count || 0) / 10000;
-    return `${index ? "L" : "M"} ${x(index)} ${yBeneficiary(value)}`;
+  const beneficiaryPoints = rows
+    .map((row, index) => ({ index, value: Number(row.beneficiary_count) / 10000 }))
+    .filter((point) => Number.isFinite(point.value) && point.value > 0);
+  const linePath = beneficiaryPoints.map((point, index) => {
+    return `${index ? "L" : "M"} ${x(point.index)} ${yBeneficiary(point.value)}`;
   }).join(" ");
   const grid = [0, 1, 2, 3, 4].map((i) => {
     const yy = pad.top + (plotH / 4) * i;
@@ -293,21 +339,24 @@ function drawMonthlyEtfHealthChart(chart, rows) {
     return show ? `<text class="axis-text" text-anchor="middle" x="${x(index)}" y="${height - 20}">${row.month.slice(5)}</text>` : "";
   });
   const bars = rows.map((row, index) => {
-    const aum = Number(row.aum_million_twd || Number(row.aum_100m_twd) * 100) / 100;
-    const y = yAum(aum);
-    const h = pad.top + plotH - y;
-    const beneficiaries = Number(row.beneficiary_count || 0) / 10000;
-    return `
-      <rect class="aum-bar" x="${x(index) - barW / 2}" y="${y}" width="${barW}" height="${h}" rx="4">
-        <title>${row.month}
+    const aum = getMonthlyAum100mValue(row);
+    const beneficiaries = Number(row.beneficiary_count) / 10000;
+    const bar = Number.isFinite(aum) && aum > 0 ? (() => {
+      const y = yAum(aum);
+      const h = Math.max(2, pad.top + plotH - y);
+      return `
+        <rect class="aum-bar" x="${x(index) - barW / 2}" y="${y}" width="${barW}" height="${h}" rx="4">
+          <title>${row.month}
 AUM：${fmt.money(aum)} 億
 受益人數：${fmt.money(row.beneficiary_count)} 人
 受益人月增率：${fmt.pct(row.beneficiary_change_pct)}</title>
-      </rect>
+        </rect>`;
+    })() : "";
+    const point = Number.isFinite(beneficiaries) && beneficiaries > 0 ? `
       <circle cx="${x(index)}" cy="${yBeneficiary(beneficiaries)}" r="3.5" fill="#c2410c">
         <title>${row.month} 受益人數：${fmt.money(row.beneficiary_count)} 人</title>
-      </circle>
-    `;
+      </circle>` : "";
+    return `${bar}${point}`;
   });
   chart.innerHTML = `
     <svg viewBox="0 0 ${width} ${height}" style="width:${width}px; max-width:none;" role="img" aria-label="ETF 規模健康">
