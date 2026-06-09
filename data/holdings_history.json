@@ -679,5 +679,30 @@
     ],
     "source": "MoneyDJ",
     "updated_at": "2026-05-25T13:48:13"
+  },
+  {
+    "data_date": "2026-06-03",
+    "industry_date": null,
+    "top10": [],
+    "holdings": [],
+    "industries": [],
+    "futures": [],
+    "other_assets": {},
+    "pcf": {},
+    "portfolio": {},
+    "buyback": {},
+    "fund_net_asset_value_twd": null,
+    "nav": null,
+    "issued_units": null,
+    "issued_lots": null,
+    "source": "unknown",
+    "source_details": {
+      "holdings_primary": null,
+      "portfolio_available": false,
+      "buyback_available": false,
+      "moneydj_available": false,
+      "industry_source": null
+    },
+    "updated_at": "2026-06-03T16:10:56"
   }
 ]

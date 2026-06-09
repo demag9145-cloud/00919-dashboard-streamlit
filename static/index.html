@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>00919 監控儀表板</title>
-    <link rel="stylesheet" href="assets/styles.css?v=20260601-ui44" />
+    <link rel="stylesheet" href="assets/styles.css?v=20260604-ui67" />
   </head>
   <body>
     <div class="app-shell">
@@ -24,6 +24,7 @@
           <a href="#holdings"><span data-icon="pieChart" data-icon-color="purple"></span>持股分析</a>
           <a href="#yearly"><span data-icon="calculator" data-icon-color="pink"></span>年度稅務總覽</a>
           <a href="#signal-settings"><span data-icon="trafficCone" data-icon-color="green"></span>燈號設定</a>
+          <a href="#data-maintenance"><span data-icon="database" data-icon-color="blue"></span>資料維護</a>
           <a href="#manual"><span data-icon="user" data-icon-color="cyan"></span>使用說明</a>
         </nav>
         <div class="sidebar-signal">
@@ -35,7 +36,7 @@
         </div>
         <div class="source-card">
           <span>資料來源</span>
-          <strong>MoneyDJ / TWSE e添富 / TWSE</strong>
+          <strong class="source-card-summary" title="群益：官方確認；MoneyDJ：較快補配息事件/月度資料；TWSE：54C 與公告組成；Yahoo：每日市價與成交量。">群益 / MoneyDJ / TWSE / Yahoo</strong>
           <small id="fetchedAt">更新中...</small>
         </div>
       </aside>
@@ -469,6 +470,10 @@
                   <div class="desktop-status-row desktop-status-row--integrity" data-status="green"><span>資料完整性</span><strong id="desktopFreshIntegrityStatus">--</strong><small id="desktopFreshIntegrityNote">--</small></div>
                 </div>
                 <div class="desktop-integrity-detail" id="desktopIntegrityDetail" data-status="green">資料完整性正常：所有關鍵欄位可用。</div>
+                <div class="recent-anomaly-summary desktop-anomaly-summary" id="desktopAnomalySummary" data-status="green">
+                  <div class="recent-anomaly-head"><strong>最近異常摘要</strong><small id="desktopAnomalyCount">--</small></div>
+                  <div class="recent-anomaly-list" id="desktopAnomalyList">讀取中...</div>
+                </div>
               </section>
             </aside>
           </div>
@@ -594,6 +599,10 @@
             </article>
           </div>
           <div class="mobile-integrity-detail" id="mobileIntegrityDetail" data-status="green">資料完整性正常：所有關鍵欄位可用。</div>
+          <div class="recent-anomaly-summary mobile-anomaly-summary" id="mobileAnomalySummary" data-status="green">
+            <div class="recent-anomaly-head"><strong>最近異常摘要</strong><small id="mobileAnomalyCount">--</small></div>
+            <div class="recent-anomaly-list" id="mobileAnomalyList">讀取中...</div>
+          </div>
           </section>
         </section>
 
@@ -857,7 +866,7 @@
             <article class="dividend-card">
               <span>補充保費觀察</span>
               <strong id="latestDividendHealth">--</strong>
-              <small>暫以 54C 估算值觀察門檻</small>
+              <small>暫以54C估算值觀察</small>
             </article>
           </div>
 
@@ -1141,6 +1150,139 @@
           </form>
         </section>
 
+
+        <section class="data-maintenance-section" id="data-maintenance">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Data Maintenance</p>
+              <h3>資料維護</h3>
+            </div>
+            <small>HTML 快速檢視頁；Excel 匯入與重新修復才開啟 Streamlit 工具。</small>
+          </div>
+
+          <section class="dm-card dm-ops-card">
+            <div class="dm-ops-status">
+              <div>
+                <h4>每日資料庫狀態</h4>
+                <p>正式檔案：data/daily_history.json；前端同步檔：static/data/daily_history.json。</p>
+              </div>
+              <div class="dm-kpis">
+                <article><span>NAV 筆數</span><strong id="dmNavCount">--</strong></article>
+                <article><span>收盤價筆數</span><strong id="dmPriceCount">--</strong></article>
+                <article><span>折溢價可計算</span><strong id="dmPremiumCount">--</strong></article>
+                <article><span>最新 NAV 日期</span><strong id="dmLatestNavDate">--</strong></article>
+              </div>
+            </div>
+            <div class="dm-ops-tool">
+              <h4>NAV Excel 匯入</h4>
+              <p>缺口太大時，先下載群益 Excel，再開啟匯入工具補資料。</p>
+              <a class="dm-action" href="/?native_page=data_maintenance" target="_top" data-native-page="data_maintenance" data-native-url="/?native_page=data_maintenance">開啟匯入工具</a>
+            </div>
+            <div class="dm-ops-tool">
+              <h4>資料工具</h4>
+              <p>重新計算折溢價屬於資料修復；備份下載可保存目前 daily_history.json。</p>
+              <div class="dm-action-group">
+                <a class="dm-action" href="/?native_page=data_maintenance" target="_top" data-native-page="data_maintenance" data-native-url="/?native_page=data_maintenance">開啟修復工具</a>
+                <a class="dm-action dm-action-secondary" href="data/daily_history.json" download="daily_history.json">備份下載</a>
+              </div>
+            </div>
+          </section>
+
+          <section class="dm-card dm-source-card">
+            <div class="dm-card-head">
+              <div>
+                <h4>資料來源主備援規劃</h4>
+                <p>依信任度與穩定度排序；月度 AUM 與最新快照分開保存，避免互相污染。</p>
+              </div>
+              <div class="dm-snapshot-pill">
+                <span>最新 AUM 快照</span>
+                <strong id="dmLatestSnapshotAum">--</strong>
+                <small id="dmLatestSnapshotSource">--</small>
+                <small id="dmLatestSnapshotDate">--</small>
+              </div>
+            </div>
+            <div class="dm-table-wrap dm-source-table-wrap">
+              <table class="dm-table dm-source-table">
+                <thead>
+                  <tr>
+                    <th>資料類型</th>
+                    <th>主來源</th>
+                    <th>備援來源</th>
+                    <th>信任度</th>
+                    <th>穩定度</th>
+                    <th>可抓欄位</th>
+                    <th>規則</th>
+                  </tr>
+                </thead>
+                <tbody id="dmSourceTableBody">
+                  <tr><td colspan="7">讀取中...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+<section class="dm-card dm-table-card dm-monthly-card">
+            <div class="dm-card-head">
+              <div>
+                <h4>月度資料明細（AUM / 受益人）</h4>
+                <p>MoneyDJ 若已更新受益人但 AUM 為 N/A，表格會顯示「AUM 待補」，圖表只畫受益人折線、不畫假 AUM 直條。</p>
+              </div>
+            </div>
+            <div class="dm-table-wrap dm-monthly-table-wrap">
+              <table class="dm-table dm-monthly-table">
+                <thead>
+                  <tr>
+                    <th>月份</th>
+                    <th>受益人數</th>
+                    <th>月增率%</th>
+                    <th>月度 AUM</th>
+                    <th>AUM 來源</th>
+                    <th>受益人來源</th>
+                    <th>狀態</th>
+                    <th>缺漏說明</th>
+                  </tr>
+                </thead>
+                <tbody id="dmMonthlyTableBody">
+                  <tr><td colspan="8">讀取中...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+<section class="dm-card dm-table-card">
+            <div class="dm-card-head">
+              <div>
+                <h4>每日資料明細（最近 30 筆）</h4>
+                <p>每一列代表一個交易日；欄位出現「缺」代表該項資料尚未補齊。</p>
+              </div>
+            </div>
+            <div class="dm-table-wrap">
+              <table class="dm-table">
+                <thead>
+                  <tr>
+                    <th>日期</th>
+                    <th>市價</th>
+                    <th>收盤價</th>
+                    <th>還原收盤價</th>
+                    <th>成交股數</th>
+                    <th>成交張數</th>
+                    <th>收盤價來源</th>
+                    <th>官方淨值</th>
+                    <th>淨值</th>
+                    <th>淨值來源</th>
+                    <th>是否估算淨值</th>
+                    <th>折溢價金額</th>
+                    <th>折溢價率%</th>
+                    <th>折溢價來源</th>
+                    <th>更新時間</th>
+                  </tr>
+                </thead>
+                <tbody id="dmDailyTableBody">
+                  <tr><td colspan="15">讀取中...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
         <section class="manual-section" id="manual">
           <div class="section-head">
             <div>
@@ -1242,13 +1384,13 @@
       </main>
     </div>
 
-    <script src="assets/signal_settings.js?v=20260522-1315"></script>
-    <script src="assets/app.js?v=20260601-ui44"></script>
-    <script src="assets/dividend_quarterly_overrides.js?v=20260521-1555"></script>
-    <script src="assets/monthly_health.js?v=20260522-1245"></script>
-    <script src="assets/holdings.js?v=20260522-0915"></script>
-    <script src="assets/yearly_tax.js?v=20260522-1245"></script>
-    <script src="assets/navigation.js?v=20260601-ui44"></script>
+    <script src="assets/signal_settings.js?v=20260604-ui67"></script>
+    <script src="assets/app.js?v=20260604-ui67"></script>
+    <script src="assets/dividend_quarterly_overrides.js?v=20260604-ui67"></script>
+    <script src="assets/monthly_health.js?v=20260604-ui67"></script>
+    <script src="assets/holdings.js?v=20260604-ui67"></script>
+    <script src="assets/yearly_tax.js?v=20260604-ui67"></script>
+    <script src="assets/navigation.js?v=20260604-ui67"></script>
   </body>
 </html>
 

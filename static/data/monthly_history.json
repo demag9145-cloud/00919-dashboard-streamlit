@@ -796,11 +796,18 @@
     "month_end_date": "2026-05-25",
     "aum_100m_twd": null,
     "aum_million_twd": null,
-    "beneficiary_count": null,
-    "beneficiary_change_pct": null,
+    "beneficiary_count": 1259337,
+    "beneficiary_change_pct": -4.41,
     "sources": [
+      "MoneyDJ",
       "Yahoo"
     ],
-    "updated_at": "2026-05-25T13:48:13"
+    "updated_at": "2026-05-25T13:48:13",
+    "source": "MoneyDJ",
+    "beneficiary_source": "MoneyDJ",
+    "monthly_aum_source": null,
+    "monthly_aum_status": "pending",
+    "aum_pending": true,
+    "aum_pending_reason": "MoneyDJ 已更新受益人數，但月度 AUM 仍為 N/A，等待月表補齊。"
   }
 ]

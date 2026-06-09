@@ -1214,7 +1214,7 @@ input {
   margin-top: 16px;
 }
 
-.trade-stats div {
+.trade-stats > div {
   min-height: 86px;
   padding: 14px 16px;
   border: 1px solid var(--line);
@@ -5675,462 +5675,6 @@ body.streamlit-embedded #trades .native-trades-fallback-card ~ .trade-actions {
   }
 }
 
-/* UI42: 統一左側大 icon + 上標題 / 中數值 / 下說明，並同步調整 Hero 右側兩張摘要卡 */
-@media (min-width: 761px) {
-  /* Hero 區右上兩張摘要卡：改為左 icon、右側三段式資訊 */
-  .desktop-hero-summary {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(260px, 1fr)) !important;
-    gap: 16px !important;
-    align-items: stretch !important;
-    align-self: stretch !important;
-    width: 100% !important;
-  }
-
-  .desktop-hero-summary-card,
-  body.streamlit-embedded .desktop-hero-summary-card,
-  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card,
-  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card,
-  body[data-active-page] .desktop-hero-summary-card,
-  body:not([data-active-page="home"]) .desktop-hero-summary-card {
-    box-sizing: border-box !important;
-    min-height: 96px !important;
-    height: auto !important;
-    display: grid !important;
-    grid-template-columns: 64px minmax(0, 1fr) !important;
-    grid-template-rows: auto auto auto !important;
-    column-gap: 16px !important;
-    row-gap: 3px !important;
-    align-content: center !important;
-    align-items: center !important;
-    padding: 16px 18px !important;
-    border-radius: 16px !important;
-    overflow: hidden !important;
-  }
-
-  .desktop-hero-summary-card .icon-box,
-  body.streamlit-embedded .desktop-hero-summary-card .icon-box,
-  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card .icon-box,
-  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box,
-  body[data-active-page] .desktop-hero-summary-card .icon-box,
-  body:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box {
-    grid-column: 1 !important;
-    grid-row: 1 / 4 !important;
-    width: 58px !important;
-    height: 58px !important;
-    min-width: 58px !important;
-    border-radius: 18px !important;
-    justify-self: center !important;
-    align-self: center !important;
-  }
-
-  .desktop-hero-summary-card .icon-box svg,
-  body.streamlit-embedded .desktop-hero-summary-card .icon-box svg,
-  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card .icon-box svg,
-  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box svg,
-  body[data-active-page] .desktop-hero-summary-card .icon-box svg,
-  body:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box svg {
-    width: 30px !important;
-    height: 30px !important;
-    stroke-width: 2.2 !important;
-  }
-
-  .desktop-hero-summary-card span:not(.icon-box),
-  body.streamlit-embedded .desktop-hero-summary-card span:not(.icon-box),
-  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card span:not(.icon-box),
-  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card span:not(.icon-box),
-  body[data-active-page] .desktop-hero-summary-card span:not(.icon-box),
-  body:not([data-active-page="home"]) .desktop-hero-summary-card span:not(.icon-box) {
-    grid-column: 2 !important;
-    grid-row: 1 !important;
-    margin: 0 !important;
-    font-size: 14px !important;
-    font-weight: 800 !important;
-    line-height: 1.18 !important;
-    color: #64748b !important;
-    white-space: nowrap !important;
-  }
-
-  .desktop-hero-summary-card strong,
-  body.streamlit-embedded .desktop-hero-summary-card strong,
-  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card strong,
-  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card strong,
-  body[data-active-page] .desktop-hero-summary-card strong,
-  body:not([data-active-page="home"]) .desktop-hero-summary-card strong {
-    grid-column: 2 !important;
-    grid-row: 2 !important;
-    margin: 1px 0 0 0 !important;
-    font-size: clamp(24px, 1.55vw, 31px) !important;
-    line-height: 1.02 !important;
-    letter-spacing: -0.025em !important;
-    white-space: nowrap !important;
-  }
-
-  .desktop-hero-summary-card small,
-  body.streamlit-embedded .desktop-hero-summary-card small,
-  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card small,
-  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card small,
-  body[data-active-page] .desktop-hero-summary-card small,
-  body:not([data-active-page="home"]) .desktop-hero-summary-card small {
-    grid-column: 2 !important;
-    grid-row: 3 !important;
-    display: block !important;
-    margin: 1px 0 0 0 !important;
-    font-size: 11.5px !important;
-    line-height: 1.22 !important;
-    color: #64748b !important;
-    white-space: normal !important;
-  }
-
-  /* 非首頁統計卡：全部統一為左側大 icon，右側三段資訊 */
-  .trade-stats > div.stat-icon-card {
-    min-height: 108px !important;
-    display: grid !important;
-    grid-template-columns: 66px minmax(0, 1fr) !important;
-    grid-template-rows: auto auto auto !important;
-    column-gap: 16px !important;
-    row-gap: 4px !important;
-    align-content: center !important;
-    align-items: center !important;
-    padding: 16px 18px !important;
-  }
-
-  .trade-stats > div.stat-icon-card > .icon-box {
-    grid-column: 1 !important;
-    grid-row: 1 / 4 !important;
-    width: 60px !important;
-    height: 60px !important;
-    min-width: 60px !important;
-    border-radius: 18px !important;
-    justify-self: center !important;
-  }
-
-  .trade-stats > div.stat-icon-card > .icon-box svg {
-    width: 31px !important;
-    height: 31px !important;
-    stroke-width: 2.2 !important;
-  }
-
-  .trade-stats > div.stat-icon-card > span {
-    grid-column: 2 !important;
-    grid-row: 1 !important;
-    margin: 0 !important;
-    font-size: 14px !important;
-    font-weight: 800 !important;
-    line-height: 1.2 !important;
-    color: #64748b !important;
-    white-space: nowrap !important;
-  }
-
-  .trade-stats > div.stat-icon-card > strong {
-    grid-column: 2 !important;
-    grid-row: 2 !important;
-    margin: 1px 0 0 0 !important;
-    font-size: clamp(22px, 1.45vw, 30px) !important;
-    line-height: 1.04 !important;
-    letter-spacing: -0.022em !important;
-  }
-
-  .trade-stats > div.stat-icon-card > small {
-    grid-column: 2 !important;
-    grid-row: 3 !important;
-    display: block !important;
-    margin: 1px 0 0 0 !important;
-    font-size: 11.5px !important;
-    line-height: 1.22 !important;
-    color: #64748b !important;
-  }
-
-  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card,
-  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card,
-  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card {
-    min-height: 108px !important;
-    padding: 16px 18px !important;
-    display: grid !important;
-    grid-template-columns: 66px minmax(0, 1fr) !important;
-    grid-template-rows: auto auto auto !important;
-    column-gap: 16px !important;
-    row-gap: 4px !important;
-    align-content: center !important;
-    align-items: center !important;
-    overflow: hidden !important;
-  }
-
-  body:not([data-active-page="home"]) .dividend-card.stat-icon-card > .icon-box {
-    grid-column: 1 !important;
-    grid-row: 1 / 4 !important;
-    width: 60px !important;
-    height: 60px !important;
-    min-width: 60px !important;
-    border-radius: 18px !important;
-    justify-self: center !important;
-    align-self: center !important;
-  }
-
-  body:not([data-active-page="home"]) .dividend-card.stat-icon-card > .icon-box svg {
-    width: 31px !important;
-    height: 31px !important;
-    stroke-width: 2.2 !important;
-  }
-
-  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > span,
-  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > span,
-  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > span {
-    grid-column: 2 !important;
-    grid-row: 1 !important;
-    margin: 0 !important;
-    font-size: 14px !important;
-    font-weight: 800 !important;
-    line-height: 1.2 !important;
-    color: #64748b !important;
-    white-space: nowrap !important;
-  }
-
-  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > strong,
-  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > strong,
-  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > strong {
-    grid-column: 2 !important;
-    grid-row: 2 !important;
-    justify-self: start !important;
-    margin: 1px 0 0 0 !important;
-    font-size: clamp(22px, 1.5vw, 30px) !important;
-    line-height: 1.04 !important;
-    letter-spacing: -0.022em !important;
-    white-space: nowrap !important;
-  }
-
-  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > small,
-  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > small,
-  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > small {
-    grid-column: 2 !important;
-    grid-row: 3 !important;
-    margin: 1px 0 0 0 !important;
-    font-size: 11.5px !important;
-    line-height: 1.22 !important;
-    color: #64748b !important;
-    white-space: normal !important;
-  }
-
-  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > strong#topHoldingName,
-  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > strong#latestDividendHealth,
-  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > strong#yearlyLatestPremium {
-    white-space: normal !important;
-    line-height: 1.08 !important;
-  }
-}
-
-/* UI43: 卡片統一改為左 icon + 右側三段式，包含 Hero 右上兩張摘要卡 */
-@media (min-width: 761px) {
-  /* ===== 共同：所有非首頁摘要卡 ===== */
-  .trade-stats > div.stat-icon-card,
-  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card,
-  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card,
-  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card {
-    display: grid !important;
-    grid-template-columns: 42px minmax(0, 1fr) !important;
-    grid-template-rows: auto auto auto !important;
-    align-items: center !important;
-    align-content: center !important;
-    column-gap: 12px !important;
-    row-gap: 2px !important;
-    min-height: 88px !important;
-    padding: 12px 14px !important;
-  }
-
-  .trade-stats > div.stat-icon-card > .icon-box,
-  body:not([data-active-page="home"]) .dividend-card.stat-icon-card > .icon-box {
-    grid-column: 1 !important;
-    grid-row: 1 / 4 !important;
-    width: 38px !important;
-    height: 38px !important;
-    min-width: 38px !important;
-    min-height: 38px !important;
-    border-radius: 12px !important;
-    align-self: center !important;
-    justify-self: start !important;
-    margin: 0 !important;
-    position: static !important;
-  }
-
-  .trade-stats > div.stat-icon-card > .icon-box svg,
-  body:not([data-active-page="home"]) .dividend-card.stat-icon-card > .icon-box svg {
-    width: 20px !important;
-    height: 20px !important;
-    stroke-width: 2.2 !important;
-  }
-
-  .trade-stats > div.stat-icon-card > span,
-  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > span,
-  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > span,
-  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > span {
-    grid-column: 2 !important;
-    grid-row: 1 !important;
-    align-self: end !important;
-    justify-self: start !important;
-    margin: 0 !important;
-    font-size: 12px !important;
-    line-height: 1.15 !important;
-    font-weight: 800 !important;
-    color: #64748b !important;
-    white-space: nowrap !important;
-    position: static !important;
-  }
-
-  .trade-stats > div.stat-icon-card > strong,
-  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > strong,
-  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > strong,
-  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > strong {
-    grid-column: 2 !important;
-    grid-row: 2 !important;
-    align-self: center !important;
-    justify-self: start !important;
-    margin: 0 !important;
-    font-size: clamp(15px, 1.18vw, 18px) !important;
-    line-height: 1.12 !important;
-    letter-spacing: -0.01em !important;
-    white-space: normal !important;
-    position: static !important;
-  }
-
-  .trade-stats > div.stat-icon-card > small,
-  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > small,
-  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > small,
-  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > small {
-    grid-column: 2 !important;
-    grid-row: 3 !important;
-    align-self: start !important;
-    justify-self: start !important;
-    display: block !important;
-    margin: 0 !important;
-    font-size: 10.5px !important;
-    line-height: 1.18 !important;
-    color: #64748b !important;
-    white-space: normal !important;
-    position: static !important;
-  }
-
-  /* 長文值避免過大 */
-  body:not([data-active-page="home"]) #latestDividendHealth,
-  body:not([data-active-page="home"]) #topHoldingName,
-  body:not([data-active-page="home"]) #yearlyLatestPremium {
-    font-size: clamp(14px, 1.02vw, 17px) !important;
-    line-height: 1.12 !important;
-  }
-
-  /* ===== Hero 右上兩張摘要卡 ===== */
-  .desktop-hero-summary {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(240px, 1fr)) !important;
-    gap: 12px !important;
-    align-items: stretch !important;
-  }
-
-  .desktop-hero-summary-card,
-  body.streamlit-embedded .desktop-hero-summary-card,
-  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card,
-  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card,
-  body[data-active-page] .desktop-hero-summary-card,
-  body:not([data-active-page="home"]) .desktop-hero-summary-card {
-    display: grid !important;
-    grid-template-columns: 42px minmax(0, 1fr) !important;
-    grid-template-rows: auto auto auto !important;
-    align-items: center !important;
-    align-content: center !important;
-    column-gap: 12px !important;
-    row-gap: 2px !important;
-    min-height: 88px !important;
-    height: auto !important;
-    padding: 12px 14px !important;
-    box-sizing: border-box !important;
-  }
-
-  .desktop-hero-summary-card .icon-box,
-  body.streamlit-embedded .desktop-hero-summary-card .icon-box,
-  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card .icon-box,
-  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box,
-  body[data-active-page] .desktop-hero-summary-card .icon-box,
-  body:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box {
-    grid-column: 1 !important;
-    grid-row: 1 / 4 !important;
-    width: 38px !important;
-    height: 38px !important;
-    min-width: 38px !important;
-    min-height: 38px !important;
-    border-radius: 12px !important;
-    justify-self: start !important;
-    align-self: center !important;
-    margin: 0 !important;
-    position: static !important;
-  }
-
-  .desktop-hero-summary-card .icon-box svg,
-  body.streamlit-embedded .desktop-hero-summary-card .icon-box svg,
-  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card .icon-box svg,
-  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box svg,
-  body[data-active-page] .desktop-hero-summary-card .icon-box svg,
-  body:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box svg {
-    width: 20px !important;
-    height: 20px !important;
-    stroke-width: 2.2 !important;
-  }
-
-  .desktop-hero-summary-card span:not(.icon-box),
-  body.streamlit-embedded .desktop-hero-summary-card span:not(.icon-box),
-  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card span:not(.icon-box),
-  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card span:not(.icon-box),
-  body[data-active-page] .desktop-hero-summary-card span:not(.icon-box),
-  body:not([data-active-page="home"]) .desktop-hero-summary-card span:not(.icon-box) {
-    grid-column: 2 !important;
-    grid-row: 1 !important;
-    margin: 0 !important;
-    align-self: end !important;
-    justify-self: start !important;
-    font-size: 12px !important;
-    line-height: 1.15 !important;
-    font-weight: 800 !important;
-    color: #64748b !important;
-    white-space: nowrap !important;
-    position: static !important;
-  }
-
-  .desktop-hero-summary-card strong,
-  body.streamlit-embedded .desktop-hero-summary-card strong,
-  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card strong,
-  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card strong,
-  body[data-active-page] .desktop-hero-summary-card strong,
-  body:not([data-active-page="home"]) .desktop-hero-summary-card strong {
-    grid-column: 2 !important;
-    grid-row: 2 !important;
-    margin: 0 !important;
-    align-self: center !important;
-    justify-self: start !important;
-    font-size: clamp(15px, 1.18vw, 18px) !important;
-    line-height: 1.12 !important;
-    letter-spacing: -0.01em !important;
-    white-space: normal !important;
-    position: static !important;
-  }
-
-  .desktop-hero-summary-card small,
-  body.streamlit-embedded .desktop-hero-summary-card small,
-  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card small,
-  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card small,
-  body[data-active-page] .desktop-hero-summary-card small,
-  body:not([data-active-page="home"]) .desktop-hero-summary-card small {
-    grid-column: 2 !important;
-    grid-row: 3 !important;
-    display: block !important;
-    margin: 0 !important;
-    align-self: start !important;
-    justify-self: start !important;
-    font-size: 10.5px !important;
-    line-height: 1.18 !important;
-    color: #64748b !important;
-    white-space: normal !important;
-    position: static !important;
-  }
-}
-
 /* UI44: 真正套用到 static/assets。統計卡改成左側 ICON + 右側三段式，並修正 Hero 右側摘要卡 */
 @media (min-width: 761px) {
   /* Hero 右側目前股數 / 含息報酬 */
@@ -6571,3 +6115,1369 @@ body.streamlit-embedded #trades .native-trades-fallback-card ~ .trade-actions {
   }
 }
 
+
+/* UI46: 左 icon + 右側標題/數字 + 最右側小字說明
+   目標：每季 54C、持股分析、年度稅務、交易紀錄與 Hero 摘要卡統一版型。
+   小字說明移到最右邊，讓 icon、標題、數字更清楚，卡片高度也壓低。 */
+@media (min-width: 761px) {
+  /* ===== Hero 右上兩張摘要卡：左 icon，右區塊內小字移到最右 ===== */
+  html body .desktop-hero-summary {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(230px, 1fr)) !important;
+    gap: 12px !important;
+    align-items: stretch !important;
+  }
+
+  html body .desktop-hero-summary-card {
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) !important;
+    column-gap: 12px !important;
+    align-items: center !important;
+    min-height: 76px !important;
+    height: auto !important;
+    padding: 10px 14px !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+  }
+
+  html body .desktop-hero-summary-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    border-radius: 13px !important;
+    justify-self: start !important;
+    align-self: center !important;
+    margin: 0 !important;
+    position: static !important;
+  }
+
+  html body .desktop-hero-summary-card > .icon-box svg {
+    width: 21px !important;
+    height: 21px !important;
+    stroke-width: 2.25 !important;
+  }
+
+  html body .desktop-hero-summary-card > div {
+    grid-column: 2 !important;
+    display: grid !important;
+    grid-template-columns: minmax(82px, max-content) minmax(72px, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 10px !important;
+    row-gap: 2px !important;
+    align-items: center !important;
+    min-width: 0 !important;
+  }
+
+  html body .desktop-hero-summary-card > div > span {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    margin: 0 !important;
+    font-size: 12.5px !important;
+    font-weight: 850 !important;
+    line-height: 1.12 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+  }
+
+  html body .desktop-hero-summary-card > div > strong {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    margin: 0 !important;
+    font-size: clamp(18px, 1.35vw, 22px) !important;
+    font-weight: 950 !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.02em !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+  }
+
+  html body .desktop-hero-summary-card > div > small {
+    grid-column: 2 !important;
+    grid-row: 1 / 3 !important;
+    justify-self: end !important;
+    align-self: center !important;
+    display: block !important;
+    margin: 0 !important;
+    max-width: 100px !important;
+    font-size: 10.5px !important;
+    font-weight: 700 !important;
+    line-height: 1.16 !important;
+    color: #64748b !important;
+    white-space: normal !important;
+    text-align: right !important;
+  }
+
+  /* ===== 分頁摘要卡：左 icon，中間標題/數字，最右小字 ===== */
+  html body .trade-stats > div.stat-icon-card,
+  html body .dividend-summary-grid .dividend-card.stat-icon-card,
+  html body .holdings-summary-grid .dividend-card.stat-icon-card,
+  html body .yearly-summary-grid .dividend-card.stat-icon-card {
+    display: grid !important;
+    grid-template-columns: 44px minmax(72px, max-content) minmax(64px, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 10px !important;
+    row-gap: 2px !important;
+    align-items: center !important;
+    align-content: center !important;
+    min-height: 72px !important;
+    height: auto !important;
+    padding: 8px 12px !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+    overflow: hidden !important;
+  }
+
+  html body .trade-stats > div.stat-icon-card > .icon-box,
+  html body .dividend-summary-grid .dividend-card.stat-icon-card > .icon-box,
+  html body .holdings-summary-grid .dividend-card.stat-icon-card > .icon-box,
+  html body .yearly-summary-grid .dividend-card.stat-icon-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 / 3 !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    border-radius: 13px !important;
+    justify-self: start !important;
+    align-self: center !important;
+    margin: 0 !important;
+    position: static !important;
+  }
+
+  html body .trade-stats > div.stat-icon-card > .icon-box svg,
+  html body .dividend-summary-grid .dividend-card.stat-icon-card > .icon-box svg,
+  html body .holdings-summary-grid .dividend-card.stat-icon-card > .icon-box svg,
+  html body .yearly-summary-grid .dividend-card.stat-icon-card > .icon-box svg {
+    width: 21px !important;
+    height: 21px !important;
+    stroke-width: 2.25 !important;
+  }
+
+  html body .trade-stats > div.stat-icon-card > span:not(.icon-box),
+  html body .dividend-summary-grid .dividend-card.stat-icon-card > span:not(.icon-box),
+  html body .holdings-summary-grid .dividend-card.stat-icon-card > span:not(.icon-box),
+  html body .yearly-summary-grid .dividend-card.stat-icon-card > span:not(.icon-box) {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    align-self: end !important;
+    justify-self: start !important;
+    margin: 0 !important;
+    font-size: 12.5px !important;
+    font-weight: 850 !important;
+    line-height: 1.12 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+    position: static !important;
+  }
+
+  html body .trade-stats > div.stat-icon-card > strong,
+  html body .dividend-summary-grid .dividend-card.stat-icon-card > strong,
+  html body .holdings-summary-grid .dividend-card.stat-icon-card > strong,
+  html body .yearly-summary-grid .dividend-card.stat-icon-card > strong {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    align-self: start !important;
+    justify-self: start !important;
+    margin: 0 !important;
+    font-size: clamp(18px, 1.35vw, 23px) !important;
+    font-weight: 950 !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.02em !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+    position: static !important;
+  }
+
+  html body .trade-stats > div.stat-icon-card > small,
+  html body .dividend-summary-grid .dividend-card.stat-icon-card > small,
+  html body .holdings-summary-grid .dividend-card.stat-icon-card > small,
+  html body .yearly-summary-grid .dividend-card.stat-icon-card > small {
+    grid-column: 3 !important;
+    grid-row: 1 / 3 !important;
+    align-self: center !important;
+    justify-self: end !important;
+    display: block !important;
+    margin: 0 !important;
+    max-width: 112px !important;
+    font-size: 10.5px !important;
+    font-weight: 700 !important;
+    line-height: 1.16 !important;
+    color: #64748b !important;
+    white-space: normal !important;
+    text-align: right !important;
+    position: static !important;
+  }
+
+  /* 長字值微縮，避免塞爆卡片 */
+  html body .dividend-summary-grid .dividend-card.stat-icon-card > strong#latestDividendHealth,
+  html body .holdings-summary-grid .dividend-card.stat-icon-card > strong#topHoldingName,
+  html body .yearly-summary-grid .dividend-card.stat-icon-card > strong#yearlyLatestPremium {
+    font-size: clamp(16px, 1.16vw, 21px) !important;
+    white-space: normal !important;
+    line-height: 1.06 !important;
+  }
+}
+
+/* UI47: 非首頁摘要卡最終排版修正
+   - 左側：大 ICON
+   - 中間：標題 + 數字
+   - 右側：小字說明
+   本段不依賴 data-active-page，也不依賴是否有 stat-icon-card，避免分頁狀態或 hydrate timing 造成樣式沒套到。 */
+@media (min-width: 761px) {
+  html body .desktop-hero-summary-card,
+  html body .trade-stats > div,
+  html body .dividend-summary-grid .dividend-card,
+  html body .holdings-summary-grid .dividend-card,
+  html body .yearly-summary-grid .dividend-card {
+    display: grid !important;
+    grid-template-columns: 52px minmax(72px, 1fr) minmax(66px, 104px) !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 12px !important;
+    row-gap: 2px !important;
+    align-items: center !important;
+    align-content: center !important;
+    min-height: 78px !important;
+    height: auto !important;
+    padding: 9px 14px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    text-align: left !important;
+  }
+
+  /* Hero 右上兩張卡本身內部有一層 div，另外處理。 */
+  html body .desktop-hero-summary-card {
+    grid-template-columns: 52px minmax(0, 1fr) !important;
+  }
+
+  html body .desktop-hero-summary-card > .icon-box,
+  html body .trade-stats > div > .icon-box,
+  html body .dividend-summary-grid .dividend-card > .icon-box,
+  html body .holdings-summary-grid .dividend-card > .icon-box,
+  html body .yearly-summary-grid .dividend-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 / 3 !important;
+    width: 46px !important;
+    height: 46px !important;
+    min-width: 46px !important;
+    min-height: 46px !important;
+    border-radius: 15px !important;
+    justify-self: start !important;
+    align-self: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: static !important;
+    z-index: 1 !important;
+  }
+
+  html body .desktop-hero-summary-card > .icon-box svg,
+  html body .trade-stats > div > .icon-box svg,
+  html body .dividend-summary-grid .dividend-card > .icon-box svg,
+  html body .holdings-summary-grid .dividend-card > .icon-box svg,
+  html body .yearly-summary-grid .dividend-card > .icon-box svg {
+    width: 24px !important;
+    height: 24px !important;
+    stroke-width: 2.35 !important;
+  }
+
+  /* 一般分頁摘要卡：標題與數字固定在中間欄，小字固定最右欄。 */
+  html body .trade-stats > div > span:not(.icon-box),
+  html body .dividend-summary-grid .dividend-card > span:not(.icon-box),
+  html body .holdings-summary-grid .dividend-card > span:not(.icon-box),
+  html body .yearly-summary-grid .dividend-card > span:not(.icon-box) {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    justify-self: start !important;
+    align-self: end !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 13px !important;
+    font-weight: 850 !important;
+    line-height: 1.12 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+    position: static !important;
+    max-width: 100% !important;
+  }
+
+  html body .trade-stats > div > strong,
+  html body .dividend-summary-grid .dividend-card > strong,
+  html body .holdings-summary-grid .dividend-card > strong,
+  html body .yearly-summary-grid .dividend-card > strong {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    justify-self: start !important;
+    align-self: start !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: clamp(19px, 1.35vw, 24px) !important;
+    font-weight: 950 !important;
+    line-height: 1.06 !important;
+    letter-spacing: -0.02em !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+    position: static !important;
+    max-width: 100% !important;
+  }
+
+  html body .trade-stats > div > small,
+  html body .dividend-summary-grid .dividend-card > small,
+  html body .holdings-summary-grid .dividend-card > small,
+  html body .yearly-summary-grid .dividend-card > small {
+    grid-column: 3 !important;
+    grid-row: 1 / 3 !important;
+    justify-self: end !important;
+    align-self: center !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 104px !important;
+    font-size: 10.8px !important;
+    font-weight: 720 !important;
+    line-height: 1.2 !important;
+    color: #64748b !important;
+    white-space: normal !important;
+    text-align: right !important;
+    position: static !important;
+  }
+
+  /* Hero：標題與數字在中間，小字說明在右側。 */
+  html body .desktop-hero-summary-card > div {
+    grid-column: 2 !important;
+    grid-row: 1 / 3 !important;
+    display: grid !important;
+    grid-template-columns: minmax(70px, 1fr) minmax(64px, 98px) !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 10px !important;
+    row-gap: 2px !important;
+    align-items: center !important;
+    align-content: center !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  html body .desktop-hero-summary-card > div > span {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    justify-self: start !important;
+    align-self: end !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 13px !important;
+    font-weight: 850 !important;
+    line-height: 1.12 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+    position: static !important;
+  }
+
+  html body .desktop-hero-summary-card > div > strong {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    justify-self: start !important;
+    align-self: start !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: clamp(19px, 1.35vw, 24px) !important;
+    font-weight: 950 !important;
+    line-height: 1.06 !important;
+    letter-spacing: -0.02em !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+    position: static !important;
+  }
+
+  html body .desktop-hero-summary-card > div > small {
+    grid-column: 2 !important;
+    grid-row: 1 / 3 !important;
+    justify-self: end !important;
+    align-self: center !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 98px !important;
+    font-size: 10.8px !important;
+    font-weight: 720 !important;
+    line-height: 1.2 !important;
+    color: #64748b !important;
+    white-space: normal !important;
+    text-align: right !important;
+    position: static !important;
+  }
+
+  /* 長文字數值可換行，避免推擠。 */
+  html body .dividend-summary-grid .dividend-card > strong#latestDividendHealth,
+  html body .holdings-summary-grid .dividend-card > strong#topHoldingName,
+  html body .yearly-summary-grid .dividend-card > strong#yearlyLatestPremium {
+    white-space: normal !important;
+    font-size: clamp(17px, 1.18vw, 22px) !important;
+    line-height: 1.08 !important;
+  }
+}
+
+
+/* UI48: 真正固定「左 ICON + 中間標題/數字 + 右側小字」。
+   這段搭配 app.js 的 normalizeNoteRightCards()，不再只靠直接子層 selector 猜結構。 */
+@media (min-width: 761px) {
+  html body .trade-stats > div.note-right-card,
+  html body .dividend-summary-grid .dividend-card.note-right-card,
+  html body .holdings-summary-grid .dividend-card.note-right-card,
+  html body .yearly-summary-grid .dividend-card.note-right-card {
+    display: grid !important;
+    grid-template-columns: 50px minmax(92px, 1fr) minmax(72px, 124px) !important;
+    grid-template-rows: auto !important;
+    column-gap: 12px !important;
+    align-items: center !important;
+    align-content: center !important;
+    min-height: 76px !important;
+    height: auto !important;
+    padding: 10px 14px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    text-align: left !important;
+  }
+
+  html body .trade-stats > div.note-right-card > .icon-box,
+  html body .dividend-summary-grid .dividend-card.note-right-card > .icon-box,
+  html body .holdings-summary-grid .dividend-card.note-right-card > .icon-box,
+  html body .yearly-summary-grid .dividend-card.note-right-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    border-radius: 14px !important;
+    justify-self: start !important;
+    align-self: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: static !important;
+  }
+
+  html body .trade-stats > div.note-right-card > .icon-box svg,
+  html body .dividend-summary-grid .dividend-card.note-right-card > .icon-box svg,
+  html body .holdings-summary-grid .dividend-card.note-right-card > .icon-box svg,
+  html body .yearly-summary-grid .dividend-card.note-right-card > .icon-box svg {
+    width: 23px !important;
+    height: 23px !important;
+    stroke-width: 2.35 !important;
+  }
+
+  html body .trade-stats > div.note-right-card > .stat-main,
+  html body .dividend-summary-grid .dividend-card.note-right-card > .stat-main,
+  html body .holdings-summary-grid .dividend-card.note-right-card > .stat-main,
+  html body .yearly-summary-grid .dividend-card.note-right-card > .stat-main {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    gap: 3px !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  html body .trade-stats > div.note-right-card > .stat-main > span,
+  html body .dividend-summary-grid .dividend-card.note-right-card > .stat-main > span,
+  html body .holdings-summary-grid .dividend-card.note-right-card > .stat-main > span,
+  html body .yearly-summary-grid .dividend-card.note-right-card > .stat-main > span {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 13.5px !important;
+    font-weight: 850 !important;
+    line-height: 1.12 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+    position: static !important;
+  }
+
+  html body .trade-stats > div.note-right-card > .stat-main > strong,
+  html body .dividend-summary-grid .dividend-card.note-right-card > .stat-main > strong,
+  html body .holdings-summary-grid .dividend-card.note-right-card > .stat-main > strong,
+  html body .yearly-summary-grid .dividend-card.note-right-card > .stat-main > strong {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: clamp(19px, 1.35vw, 24px) !important;
+    font-weight: 950 !important;
+    line-height: 1.06 !important;
+    letter-spacing: -0.02em !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+    position: static !important;
+    max-width: 100% !important;
+  }
+
+  html body .trade-stats > div.note-right-card > small.stat-note,
+  html body .dividend-summary-grid .dividend-card.note-right-card > small.stat-note,
+  html body .holdings-summary-grid .dividend-card.note-right-card > small.stat-note,
+  html body .yearly-summary-grid .dividend-card.note-right-card > small.stat-note {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    justify-self: end !important;
+    align-self: center !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 124px !important;
+    font-size: 10.8px !important;
+    font-weight: 720 !important;
+    line-height: 1.22 !important;
+    color: #64748b !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    text-align: right !important;
+    position: static !important;
+  }
+
+  html body .dividend-summary-grid .dividend-card.note-right-card > .stat-main > strong#latestDividendHealth,
+  html body .holdings-summary-grid .dividend-card.note-right-card > .stat-main > strong#topHoldingName,
+  html body .yearly-summary-grid .dividend-card.note-right-card > .stat-main > strong#yearlyLatestPremium {
+    white-space: normal !important;
+    font-size: clamp(17px, 1.18vw, 22px) !important;
+    line-height: 1.08 !important;
+  }
+
+  /* Hero 右上兩張卡：同樣是左 ICON，中間標題/數字，右側小字。 */
+  html body .desktop-hero-summary-card.hero-note-right-card {
+    display: grid !important;
+    grid-template-columns: 50px minmax(0, 1fr) !important;
+    column-gap: 12px !important;
+    align-items: center !important;
+    min-height: 76px !important;
+    height: auto !important;
+    padding: 10px 14px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  html body .desktop-hero-summary-card.hero-note-right-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    border-radius: 14px !important;
+    justify-self: start !important;
+    align-self: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: static !important;
+  }
+
+  html body .desktop-hero-summary-card.hero-note-right-card > .icon-box svg {
+    width: 23px !important;
+    height: 23px !important;
+    stroke-width: 2.35 !important;
+  }
+
+  html body .desktop-hero-summary-card.hero-note-right-card > .stat-main {
+    grid-column: 2 !important;
+    display: grid !important;
+    grid-template-columns: minmax(70px, 1fr) minmax(62px, 104px) !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 10px !important;
+    row-gap: 3px !important;
+    align-items: center !important;
+    align-content: center !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  html body .desktop-hero-summary-card.hero-note-right-card > .stat-main > span {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    justify-self: start !important;
+    align-self: end !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 13.5px !important;
+    font-weight: 850 !important;
+    line-height: 1.12 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+    position: static !important;
+  }
+
+  html body .desktop-hero-summary-card.hero-note-right-card > .stat-main > strong {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    justify-self: start !important;
+    align-self: start !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: clamp(19px, 1.35vw, 24px) !important;
+    font-weight: 950 !important;
+    line-height: 1.06 !important;
+    letter-spacing: -0.02em !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+    position: static !important;
+  }
+
+  html body .desktop-hero-summary-card.hero-note-right-card > .stat-main > small.stat-note {
+    grid-column: 2 !important;
+    grid-row: 1 / 3 !important;
+    justify-self: end !important;
+    align-self: center !important;
+    display: block !important;
+    max-width: 104px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 10.8px !important;
+    font-weight: 720 !important;
+    line-height: 1.22 !important;
+    color: #64748b !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    text-align: right !important;
+    position: static !important;
+  }
+}
+
+/* UI49: 修正交易紀錄卡片內 stat-main 被 .trade-stats div 當成卡片造成的小方塊。
+   同時放大右側小字說明，並確保三區塊排列穩定。 */
+@media (min-width: 761px) {
+  /* 舊規則 .trade-stats div 會誤套到內層 .stat-main，這裡直接清掉。 */
+  html body .trade-stats .stat-main {
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    outline: 0 !important;
+  }
+
+  html body .trade-stats > div.note-right-card > .stat-main,
+  html body .dividend-summary-grid .dividend-card.note-right-card > .stat-main,
+  html body .holdings-summary-grid .dividend-card.note-right-card > .stat-main,
+  html body .yearly-summary-grid .dividend-card.note-right-card > .stat-main {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+  }
+
+  html body .trade-stats > div.note-right-card > small.stat-note,
+  html body .dividend-summary-grid .dividend-card.note-right-card > small.stat-note,
+  html body .holdings-summary-grid .dividend-card.note-right-card > small.stat-note,
+  html body .yearly-summary-grid .dividend-card.note-right-card > small.stat-note,
+  html body .desktop-hero-summary-card.hero-note-right-card > .stat-main > small.stat-note,
+  html body .desktop-hero-summary-card > div > small {
+    font-size: 12.2px !important;
+    line-height: 1.25 !important;
+    font-weight: 760 !important;
+    max-width: 132px !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    text-align: right !important;
+  }
+
+  html body .trade-stats > div.note-right-card > .stat-main > span,
+  html body .dividend-summary-grid .dividend-card.note-right-card > .stat-main > span,
+  html body .holdings-summary-grid .dividend-card.note-right-card > .stat-main > span,
+  html body .yearly-summary-grid .dividend-card.note-right-card > .stat-main > span,
+  html body .desktop-hero-summary-card.hero-note-right-card > .stat-main > span {
+    font-size: 13.8px !important;
+    line-height: 1.12 !important;
+  }
+
+  html body .trade-stats > div.note-right-card > .stat-main > strong,
+  html body .dividend-summary-grid .dividend-card.note-right-card > .stat-main > strong,
+  html body .holdings-summary-grid .dividend-card.note-right-card > .stat-main > strong,
+  html body .yearly-summary-grid .dividend-card.note-right-card > .stat-main > strong,
+  html body .desktop-hero-summary-card.hero-note-right-card > .stat-main > strong {
+    font-size: clamp(20px, 1.42vw, 25px) !important;
+    line-height: 1.05 !important;
+  }
+
+  html body .trade-stats > div.note-right-card,
+  html body .dividend-summary-grid .dividend-card.note-right-card,
+  html body .holdings-summary-grid .dividend-card.note-right-card,
+  html body .yearly-summary-grid .dividend-card.note-right-card {
+    grid-template-columns: 50px minmax(86px, 1fr) minmax(88px, 132px) !important;
+    column-gap: 12px !important;
+  }
+}
+
+/* UI58: HTML-native data maintenance dashboard page */
+.data-maintenance-section {
+  display: block;
+}
+.dm-card {
+  background: #fff;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+  padding: 16px 18px;
+  margin: 14px 0;
+}
+.dm-card h4 {
+  margin: 0 0 5px;
+  font-size: 17px;
+  color: #0f172a;
+  letter-spacing: 0.01em;
+}
+.dm-card p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.dm-status-card {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.7fr) minmax(520px, 1.3fr);
+  gap: 18px;
+  align-items: center;
+}
+.dm-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.dm-kpis article {
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 13px;
+  padding: 13px 14px;
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+}
+.dm-kpis span {
+  display: block;
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.dm-kpis strong {
+  display: block;
+  font-size: 22px;
+  color: #0f172a;
+  letter-spacing: 0.02em;
+}
+.dm-compact-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding-top: 13px;
+  padding-bottom: 13px;
+}
+.dm-action-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+.dm-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 152px;
+  min-height: 38px;
+  border-radius: 10px;
+  background: #078b5c;
+  color: #fff !important;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 13px;
+  box-shadow: 0 8px 18px rgba(7, 139, 92, 0.18);
+}
+.dm-action-secondary {
+  background: #0f766e;
+}
+.dm-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.dm-gap-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 88px;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 900;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: #475569;
+  background: #f8fafc;
+}
+.dm-gap-badge.ok {
+  color: #047857;
+  background: #ecfdf5;
+  border-color: rgba(16, 185, 129, 0.32);
+}
+.dm-gap-badge.warn {
+  color: #b45309;
+  background: #fffbeb;
+  border-color: rgba(245, 158, 11, 0.38);
+}
+.dm-gap-line {
+  margin-top: 10px !important;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  font-size: 14px !important;
+  color: #0f172a !important;
+  font-weight: 700;
+}
+.dm-table-card {
+  padding: 14px;
+}
+.dm-table-wrap {
+  margin-top: 12px;
+  overflow: auto;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 13px;
+  max-height: 560px;
+  background: #fff;
+}
+.dm-table {
+  width: 100%;
+  min-width: 1380px;
+  border-collapse: collapse;
+  font-size: 14px;
+  color: #0f172a;
+}
+.dm-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #eef6f5;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 900;
+  text-align: left;
+  padding: 11px 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.32);
+  white-space: nowrap;
+}
+.dm-table tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.95);
+  white-space: nowrap;
+  font-weight: 700;
+}
+.dm-table tbody tr:hover {
+  background: #f8fafc;
+}
+.dm-missing {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  min-height: 22px;
+  border-radius: 999px;
+  color: #b45309;
+  background: #fffbeb;
+  border: 1px solid rgba(245, 158, 11, 0.38);
+  font-size: 12px;
+  font-weight: 900;
+}
+@media (max-width: 760px) {
+  .data-maintenance-section { display: none !important; }
+}
+
+/* UI59: fallback active state for hash pages when class restoration lags inside Streamlit iframe */
+body[data-active-page="home"] .nav a[href="#home"],
+body[data-active-page="trades"] .nav a[href="#trades"],
+body[data-active-page="monthly"] .nav a[href="#monthly"],
+body[data-active-page="quarterly"] .nav a[href="#quarterly"],
+body[data-active-page="holdings"] .nav a[href="#holdings"],
+body[data-active-page="yearly"] .nav a[href="#yearly"],
+body[data-active-page="signal-settings"] .nav a[href="#signal-settings"],
+body[data-active-page="data-maintenance"] .nav a[href="#data-maintenance"],
+body[data-active-page="manual"] .nav a[href="#manual"] {
+  color: #fff !important;
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.24), rgba(255, 255, 255, 0.08)) !important;
+  box-shadow: inset 3px 0 0 #10b981 !important;
+}
+
+body[data-active-page="home"] .nav a[href="#home"] .icon-box,
+body[data-active-page="trades"] .nav a[href="#trades"] .icon-box,
+body[data-active-page="monthly"] .nav a[href="#monthly"] .icon-box,
+body[data-active-page="quarterly"] .nav a[href="#quarterly"] .icon-box,
+body[data-active-page="holdings"] .nav a[href="#holdings"] .icon-box,
+body[data-active-page="yearly"] .nav a[href="#yearly"] .icon-box,
+body[data-active-page="signal-settings"] .nav a[href="#signal-settings"] .icon-box,
+body[data-active-page="data-maintenance"] .nav a[href="#data-maintenance"] .icon-box,
+body[data-active-page="manual"] .nav a[href="#manual"] .icon-box {
+  background: rgba(16, 185, 129, 0.16) !important;
+  color: #34d399 !important;
+}
+
+/* UI61: monthly AUM pending marker */
+.monthly-table td.pending,
+#monthlyEtfTableBody td.pending {
+  color: #b45309;
+  font-weight: 800;
+  background: #fffbeb;
+}
+
+/* UI62: data source inventory and monthly AUM pending diagnostics */
+.dm-source-card .dm-card-head { align-items: flex-start; }
+.dm-snapshot-pill {
+  min-width: 210px;
+  border: 1px solid rgba(14, 165, 233, 0.28);
+  background: linear-gradient(180deg, #f0f9ff, #ffffff);
+  border-radius: 14px;
+  padding: 10px 12px;
+  text-align: right;
+}
+.dm-snapshot-pill span,
+.dm-snapshot-pill small {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+}
+.dm-snapshot-pill strong {
+  display: block;
+  color: #0369a1;
+  font-size: 22px;
+  font-weight: 950;
+  line-height: 1.15;
+  margin: 4px 0;
+}
+.dm-source-table-wrap { max-height: 260px; }
+.dm-source-table { min-width: 1500px; }
+.dm-source-table td:nth-child(6),
+.dm-source-table td:nth-child(7) { white-space: normal; min-width: 220px; line-height: 1.45; }
+.dm-monthly-table-wrap { max-height: 360px; }
+.dm-monthly-table { min-width: 1120px; }
+.dm-monthly-table td:nth-child(8) { white-space: normal; min-width: 260px; line-height: 1.45; color: #92400e; }
+.dm-missing-text { padding: 3px 8px; min-width: auto; }
+.monthly-table .pending,
+.trade-table .pending { color: #b45309; font-weight: 900; }
+
+/* UI64: dividend pending / source labels */
+.legend-dot.pending {
+  background: #b9c3c8;
+  border: 1px dashed rgba(78, 94, 104, 0.6);
+}
+.pending-label {
+  font-size: 10px;
+  fill: #64748b;
+  font-weight: 800;
+}
+.dividend-pending,
+.source-note-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 800;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.pending-dividend-row td {
+  background: rgba(241, 245, 249, 0.45);
+}
+.dividend-table td small {
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.composition-tooltip div:last-child b {
+  max-width: 260px;
+  white-space: normal;
+  text-align: right;
+}
+
+
+/* UI65: readability, monthly tooltips, and data maintenance layout */
+.monthly-chart .hover-guide.active {
+  opacity: 0.72;
+}
+.monthly-hover-zone {
+  fill: transparent;
+  cursor: crosshair;
+}
+.monthly-chart-tooltip {
+  min-width: 260px;
+  font-size: 14px;
+}
+.monthly-chart-tooltip div {
+  font-size: 14px;
+  gap: 18px;
+}
+.monthly-chart-point {
+  stroke: #fff;
+  stroke-width: 1.8;
+  paint-order: stroke;
+}
+.axis-text {
+  font-size: 13px;
+}
+.monthly-legend,
+.dividend-composition-legend,
+.desktop-chart-legend,
+.mobile-chart-legend {
+  font-size: 14px;
+}
+.trade-table th,
+.monthly-table th,
+.dividend-table th,
+.holdings-table th,
+.yearly-tax-table th {
+  font-size: 14px;
+}
+.trade-table td,
+.monthly-table td,
+.dividend-table td,
+.holdings-table td,
+.yearly-tax-table td {
+  font-size: 15px;
+}
+.dividend-table {
+  min-width: 1040px;
+}
+.dividend-table th,
+.dividend-table td {
+  padding: 13px 15px;
+  vertical-align: top;
+}
+.dividend-table th:nth-child(8),
+.dividend-table td:nth-child(8) {
+  min-width: 280px;
+  white-space: normal;
+  line-height: 1.55;
+}
+.dividend-pending,
+.source-note-pill {
+  font-size: 13px;
+  padding: 4px 10px;
+}
+.dividend-table td small {
+  display: inline-block;
+  margin-top: 5px;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.55;
+  max-width: 340px;
+  white-space: normal;
+}
+.dividend-composition-head p,
+.chart-note,
+.composition-tooltip div,
+.chart-tooltip div {
+  font-size: 14px;
+}
+.dm-ops-card {
+  display: grid;
+  grid-template-columns: minmax(520px, 1.45fr) minmax(230px, 0.72fr) minmax(310px, 0.92fr);
+  gap: 14px;
+  align-items: stretch;
+}
+.dm-ops-status,
+.dm-ops-tool {
+  min-width: 0;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  padding: 14px;
+}
+.dm-ops-status {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.58fr) minmax(360px, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+.dm-ops-tool {
+  display: grid;
+  align-content: space-between;
+  gap: 10px;
+}
+.dm-ops-tool .dm-action,
+.dm-ops-tool .dm-action-group {
+  justify-self: start;
+}
+.dm-ops-tool .dm-action-group {
+  justify-content: flex-start;
+}
+.dm-card h4 {
+  font-size: 18px;
+}
+.dm-card p {
+  font-size: 14px;
+}
+.dm-kpis span {
+  font-size: 13px;
+}
+.dm-kpis strong {
+  font-size: 23px;
+}
+.dm-action {
+  font-size: 14px;
+}
+.dm-table {
+  font-size: 14.5px;
+}
+.dm-table thead th {
+  font-size: 14px;
+}
+.dm-table tbody td {
+  font-size: 14.5px;
+  line-height: 1.45;
+}
+.dm-source-table { min-width: 1420px; }
+.dm-source-table td:nth-child(7) {
+  min-width: 320px;
+  color: #334155;
+}
+.dm-monthly-table td:nth-child(8),
+.dm-reason-cell {
+  white-space: normal;
+  min-width: 260px;
+  line-height: 1.5;
+  color: #475569 !important;
+}
+@media (max-width: 1320px) {
+  .dm-ops-card {
+    grid-template-columns: 1fr;
+  }
+  .dm-ops-status {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* UI66: holdings rotation wrap layout + larger left navigation labels */
+@media (min-width: 761px) {
+  .nav a {
+    font-size: 17px !important;
+    line-height: 1.25 !important;
+    min-height: 48px !important;
+    padding: 12px 14px !important;
+    gap: 12px !important;
+    letter-spacing: 0.02em;
+  }
+
+  .nav a .icon-box {
+    width: 31px !important;
+    height: 31px !important;
+    flex: 0 0 31px !important;
+  }
+
+  .nav a .icon-box svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .brand h1 {
+    font-size: 21px !important;
+  }
+
+  .brand p,
+  .source-card span,
+  .source-card small,
+  .sidebar-signal strong,
+  .sidebar-signal small {
+    font-size: 14px !important;
+    line-height: 1.45 !important;
+  }
+
+  .holding-rotation-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    align-items: stretch !important;
+    gap: 14px !important;
+  }
+
+  .rotation-group {
+    padding: 14px 16px !important;
+    min-height: 150px;
+    overflow: visible !important;
+  }
+
+  .rotation-group strong {
+    font-size: 20px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .rotation-group ul {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px 12px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    list-style: none !important;
+    line-height: 1.35 !important;
+  }
+
+  .rotation-group li {
+    display: flex;
+    align-items: center;
+    min-height: 34px;
+    padding: 6px 10px;
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    border-radius: 999px;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 15px;
+    font-weight: 750;
+    white-space: normal;
+  }
+
+  .rotation-added li {
+    border-color: rgba(16, 185, 129, 0.26);
+    background: rgba(236, 253, 245, 0.75);
+    color: #047857;
+  }
+
+  .rotation-removed li {
+    border-color: rgba(248, 113, 113, 0.24);
+    background: rgba(254, 242, 242, 0.7);
+    color: #b42318;
+  }
+
+  .rotation-group .change-flat {
+    font-size: 15px !important;
+    font-weight: 750;
+  }
+}
+
+
+/* UI67: source tooltips + homepage anomaly summary + shorter holding chips */
+.source-card-summary,
+.source-hint {
+  cursor: help;
+}
+
+.source-hint {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: rgba(15, 118, 110, 0.08);
+  color: #0f766e;
+  font-weight: 800;
+  border-bottom: 1px dotted currentColor;
+  line-height: 1.35;
+}
+
+.source-hint--moneydj { background: rgba(245, 158, 11, 0.12); color: #92400e; }
+.source-hint--twse { background: rgba(59, 130, 246, 0.10); color: #1d4ed8; }
+.source-hint--capital { background: rgba(16, 185, 129, 0.12); color: #047857; }
+.source-hint--yahoo { background: rgba(99, 102, 241, 0.10); color: #4338ca; }
+
+.recent-anomaly-summary {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(226, 232, 240, 0.96);
+  background: #f8fafc;
+}
+
+.recent-anomaly-summary[data-status="yellow"] {
+  background: #fffbeb;
+  border-color: rgba(245, 158, 11, 0.28);
+}
+
+.recent-anomaly-summary[data-status="red"] {
+  background: #fef2f2;
+  border-color: rgba(239, 68, 68, 0.30);
+}
+
+.recent-anomaly-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.recent-anomaly-head strong {
+  font-size: 15px;
+  color: #0f172a;
+}
+
+.recent-anomaly-head small {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(15, 118, 110, 0.10);
+  color: #0f766e;
+  font-weight: 850;
+  font-size: 12px;
+}
+
+.recent-anomaly-list {
+  display: grid;
+  gap: 7px;
+}
+
+.recent-anomaly-item {
+  display: grid;
+  gap: 3px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  color: inherit;
+  text-decoration: none;
+}
+
+.recent-anomaly-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+}
+
+.recent-anomaly-item b {
+  font-size: 13.5px;
+  color: #0f172a;
+}
+
+.recent-anomaly-item span,
+.recent-anomaly-item small,
+.recent-anomaly-empty {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: #64748b;
+}
+
+.recent-anomaly-item[data-status="yellow"] { border-left: 4px solid #f59e0b; }
+.recent-anomaly-item[data-status="red"] { border-left: 4px solid #ef4444; }
+
+@media (min-width: 761px) {
+  .rotation-group ul {
+    grid-template-columns: repeat(auto-fit, minmax(122px, 1fr)) !important;
+  }
+
+  .rotation-group li {
+    min-height: 30px !important;
+    padding: 5px 10px !important;
+    font-size: 14px !important;
+    white-space: nowrap !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .desktop-anomaly-summary .recent-anomaly-list {
+    max-height: 190px;
+    overflow: auto;
+  }
+}

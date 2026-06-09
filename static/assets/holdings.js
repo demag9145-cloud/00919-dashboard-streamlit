@@ -80,7 +80,7 @@ function renderHoldingRotation(currentTop10, previousSnapshot, currentDate) {
   }
   const list = (rows, emptyText) =>
     rows.length
-      ? `<ul>${rows.map((row) => `<li>${row.name} ${row.code || ""}，${fmt.money(row.weight_pct, 2)}%</li>`).join("")}</ul>`
+      ? `<ul>${rows.map((row) => `<li title="${row.name} ${row.code || ""}，${fmt.money(row.weight_pct, 2)}%">${row.name} ${fmt.money(row.weight_pct, 2)}%</li>`).join("")}</ul>`
       : `<p class="change-flat">${emptyText}</p>`;
   target.innerHTML = `
     <div class="rotation-group rotation-added">

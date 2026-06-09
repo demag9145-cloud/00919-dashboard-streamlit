@@ -1,6 +1,7 @@
 const state = {
   data: null,
   trades: [],
+  dailyHistory: {},
   tradeAction: "buy",
   editingTradeId: "",
 };
@@ -86,6 +87,7 @@ function hydrateDesktopIcons() {
     [".holdings-section .section-head h3", "pieChart", "purple"],
     [".yearly-section .section-head h3", "calculator", "pink"],
     [".settings-section .section-head h3", "activity", "blue"],
+    [".data-maintenance-section .section-head h3", "database", "blue"],
   ];
   iconTargets.forEach(([selector, iconName, colorClass]) => prependDesktopIcon(selector, iconName, colorClass));
 
@@ -152,6 +154,50 @@ function hydrateDesktopIcons() {
     card.classList.add("stat-icon-card");
     card.insertAdjacentHTML("afterbegin", renderIcon(iconName, colorClass));
   });
+}
+
+
+/* UI48: 將統計卡 DOM 正規化，確保不是靠 CSS 猜結構。
+   一般卡片：icon + div.stat-main(標題/數字) + small.stat-note
+   Hero 卡片：icon + div.stat-main，其中 small 由 CSS 放到右側 */
+function normalizeNoteRightCard(card) {
+  if (!card || card.dataset.noteRightReady === "1") return;
+  const icon = card.querySelector(":scope > .icon-box");
+  const children = Array.from(card.children);
+  const label = children.find((node) => node.tagName === "SPAN" && !node.classList.contains("icon-box"));
+  const value = children.find((node) => node.tagName === "STRONG");
+  const note = children.find((node) => node.tagName === "SMALL");
+  if (!icon || !label || !value) return;
+
+  const main = document.createElement("div");
+  main.className = "stat-main";
+  card.insertBefore(main, label);
+  main.appendChild(label);
+  main.appendChild(value);
+
+  if (note) note.classList.add("stat-note");
+  card.classList.add("note-right-card");
+  card.dataset.noteRightReady = "1";
+}
+
+function normalizeHeroNoteRightCard(card) {
+  if (!card || card.dataset.noteRightReady === "1") return;
+  const icon = card.querySelector(":scope > .icon-box");
+  const main = card.querySelector(":scope > div");
+  if (!icon || !main) return;
+  main.classList.add("stat-main");
+  const note = main.querySelector("small");
+  if (note) note.classList.add("stat-note");
+  card.classList.add("note-right-card", "hero-note-right-card");
+  card.dataset.noteRightReady = "1";
+}
+
+function normalizeNoteRightCards() {
+  document.querySelectorAll(".desktop-hero-summary-card").forEach(normalizeHeroNoteRightCard);
+  document.querySelectorAll(".trade-stats > div").forEach(normalizeNoteRightCard);
+  document.querySelectorAll(".dividend-summary-grid .dividend-card").forEach(normalizeNoteRightCard);
+  document.querySelectorAll(".holdings-summary-grid .dividend-card").forEach(normalizeNoteRightCard);
+  document.querySelectorAll(".yearly-summary-grid .dividend-card").forEach(normalizeNoteRightCard);
 }
 
 function signalText(level) {
@@ -413,7 +459,24 @@ function hasValidAum(row) {
 }
 
 function latestRowWithValidAum(rows = []) {
-  return [...rows].reverse().find((row) => hasValidAum(row)) || {};
+  return [...rows].reverse().find((row) => hasValidAum(row) && !row.aum_is_current_snapshot && row.monthly_aum_status !== "pending") || {};
+}
+
+function getLatestAumSnapshot() {
+  const snap = state.data?.latest_snapshot || {};
+  const snapAum = getAum100mValue(snap);
+  if (Number.isFinite(snapAum)) return { ...snap, aum_100m_twd: snapAum, source: snap.source || "最新快照" };
+  const candidates = snap.candidates || [];
+  const found = candidates.find((row) => Number.isFinite(getAum100mValue(row)));
+  if (found) return { ...found, aum_100m_twd: getAum100mValue(found) };
+  return {};
+}
+
+function pickAumDisplayRow(monthlyRows = []) {
+  const snapshot = getLatestAumSnapshot();
+  if (Number.isFinite(getAum100mValue(snapshot))) return { row: snapshot, isSnapshot: true };
+  const monthly = latestRowWithValidAum(monthlyRows);
+  return { row: monthly, isSnapshot: false };
 }
 
 function getLatestMarketRow(rows = state.data?.daily || []) {
@@ -469,13 +532,13 @@ function normalizeIntegrityWarning(warning = {}) {
     "日價格歷史": "Yahoo 每日價格歷史資料",
     "最新交易日": "Yahoo 每日價格最新交易日",
     "市價": "Yahoo 每日價格 / 即時市價",
-    "淨值": "MoneyDJ 每日淨值 / 折溢價",
-    "折溢價": "MoneyDJ 每日淨值 / 折溢價",
+    "淨值": "群益淨值與績效走勢 / MoneyDJ 備援",
+    "折溢價": "系統自行計算（收盤價 - NAV）",
     "成交量": "Yahoo 每日成交量",
     "淨值/折溢價更新落後": "MoneyDJ 每日淨值 / 折溢價尚未更新到最新市價交易日",
     "每月規模歷史": "MoneyDJ 每月規模 / 受益人歷史資料尚未取得",
     "最新月資料": "MoneyDJ 每月規模 / 受益人尚未更新最新月份資料",
-    "AUM": "MoneyDJ 每月規模 / 受益人尚未更新最新月份資料或 AUM 欄位缺值",
+    "AUM": "MoneyDJ 月度 AUM 尚未補齊；首頁可用群益 / TWSE 最新快照",
     "受益人數": "MoneyDJ 每月規模 / 受益人尚未更新最新月份資料或受益人數欄位缺值",
     "配息歷史": "TWSE ETF 配息公告 / 54C 歷史資料",
     "最新除息日": "TWSE ETF 配息公告尚未更新最新除息日",
@@ -674,9 +737,10 @@ function setText(id, value) {
 }
 
 async function loadData() {
-  const [dashboardResponse, tradesResponse] = await Promise.all([
+  const [dashboardResponse, tradesResponse, dailyHistoryResponse] = await Promise.all([
     fetch(`data/dashboard_data.json?ts=${Date.now()}`),
     fetch(`data/trades.json?ts=${Date.now()}`),
+    fetch(`data/daily_history.json?ts=${Date.now()}`).catch(() => null),
   ]);
   if (!dashboardResponse.ok) {
     throw new Error(`資料檔讀取失敗：HTTP ${dashboardResponse.status}`);
@@ -685,6 +749,7 @@ async function loadData() {
     throw new Error(`交易紀錄讀取失敗：HTTP ${tradesResponse.status}`);
   }
   state.data = await dashboardResponse.json();
+  state.dailyHistory = dailyHistoryResponse && dailyHistoryResponse.ok ? await dailyHistoryResponse.json() : {};
   const serverTrades = normalizeTrades(await tradesResponse.json());
   state.trades = serverTrades;
   if (window.__00919_TRADES_SOURCE?.message) {
@@ -921,6 +986,206 @@ async function refreshDashboardData() {
     });
   }
 }
+
+function hasMaintenanceValue(value) {
+  if (value === null || value === undefined) return false;
+  if (typeof value === "number") return Number.isFinite(value);
+  const text = String(value).trim();
+  return text !== "" && text !== "--" && text.toLowerCase() !== "nan" && text.toLowerCase() !== "none" && text.toLowerCase() !== "n/a";
+}
+
+function getHistoryRows() {
+  const raw = state.dailyHistory || {};
+  const rows = Array.isArray(raw) ? raw : Object.values(raw);
+  return rows
+    .filter((row) => row && hasMaintenanceValue(row.date))
+    .sort((a, b) => String(b.date).localeCompare(String(a.date)));
+}
+
+function maintenanceNavValue(row) {
+  if (!row) return null;
+  if (hasMaintenanceValue(row.official_nav)) return Number(row.official_nav);
+  if (hasMaintenanceValue(row.nav)) return Number(row.nav);
+  return null;
+}
+
+function maintenancePriceValue(row) {
+  if (!row) return null;
+  if (hasMaintenanceValue(row.market_close)) return Number(row.market_close);
+  if (hasMaintenanceValue(row.market_price)) return Number(row.market_price);
+  return null;
+}
+
+function maintenanceFmt(value, digits = 2) {
+  if (!hasMaintenanceValue(value)) return '<span class="dm-missing">缺</span>';
+  const num = Number(value);
+  if (Number.isFinite(num)) return num.toLocaleString("zh-TW", { maximumFractionDigits: digits, minimumFractionDigits: digits });
+  return String(value);
+}
+
+const SOURCE_TOOLTIP_INFO = {
+  "群益": "群益官網：00919 官方資料確認來源；NAV、持股、配息公告與投資組合以官方公布為最後依據。",
+  "MoneyDJ": "MoneyDJ：較快補上配息事件、月度規模、受益人或持股資料；若早於官方，先標示 pending / 待官方確認。",
+  "TWSE ETF e添富": "TWSE e添富：54C、收益平準金、資本利得與 ETF 配息公告組成資料的主要來源。",
+  "TWSE": "TWSE：證交所公開資料；用於 ETF 公告、54C 組成、配息與部分交易資料驗證。",
+  "Yahoo": "Yahoo：每日市價與成交量備援；用於收盤價、成交量與圖表資料補齊。",
+  "Google Sheets": "Google Sheets：交易紀錄唯一正式資料庫；前端 JSON 只作快取與顯示。",
+  "navs.xlsx": "navs.xlsx：手動匯入的歷史 NAV 底稿；用於補齊 MoneyDJ 近 30 日以外的長期 NAV。",
+};
+
+function sourceTooltipClassName(label) {
+  if (/群益/.test(label)) return "capital";
+  if (/MoneyDJ/.test(label)) return "moneydj";
+  if (/TWSE/.test(label)) return "twse";
+  if (/Yahoo/.test(label)) return "yahoo";
+  return "generic";
+}
+
+function sourceTooltipHtml(value) {
+  const raw = String(value ?? "");
+  if (!raw) return "";
+  const escaped = escapeHtml(raw);
+  const pattern = /TWSE ETF e添富|Google Sheets|MoneyDJ|navs\.xlsx|TWSE|群益|Yahoo/g;
+  return escaped.replace(pattern, (match) => {
+    const title = SOURCE_TOOLTIP_INFO[match] || SOURCE_TOOLTIP_INFO[match.replace(" ETF e添富", "")] || "資料來源說明";
+    return `<span class="source-hint source-hint--${sourceTooltipClassName(match)}" title="${escapeHtml(title)}">${match}</span>`;
+  });
+}
+
+function maintenanceFmtText(value) {
+  return hasMaintenanceValue(value) ? sourceTooltipHtml(value) : '<span class="dm-missing">缺</span>';
+}
+
+function maintenanceAumValue(row) {
+  if (!row || row.monthly_aum_status === "pending" || row.aum_pending || row.aum_is_current_snapshot) return null;
+  const direct = Number(row.aum_100m_twd);
+  if (Number.isFinite(direct) && direct > 0) return direct;
+  const million = Number(row.aum_million_twd);
+  if (!Number.isFinite(million) || million <= 0) return null;
+  return million < 20000 ? million : million / 100;
+}
+
+
+function sourceInventoryRule(item) {
+  const baseText = [item?.label, item?.primary, Array.isArray(item?.fields) ? item.fields.join("、") : item?.fields].filter(Boolean).join(" ");
+  const text = String(baseText || "");
+  const existing = item?.rule;
+  if (hasMaintenanceValue(existing)) return String(existing);
+  if (/配息|54C|收益平準金|資本利得/.test(text)) return "MoneyDJ 先抓最新配息事件；TWSE 補 54C / 收益平準金 / 資本利得；群益官網作官方確認，來源需標註 pending / complete。";
+  if (/AUM|受益人|月度|規模/.test(text)) return "MoneyDJ 月表為主；受益人可先更新，AUM 若 N/A 顯示待補；最新快照不得覆蓋月度 AUM。";
+  if (/持股|前十大|成分|汰換/.test(text)) return "其他來源可先顯示最新持股或汰換訊息；正式判讀仍以群益官網公告為主，並保留來源註記。";
+  if (/淨值|NAV|折溢價|市價|收盤|每日/.test(text)) return "每日市價 / NAV / 折溢價寫入 daily_history；主來源優先，備援只補缺口，舊有效資料不被空值覆蓋。";
+  if (/交易|Google Sheets|Sheets/.test(text)) return "Google Sheets 為唯一交易資料庫；本機 JSON 只作快取與前端顯示，不反向覆蓋正式交易庫。";
+  return "主來源優先，備援只補缺口；保留來源、狀態與更新時間，避免空值覆蓋有效舊資料。";
+}
+
+function renderDataMaintenanceSources() {
+  const body = $("dmSourceTableBody");
+  if (!body) return;
+  const inv = state.data?.source_inventory || {};
+  const rows = Object.values(inv);
+  body.innerHTML = rows.length ? rows.map((item) => `
+    <tr>
+      <td>${maintenanceFmtText(item.label)}</td>
+      <td>${maintenanceFmtText(item.primary)}</td>
+      <td>${Array.isArray(item.fallback) ? sourceTooltipHtml(item.fallback.join(" / ")) : maintenanceFmtText(item.fallback)}</td>
+      <td>${maintenanceFmtText(item.trust)}</td>
+      <td>${maintenanceFmtText(item.stability)}</td>
+      <td>${Array.isArray(item.fields) ? sourceTooltipHtml(item.fields.join("、")) : maintenanceFmtText(item.fields)}</td>
+      <td>${maintenanceFmtText(sourceInventoryRule(item))}</td>
+    </tr>
+  `).join("") : '<tr><td colspan="7">尚未建立資料來源規劃。</td></tr>';
+
+  const snapshot = getLatestAumSnapshot();
+  const aum = getAum100mValue(snapshot);
+  setText("dmLatestSnapshotAum", Number.isFinite(aum) ? `${fmt.money(aum)} 億` : "--");
+  setText("dmLatestSnapshotDate", snapshot.data_date || "--");
+  setText("dmLatestSnapshotSource", snapshot.source || "--");
+}
+
+function renderDataMaintenanceMonthly() {
+  const body = $("dmMonthlyTableBody");
+  if (!body) return;
+  const rows = (state.data?.monthly_history || state.data?.monthly_size || [])
+    .filter((row) => row && row.month)
+    .sort((a, b) => String(b.month).localeCompare(String(a.month)))
+    .slice(0, 18);
+  body.innerHTML = rows.length ? rows.map((row) => {
+    const aum = maintenanceAumValue(row);
+    const status = row.monthly_aum_status || (Number.isFinite(aum) ? "complete" : (hasMaintenanceValue(row.beneficiary_count) ? "pending" : "missing"));
+    const statusText = status === "complete" ? "完整" : status === "pending" ? "AUM 待補" : "缺";
+    const reasonText = status === "complete"
+      ? "—"
+      : hasMaintenanceValue(row.aum_pending_reason)
+      ? String(row.aum_pending_reason)
+      : status === "pending"
+      ? "受益人已更新，月度 AUM 等待來源補齊"
+      : "月度 AUM / 受益人資料缺漏";
+    return `<tr>
+      <td>${maintenanceFmtText(row.month)}</td>
+      <td>${maintenanceFmt(row.beneficiary_count, 0)}</td>
+      <td>${maintenanceFmt(row.beneficiary_change_pct, 2)}</td>
+      <td>${Number.isFinite(aum) ? `${maintenanceFmt(aum, 2)} 億` : '<span class="dm-missing dm-missing-text">待補</span>'}</td>
+      <td>${maintenanceFmtText(row.monthly_aum_source)}</td>
+      <td>${maintenanceFmtText(row.beneficiary_source || row.source)}</td>
+      <td>${statusText}</td>
+      <td class="dm-reason-cell">${reasonText}</td>
+    </tr>`;
+  }).join("") : '<tr><td colspan="8">尚未建立 monthly_history.json</td></tr>';
+}
+
+function renderDataMaintenance() {
+  renderDataMaintenanceSources();
+  renderDataMaintenanceMonthly();
+  const tableBody = $("dmDailyTableBody");
+  if (!tableBody) return;
+  const rows = getHistoryRows();
+  const navRows = rows.filter((row) => maintenanceNavValue(row) !== null);
+  const priceRows = rows.filter((row) => maintenancePriceValue(row) !== null);
+  const premiumRows = rows.filter((row) => hasMaintenanceValue(row.premium_discount_pct));
+  const latestNavDate = navRows.length ? navRows[0].date : "--";
+  setText("dmNavCount", fmt.money(navRows.length));
+  setText("dmPriceCount", fmt.money(priceRows.length));
+  setText("dmPremiumCount", fmt.money(premiumRows.length));
+  setText("dmLatestNavDate", latestNavDate || "--");
+
+  const missingNav = rows.filter((row) => maintenancePriceValue(row) !== null && maintenanceNavValue(row) === null).map((row) => row.date);
+  const missingPrice = rows.filter((row) => maintenanceNavValue(row) !== null && maintenancePriceValue(row) === null).map((row) => row.date);
+  const gapTotal = missingNav.length + missingPrice.length;
+  const gapBadge = $("dmGapBadge");
+  if (gapBadge) {
+    gapBadge.textContent = gapTotal ? `${gapTotal} 筆需補` : "無缺漏";
+    gapBadge.className = `dm-gap-badge ${gapTotal ? "warn" : "ok"}`;
+  }
+  setText("dmGapSummary", `缺 NAV：${missingNav.length ? missingNav.slice(0, 12).join("、") : "無"} ｜ 缺收盤價：${missingPrice.length ? missingPrice.slice(0, 12).join("、") : "無"}`);
+
+  const preview = rows.slice(0, 30);
+  if (!preview.length) {
+    tableBody.innerHTML = '<tr><td colspan="15">尚未建立 daily_history.json</td></tr>';
+    return;
+  }
+  tableBody.innerHTML = preview.map((row) => {
+    const estimated = row.is_estimated_nav === true || row.is_estimated_nav === "true" || row.is_estimated_nav === 1;
+    return `<tr>
+      <td>${maintenanceFmtText(row.date)}</td>
+      <td>${maintenanceFmt(row.market_price, 2)}</td>
+      <td>${maintenanceFmt(row.market_close, 2)}</td>
+      <td>${maintenanceFmt(row.adjusted_close, 2)}</td>
+      <td>${maintenanceFmt(row.volume_shares, 0)}</td>
+      <td>${maintenanceFmt(row.volume_lots, 0)}</td>
+      <td>${maintenanceFmtText(row.price_source)}</td>
+      <td>${maintenanceFmt(row.official_nav, 2)}</td>
+      <td>${maintenanceFmt(row.nav, 2)}</td>
+      <td>${maintenanceFmtText(row.nav_source)}</td>
+      <td>${hasMaintenanceValue(row.is_estimated_nav) ? (estimated ? "是" : "否") : '<span class="dm-missing">缺</span>'}</td>
+      <td>${maintenanceFmt(row.premium_discount_amount, 2)}</td>
+      <td>${maintenanceFmt(row.premium_discount_pct, 4)}</td>
+      <td>${maintenanceFmtText(row.premium_source)}</td>
+      <td>${maintenanceFmtText(row.updated_at)}</td>
+    </tr>`;
+  }).join("");
+}
+
 function render() {
   if (!state.data) return;
 
@@ -990,6 +1255,8 @@ function render() {
   };
   renderDesktopHome(renderModel);
   renderMobileHome(renderModel);
+  renderRecentAnomalySummary(freshnessModel, signals);
+  renderDataMaintenance();
 
   renderTradeTable(position, latestForPrice);
   renderQuarterlyDividends(state.data.dividends || [], state.trades || []);
@@ -1237,12 +1504,13 @@ function renderMobileFocusCards({ position, dividend, totalReturn, totalCost, fr
     .filter((row) => row.month && (row.aum_million_twd != null || row.aum_100m_twd != null || row.beneficiary_count != null))
     .sort((a, b) => String(a.month).localeCompare(String(b.month)));
   const latestSize = freshnessModel.latestMonthly || monthlySizeRows[monthlySizeRows.length - 1] || {};
-  const latestAum = latestRowWithValidAum(monthlySizeRows);
+  const aumDisplay = pickAumDisplayRow(monthlySizeRows);
+  const latestAum = aumDisplay.row || {};
   const aum100m = getAum100mValue(latestAum);
   setText("mobileFocusBeneficiaries", Number.isFinite(Number(latestSize.beneficiary_count)) ? `${fmt.money(Number(latestSize.beneficiary_count))} 人` : "--");
   setText("mobileFocusBeneficiariesNote", Number.isFinite(Number(latestSize.beneficiary_change_pct)) ? `月變化 ${fmt.pct(Number(latestSize.beneficiary_change_pct))}` : "--");
   setText("mobileFocusAum", Number.isFinite(aum100m) ? `${fmt.money(aum100m)} 億` : "--");
-  setText("mobileFocusAumNote", latestAum.month || latestSize.month || "--");
+  setText("mobileFocusAumNote", aumDisplay.isSnapshot ? `最新快照 ${latestAum.data_date || latestAum.source || "--"}` : (latestAum.month || latestSize.month || "--"));
 
   const holdings = freshnessModel.holdingsData || {};
   const top10 = holdings.top10 || [];
@@ -1335,12 +1603,13 @@ function renderDesktopFocusCards({ position, dividend, totalReturn, totalCost, f
     .filter((row) => row.month && (row.aum_million_twd != null || row.aum_100m_twd != null || row.beneficiary_count != null))
     .sort((a, b) => String(a.month).localeCompare(String(b.month)));
   const latestSize = freshnessModel.latestMonthly || monthlySizeRows[monthlySizeRows.length - 1] || {};
-  const latestAum = latestRowWithValidAum(monthlySizeRows);
+  const aumDisplay = pickAumDisplayRow(monthlySizeRows);
+  const latestAum = aumDisplay.row || {};
   const aum100m = getAum100mValue(latestAum);
   setText("desktopFocusBeneficiaries", Number.isFinite(Number(latestSize.beneficiary_count)) ? `${fmt.money(Number(latestSize.beneficiary_count))} 人` : "--");
   setText("desktopFocusBeneficiariesNote", Number.isFinite(Number(latestSize.beneficiary_change_pct)) ? `月變化 ${fmt.pct(Number(latestSize.beneficiary_change_pct))}` : "--");
   setText("desktopFocusAum", Number.isFinite(aum100m) ? `${fmt.money(aum100m)} 億` : "--");
-  setText("desktopFocusAumNote", latestAum.month || latestSize.month || "--");
+  setText("desktopFocusAumNote", aumDisplay.isSnapshot ? `最新快照 ${latestAum.data_date || latestAum.source || "--"}` : (latestAum.month || latestSize.month || "--"));
 
   const holdings = freshnessModel.holdingsData || {};
   const top10 = holdings.top10 || [];
@@ -1477,10 +1746,11 @@ function renderHomeFocus(position, latest, dividend, totalReturn, totalCost) {
     .filter((row) => row.month && (row.aum_million_twd != null || row.aum_100m_twd != null || row.beneficiary_count != null))
     .sort((a, b) => String(a.month).localeCompare(String(b.month)));
   const latestSize = sizeRows[sizeRows.length - 1] || {};
-  const latestAum = latestRowWithValidAum(sizeRows);
+  const aumDisplay = pickAumDisplayRow(sizeRows);
+  const latestAum = aumDisplay.row || {};
   const aum100m = getAum100mValue(latestAum);
   setText("homeAum", Number.isFinite(aum100m) ? `${fmt.money(aum100m)} 億` : "--");
-  setText("homeAumMonth", latestAum.month || latestSize.month || "--");
+  setText("homeAumMonth", aumDisplay.isSnapshot ? `最新快照 ${latestAum.data_date || latestAum.source || "--"}` : (latestAum.month || latestSize.month || "--"));
   setText("homeBeneficiaries", Number.isFinite(Number(latestSize.beneficiary_count)) ? `${fmt.money(Number(latestSize.beneficiary_count))} 人` : "--");
   setText(
     "homeBeneficiaryChange",
@@ -1494,6 +1764,118 @@ function renderHomeFocus(position, latest, dividend, totalReturn, totalCost) {
   setText("homeTop10Date", holdings.data_date ? `資料日 ${holdings.data_date}` : "--");
   setText("homeTopHolding", top10[0] ? `${top10[0].name} ${top10[0].code || ""}` : "--");
   setText("homeTopHoldingWeight", top10[0] ? fmt.pct(Number(top10[0].weight_pct || 0)) : "--");
+}
+
+
+function addUniqueAnomaly(items, item) {
+  const key = item.key || item.title;
+  if (!key || items.some((existing) => existing.key === key || existing.title === item.title)) return;
+  items.push({ level: item.level || "yellow", key, title: item.title, detail: item.detail || "", source: item.source || "", href: item.href || "" });
+}
+
+function buildRecentAnomalyItems(model, signals = {}) {
+  const items = [];
+  const latestDividend = state.data?.latest_dividend || {};
+  const dividendPerShare = Number(latestDividend.dividend_per_share || 0);
+  const compositionPending = latestDividend.ex_date && dividendPerShare > 0 && (
+    latestDividend.composition_pending === true ||
+    latestDividend.composition_status === "pending" ||
+    latestDividend.event_status === "pending" ||
+    !isFiniteValue(latestDividend.estimated_54c_per_share)
+  );
+  if (compositionPending) {
+    addUniqueAnomaly(items, {
+      key: "dividend-composition-pending",
+      level: "yellow",
+      title: "54C 組成待補",
+      detail: `${latestDividend.ex_date} 每股 ${fmt.money(dividendPerShare, 2)} 元已可先顯示柱狀圖；54C / 收益平準金 / 資本利得等待 TWSE 或官方補齊。`,
+      source: latestDividend.event_source || latestDividend.source || "MoneyDJ / TWSE / 群益",
+      href: "#quarterly",
+    });
+  }
+
+  const latestMonthly = model?.latestMonthly || {};
+  const aumPending = latestMonthly.month && (
+    latestMonthly.monthly_aum_status === "pending" ||
+    latestMonthly.aum_pending === true ||
+    (!isFiniteValue(latestMonthly.aum_100m_twd ?? latestMonthly.aum_million_twd) && isFiniteValue(latestMonthly.beneficiary_count))
+  );
+  if (aumPending) {
+    addUniqueAnomaly(items, {
+      key: "monthly-aum-pending",
+      level: "yellow",
+      title: "AUM 月資料待補",
+      detail: `${latestMonthly.month} 受益人數已更新，但月度 AUM 尚未補齊；首頁可先使用最新快照，不覆蓋月資料。`,
+      source: latestMonthly.monthly_aum_source || latestMonthly.beneficiary_source || "MoneyDJ / 群益快照",
+      href: "#data-maintenance",
+    });
+  }
+
+  [calcHoldingSignalForSummary(), calcBeneficiarySignalForSummary(), calcTaxSignalForSummary()].forEach((signal) => {
+    if (signalSeverity(signal.level) > 0) {
+      const title = signal.reason.split("：")[0] || "燈號提醒";
+      addUniqueAnomaly(items, {
+        key: `signal-${title}`,
+        level: signal.level,
+        title,
+        detail: signal.reason,
+        source: "燈號設定 / dashboard_data",
+        href: title.includes("持股") ? "#holdings" : title.includes("受益人") ? "#monthly" : "#yearly",
+      });
+    }
+  });
+
+  (model?.integrity?.warnings || []).forEach((warning) => {
+    const normalized = normalizeIntegrityWarning(warning);
+    addUniqueAnomaly(items, {
+      key: `integrity-${normalized.label}`,
+      level: normalized.level,
+      title: `${normalized.label}需檢查`,
+      detail: normalized.impact,
+      source: normalized.source,
+      href: "#data-maintenance",
+    });
+  });
+
+  if (signals.level && signals.level !== "green" && signals.reason) {
+    addUniqueAnomaly(items, {
+      key: "main-signal",
+      level: signals.level,
+      title: "主燈號提醒",
+      detail: signals.reason,
+      source: "燈號設定",
+      href: "#signal-settings",
+    });
+  }
+
+  return items
+    .sort((a, b) => signalSeverity(b.level) - signalSeverity(a.level))
+    .slice(0, 5);
+}
+
+function renderRecentAnomalySummary(model, signals = {}) {
+  const items = buildRecentAnomalyItems(model, signals);
+  const worst = items[0]?.level || "green";
+  const targets = [
+    { box: $("desktopAnomalySummary"), list: $("desktopAnomalyList"), count: $("desktopAnomalyCount") },
+    { box: $("mobileAnomalySummary"), list: $("mobileAnomalyList"), count: $("mobileAnomalyCount") },
+  ];
+  targets.forEach(({ box, list, count }) => {
+    if (!box || !list) return;
+    box.dataset.status = worst;
+    if (count) count.textContent = items.length ? `${items.length} 項` : "正常";
+    if (!items.length) {
+      list.innerHTML = `<div class="recent-anomaly-empty">目前沒有需要特別處理的異常；資料來源與關鍵欄位正常。</div>`;
+      return;
+    }
+    list.innerHTML = items.map((item) => `
+      <a class="recent-anomaly-item" data-status="${item.level}" href="${item.href || "#data-maintenance"}">
+        <b>${escapeHtml(item.title)}</b>
+        <span>${escapeHtml(item.detail)}</span>
+        <small>來源：${sourceTooltipHtml(item.source || "系統判斷")}</small>
+      </a>
+    `).join("");
+  });
 }
 
 function bindTradeForm() {
@@ -2238,6 +2620,7 @@ function drawMobileChart(allRows, range = "month") {
 
 hydrateInlineIcons();
 hydrateDesktopIcons();
+normalizeNoteRightCards();
 bindInputs();
 loadData().catch((error) => {
   console.error(error);

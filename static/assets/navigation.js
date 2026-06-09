@@ -8,6 +8,7 @@
     "#holdings": [".desktop-home", "#holdings"],
     "#yearly": [".desktop-home", "#yearly"],
     "#signal-settings": [".desktop-home", "#signal-settings"],
+    "#data-maintenance": [".desktop-home", "#data-maintenance"],
     "#manual": [".desktop-home", "#manual"],
   };
   const managedPageSelectors = [
@@ -20,6 +21,7 @@
     "#holdings",
     "#yearly",
     "#signal-settings",
+    "#data-maintenance",
     "#manual",
   ];
 
@@ -237,8 +239,73 @@
     return requested;
   }
 
+  function resolveNativePageUrl(nativePage, configuredUrl) {
+    if (configuredUrl) {
+      if (/^https?:\/\//i.test(configuredUrl) || configuredUrl.startsWith("/")) return configuredUrl;
+      return "/" + configuredUrl.replace(/^\/?/, "");
+    }
+    const page = nativePage || "data_maintenance";
+    if (page === "data_maintenance") return "/?native_page=data_maintenance";
+    if (page === "data-maintenance") return "/?target_page=data-maintenance";
+    return `/?native_page=${page}`;
+  }
+
+  function navigateToNativePage(nativePage, configuredUrl) {
+    const targetUrl = resolveNativePageUrl(nativePage, configuredUrl);
+    const normalizedPage = String(nativePage || "").replace("_", "-");
+    const isDataMaintenance = normalizedPage === "data-maintenance" || targetUrl.includes("target_page=data-maintenance");
+
+    // UI57：資料維護由 Streamlit 原生頁負責。先用 postMessage 請父層
+    // 直接改最外層網址；同時送新版與舊版相容訊息，避免瀏覽器殘留舊 bridge
+    // 時左鍵點擊沒有反應。
+    const payload = {
+      type: "00919:navigate-native",
+      nativePage: nativePage || "data-maintenance",
+      nativeUrl: targetUrl,
+      forceTop: true,
+    };
+    const compatPayload = {
+      type: "00919:navigate",
+      hash: isDataMaintenance ? "#data-maintenance" : "#trades",
+      nativePage: nativePage || "data-maintenance",
+      nativeUrl: targetUrl,
+      forceTop: true,
+    };
+
+    let requested = false;
+    function sendTo(win) {
+      if (!win || win === window) return;
+      try { win.postMessage(payload, "*"); requested = true; } catch (err) {}
+      try { win.postMessage(compatPayload, "*"); requested = true; } catch (err) {}
+    }
+    sendTo(window.parent);
+    sendTo(window.top);
+
+    window.setTimeout(() => {
+      sendTo(window.parent);
+      sendTo(window.top);
+      // 不再把資料維護載進 iframe，避免雙更新按鈕；若父層橋接真的失敗，
+      // 維持目前畫面，使用者仍可用右鍵開啟。
+      if (isDataMaintenance) return;
+      try { if (window.top && window.top !== window) { window.top.location.href = targetUrl; return; } } catch (err) {}
+      try { window.location.assign(targetUrl); return; } catch (err) {}
+      try { window.location.href = targetUrl; return; } catch (err) {}
+    }, requested ? 120 : 40);
+    return requested;
+  }
+
+
   document.addEventListener("click", (event) => {
     if (event.defaultPrevented) return;
+    const nativePageLink = event.target.closest("a[data-native-page]");
+    if (nativePageLink && window.__00919_STREAMLIT_EMBED) {
+      const nativePage = nativePageLink.dataset.nativePage || "data-maintenance";
+      const nativeUrl = nativePageLink.dataset.nativeUrl || nativePageLink.getAttribute("href") || "/?target_page=data-maintenance";
+      event.preventDefault();
+      if (nativePage === "data-maintenance") setActiveNav("#data-maintenance");
+      navigateToNativePage(nativePage, nativeUrl);
+      return;
+    }
     const nativeLink = event.target.closest("a[data-native-trades-link]");
     if (nativeLink && window.__00919_STREAMLIT_EMBED && window.__00919_NATIVE_TRADES_ENABLED) {
       event.preventDefault();

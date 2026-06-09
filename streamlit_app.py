@@ -9,7 +9,7 @@ import re
 import shutil
 import subprocess
 import sys
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import altair as alt
@@ -36,6 +36,7 @@ DATA_DIR = BASE_DIR / "data"
 STATIC_DIR = BASE_DIR / "static"
 DASHBOARD_PATH = DATA_DIR / "dashboard_data.json"
 TRADES_PATH = DATA_DIR / "trades.json"
+DAILY_HISTORY_PATH = DATA_DIR / "daily_history.json"
 HEALTH_PREMIUM_THRESHOLD = 20_000
 HEALTH_PREMIUM_RATE = 0.0211
 
@@ -1199,7 +1200,8 @@ def build_embedded_dashboard_html(split_mode: str = "full", initial_hash: str = 
     trades, trades_source = load_trades_with_source()
     trades_json = json.dumps(trades, ensure_ascii=False)
     trades_source_json = json.dumps(trades_source, ensure_ascii=False)
-    initial_hash = initial_hash if initial_hash in {"#home", "#trades", "#monthly", "#quarterly", "#holdings", "#yearly", "#signal-settings", "#manual"} else "#home"
+    daily_history_json = json.dumps(load_daily_history_map(), ensure_ascii=False)
+    initial_hash = initial_hash if initial_hash in {"#home", "#trades", "#monthly", "#quarterly", "#holdings", "#yearly", "#signal-settings", "#data-maintenance", "#manual"} else "#home"
     initial_hash_json = json.dumps(initial_hash)
 
     bootstrap = f"""
@@ -1255,6 +1257,7 @@ def build_embedded_dashboard_html(split_mode: str = "full", initial_hash: str = 
       window.__00919_DASHBOARD_DATA = {dashboard_json};
       window.__00919_TRADES_DATA = {trades_json};
       window.__00919_TRADES_SOURCE = {trades_source_json};
+      window.__00919_DAILY_HISTORY_DATA = {daily_history_json};
       console.info("[00919] " + (window.__00919_TRADES_SOURCE.message || "交易紀錄來源已載入"));
       window.addEventListener("DOMContentLoaded", () => {{
         const ref = document.referrer || window.location.href || "http://localhost:8501/";
@@ -1294,6 +1297,10 @@ def build_embedded_dashboard_html(split_mode: str = "full", initial_hash: str = 
             script = script.replace(
                 "fetch(`data/trades.json?ts=${Date.now()}`)",
                 "Promise.resolve(new Response(JSON.stringify(window.__00919_TRADES_DATA || []), {status: 200, headers: {'Content-Type': 'application/json'}}))",
+            )
+            script = script.replace(
+                "fetch(`data/daily_history.json?ts=${Date.now()}`).catch(() => null)",
+                "Promise.resolve(new Response(JSON.stringify(window.__00919_DAILY_HISTORY_DATA || {}), {status: 200, headers: {'Content-Type': 'application/json'}}))",
             )
         return f"<script>\n{script}\n</script>"
 
@@ -1489,7 +1496,10 @@ def render_iframe_navigation_bridge() -> None:
             if (!parentWindow) return;
 
             try {
-              if (parentWindow.__00919NavBridgeInstalled) return;
+              if (parentWindow.__00919NavBridgeVersion === "ui61") return;
+              parentWindow.__00919NavBridgeVersion = "ui61";
+              // 不再沿用舊版 __00919NavBridgeInstalled，避免瀏覽器還掛著 UI14/UI55
+              // 的 bridge，導致資料維護的 navigate-native 訊息沒有人處理。
               parentWindow.__00919NavBridgeInstalled = true;
             } catch (err) {
               /* Continue even if the marker cannot be written. */
@@ -1509,6 +1519,45 @@ def render_iframe_navigation_bridge() -> None:
               } catch (err) {
                 return "/?native_page=trades";
               }
+            }
+
+            function makeNativePageUrl(nativePage, nativeUrl) {
+              if (nativeUrl) {
+                try { return new URL(nativeUrl, parentWindow.location.href).toString(); } catch (err) {}
+              }
+              try {
+                var url = new URL(parentWindow.location.href);
+                if (nativePage === "data_maintenance") {
+                  url.searchParams.set("native_page", "data_maintenance");
+                  url.searchParams.delete("target_page");
+                } else if (nativePage === "data-maintenance") {
+                  url.searchParams.set("target_page", "data-maintenance");
+                  url.searchParams.delete("native_page");
+                } else {
+                  url.searchParams.set("native_page", nativePage || "data_maintenance");
+                  url.searchParams.delete("target_page");
+                }
+                url.searchParams.delete("embedded");
+                url.hash = "";
+                return url.toString();
+              } catch (err) {
+                if (nativePage === "data_maintenance") return "/?native_page=data_maintenance";
+                if (nativePage === "data-maintenance") return "/?target_page=data-maintenance";
+                return "/?native_page=" + (nativePage || "data_maintenance");
+              }
+            }
+
+            function goNativePage(nativePage, nativeUrl) {
+              var target = makeNativePageUrl(nativePage, nativeUrl);
+              try {
+                // 用 assign 比 href 更穩定，會觸發 Streamlit 重新跑一次，
+                // target_page=data-maintenance 才會進原生資料維護頁。
+                parentWindow.location.assign(target);
+                return true;
+              } catch (err) {}
+              try { parentWindow.location.href = target; return true; } catch (err) {}
+              try { parentWindow.open(target, "_self"); return true; } catch (err) {}
+              return false;
             }
 
             function goNativeTrades() {
@@ -1538,7 +1587,7 @@ def render_iframe_navigation_bridge() -> None:
 
             function syncActivePageToParentUrl(page, hash) {
               var normalized = String(page || hash || "home").replace(/^#/, "");
-              var allowed = { home: true, trades: true, monthly: true, quarterly: true, holdings: true, yearly: true, "signal-settings": true, manual: true };
+              var allowed = { home: true, trades: true, monthly: true, quarterly: true, holdings: true, yearly: true, "signal-settings": true, "data-maintenance": true, manual: true };
               if (!allowed[normalized]) normalized = "home";
               try {
                 var url = new URL(parentWindow.location.href);
@@ -1558,6 +1607,18 @@ def render_iframe_navigation_bridge() -> None:
 
               if (data.type === "00919:active-page") {
                 syncActivePageToParentUrl(data.page, data.hash);
+                return;
+              }
+
+              if (data.type === "00919:navigate-native") {
+                goNativePage(data.nativePage, data.nativeUrl);
+                return;
+              }
+
+              // UI59 相容訊息：從 HTML iframe 左側點資料維護時，也允許走
+              // 00919:navigate + nativeUrl，避免舊 navigation handler 或快取造成左鍵失效。
+              if (data.type === "00919:navigate" && data.nativeUrl) {
+                goNativePage(data.nativePage || (data.hash === "#data-maintenance" ? "data-maintenance" : "trades"), data.nativeUrl);
                 return;
               }
 
@@ -1616,6 +1677,7 @@ def target_page_hash_from_query() -> str:
         "holdings": "#holdings",
         "yearly": "#yearly",
         "signal-settings": "#signal-settings",
+        "data-maintenance": "#data-maintenance",
         "manual": "#manual",
     }
     return mapping.get(page, "#home")
@@ -1624,6 +1686,10 @@ def target_page_hash_from_query() -> str:
 def dashboard_route_url(target: str) -> str:
     if target == "trades":
         return "/?native_page=trades"
+    if target == "data-maintenance":
+        # UI59: 資料維護改走 target_page 原生路由，不再使用 native_page，
+        # 避免被 HTML dashboard iframe 套住，造成黑屏與雙更新按鈕。
+        return "/?target_page=data-maintenance"
     return f"/?target_page={target}"
 
 
@@ -1636,14 +1702,17 @@ def render_native_sidebar(active: str = "trades") -> None:
         ("holdings", "pieChart", "purple", "持股分析"),
         ("yearly", "calculator", "pink", "年度稅務總覽"),
         ("signal-settings", "trafficCone", "green", "燈號設定"),
+        ("data-maintenance", "database", "blue", "資料維護"),
         ("manual", "user", "cyan", "使用說明"),
     ]
     links = []
     for key, icon, color, label in nav_items:
         active_class = " active is-active" if key == active else ""
         aria = " aria-current='page'" if key == active else ""
+        href = dashboard_route_url(key)
+        onclick = "try{event.preventDefault(); window.location.assign(this.href);}catch(e){window.location.href=this.href;} return false;"
         links.append(
-            f"<a class='{active_class.strip()}' href='{dashboard_route_url(key)}'{aria}>"
+            f'<a class="{active_class.strip()}" href="{href}" target="_self"{aria} onclick="{onclick}">'
             f"<span data-icon='{icon}' data-icon-color='{color}'></span>{html.escape(label)}</a>"
         )
     st.markdown(
@@ -1677,6 +1746,138 @@ def render_native_sidebar(active: str = "trades") -> None:
         """,
         unsafe_allow_html=True,
     )
+
+
+def install_native_sidebar_same_tab_guard() -> None:
+    """Keep custom HTML native-sidebar links in the current browser tab.
+
+    UI54: avoid intercepting clicks from a Streamlit component iframe.  The
+    native sidebar anchors now carry their own target="_self" + onclick handler
+    in the main Streamlit document.  This helper only normalizes target attrs as
+    a best-effort pass, so it will not trap the user inside 資料維護 when leaving
+    for 首頁 / 其他 HTML dashboard pages.
+    """
+    components.html(
+        """
+        <script>
+        (() => {
+          function install() {
+            try {
+              const doc = window.parent && window.parent.document ? window.parent.document : document;
+              doc.querySelectorAll('.native-sidebar .nav a[href]').forEach((link) => {
+                link.setAttribute('target', '_self');
+                link.removeAttribute('rel');
+              });
+            } catch (err) {}
+          }
+          install();
+          window.setTimeout(install, 250);
+          window.setTimeout(install, 900);
+        })();
+        </script>
+        """,
+        height=0,
+        scrolling=False,
+    )
+
+
+def build_daily_history_preview_df(history: dict, limit: int = 30) -> pd.DataFrame:
+    rows = [history[key] for key in sorted(history.keys(), reverse=True)[:limit]]
+    if not rows:
+        return pd.DataFrame()
+    df = pd.DataFrame(rows)
+    column_labels = {
+        "date": "日期",
+        "market_price": "市價",
+        "market_close": "收盤價",
+        "adjusted_close": "還原收盤價",
+        "volume_shares": "成交股數",
+        "volume_lots": "成交張數",
+        "price_source": "收盤價來源",
+        "updated_at": "更新時間",
+        "official_nav": "官方淨值",
+        "nav": "淨值",
+        "nav_source": "淨值來源",
+        "is_estimated_nav": "是否估算淨值",
+        "premium_discount_amount": "折溢價金額",
+        "premium_discount_pct": "折溢價率%",
+        "premium_source": "折溢價來源",
+        "imported_premium_discount_pct": "匯入折溢價率%",
+        "source": "原始來源",
+    }
+    preferred = [
+        "date",
+        "market_price",
+        "market_close",
+        "adjusted_close",
+        "volume_shares",
+        "volume_lots",
+        "price_source",
+        "official_nav",
+        "nav",
+        "nav_source",
+        "is_estimated_nav",
+        "premium_discount_amount",
+        "premium_discount_pct",
+        "premium_source",
+        "updated_at",
+    ]
+    ordered = [col for col in preferred if col in df.columns]
+    ordered += [col for col in df.columns if col not in ordered]
+    df = df[ordered].rename(columns=column_labels)
+
+    source_map = {
+        "Yahoo": "Yahoo",
+        "TWSE": "TWSE",
+        "MoneyDJ": "MoneyDJ",
+        "calculated": "系統計算",
+        "excel_import": "Excel 匯入",
+        "capitalfund_excel_import": "群益 Excel 匯入",
+        "capitalfund_trend": "群益官網",
+    }
+    for col in ["收盤價來源", "淨值來源", "折溢價來源", "原始來源"]:
+        if col in df.columns:
+            df[col] = df[col].map(lambda value: source_map.get(value, value) if value not in (None, "") else "缺")
+    if "是否估算淨值" in df.columns:
+        df["是否估算淨值"] = df["是否估算淨值"].map(lambda value: "是" if bool(value) else "否")
+    df = df.where(pd.notnull(df), "缺")
+    return df
+
+
+
+
+def _maintenance_format_cell(value, column_name: str) -> str:
+    if value in (None, "", "缺") or pd.isna(value):
+        return "缺"
+    if isinstance(value, bool):
+        return "是" if value else "否"
+    if isinstance(value, (int, float)):
+        if column_name in {"成交股數", "成交張數"}:
+            return f"{value:,.0f}"
+        if column_name in {"折溢價率%"}:
+            return f"{value:.4f}"
+        if column_name in {"市價", "收盤價", "還原收盤價", "官方淨值", "淨值", "折溢價金額"}:
+            return f"{value:.2f}".rstrip("0").rstrip(".")
+    return str(value)
+
+
+def build_daily_history_preview_html(history: dict, limit: int = 30) -> str:
+    df = build_daily_history_preview_df(history, limit=limit)
+    if df.empty:
+        return "<div class='daily-history-table-wrap'><table class='daily-history-table'><tbody><tr><td>目前沒有每日資料。</td></tr></tbody></table></div>"
+    headers = "".join(f"<th>{html.escape(str(col))}</th>" for col in df.columns)
+    row_html = []
+    for _, row in df.iterrows():
+        formatted_cells = [_maintenance_format_cell(row[col], str(col)) for col in df.columns]
+        has_missing = any(cell == "缺" for cell in formatted_cells)
+        cells = []
+        for cell in formatted_cells:
+            if cell == "缺":
+                cells.append("<td><span class='cell-missing'>缺</span></td>")
+            else:
+                cells.append(f"<td>{html.escape(cell)}</td>")
+        row_html.append(f"<tr class='{'row-has-missing' if has_missing else ''}'>" + "".join(cells) + "</tr>")
+    return "<div class='daily-history-table-wrap'><table class='daily-history-table'><thead><tr>" + headers + "</tr></thead><tbody>" + "".join(row_html) + "</tbody></table></div>"
 
 
 def render_native_trade_hero(data: dict, trades: list[dict]) -> None:
@@ -1716,6 +1917,464 @@ def render_native_trade_hero(data: dict, trades: list[dict]) -> None:
         unsafe_allow_html=True,
     )
 
+
+
+def normalize_history_date(value) -> str | None:
+    if value is None or value == "":
+        return None
+    try:
+        parsed = pd.to_datetime(value, errors="coerce")
+    except Exception:
+        parsed = pd.NaT
+    if pd.isna(parsed):
+        text = str(value).strip().replace("/", "-")
+        match = re.match(r"^(\d{4})-(\d{1,2})-(\d{1,2})$", text)
+        if not match:
+            return None
+        return f"{int(match.group(1)):04d}-{int(match.group(2)):02d}-{int(match.group(3)):02d}"
+    return parsed.strftime("%Y-%m-%d")
+
+
+def coerce_history_float(value) -> float | None:
+    if value is None or value == "":
+        return None
+    try:
+        text = str(value).replace(",", "").replace("%", "").strip()
+        if text.upper() in {"N/A", "NA", "--", "-", "NONE", "NULL"}:
+            return None
+        numeric = float(text)
+    except Exception:
+        return None
+    if pd.isna(numeric) or numeric <= 0:
+        return None
+    return round(numeric, 4)
+
+
+def load_daily_history_map() -> dict:
+    raw = read_json(DAILY_HISTORY_PATH, {})
+    rows = raw.values() if isinstance(raw, dict) else raw
+    result = {}
+    for row in rows or []:
+        if not isinstance(row, dict):
+            continue
+        date_value = normalize_history_date(row.get("date"))
+        if not date_value:
+            continue
+        normalized = {**row, "date": date_value}
+        nav = coerce_history_float(normalized.get("official_nav") if normalized.get("official_nav") is not None else normalized.get("nav"))
+        price = coerce_history_float(normalized.get("market_close") if normalized.get("market_close") is not None else normalized.get("market_price"))
+        if nav is not None:
+            normalized["official_nav"] = nav
+            normalized["nav"] = nav
+            normalized.setdefault("is_estimated_nav", False)
+        if price is not None:
+            normalized["market_close"] = price
+            normalized["market_price"] = price
+        result[date_value] = recalc_daily_history_row(normalized)
+    return result
+
+
+def recalc_daily_history_row(row: dict) -> dict:
+    nav = coerce_history_float(row.get("official_nav") if row.get("official_nav") is not None else row.get("nav"))
+    price = coerce_history_float(row.get("market_close") if row.get("market_close") is not None else row.get("market_price"))
+    if nav is not None:
+        row["official_nav"] = nav
+        row["nav"] = nav
+    if price is not None:
+        row["market_close"] = price
+        row["market_price"] = price
+    if nav is not None and price is not None:
+        row["premium_discount_amount"] = round(price - nav, 4)
+        row["premium_discount_pct"] = round((price - nav) / nav * 100, 4)
+        row["premium_source"] = "calculated"
+    return row
+
+
+def save_daily_history_map(history: dict) -> None:
+    DATA_DIR.mkdir(exist_ok=True)
+    clean = {}
+    for date_value in sorted(history):
+        row = recalc_daily_history_row({**history[date_value], "date": date_value})
+        clean[date_value] = row
+    DAILY_HISTORY_PATH.write_text(json.dumps(clean, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def build_daily_history_status(history: dict) -> dict:
+    rows = [history[key] for key in sorted(history)]
+    nav_dates = [row["date"] for row in rows if coerce_history_float(row.get("official_nav")) is not None]
+    price_dates = [row["date"] for row in rows if coerce_history_float(row.get("market_close")) is not None]
+    premium_dates = [row["date"] for row in rows if row.get("premium_discount_pct") is not None]
+    market_dates = set(price_dates)
+    missing_nav_on_market_dates = sorted([d for d in market_dates if d not in set(nav_dates)])
+    missing_price_on_nav_dates = sorted([d for d in set(nav_dates) if d not in market_dates])
+    return {
+        "row_count": len(rows),
+        "nav_count": len(nav_dates),
+        "price_count": len(price_dates),
+        "premium_count": len(premium_dates),
+        "first_nav_date": nav_dates[0] if nav_dates else "--",
+        "latest_nav_date": nav_dates[-1] if nav_dates else "--",
+        "latest_price_date": price_dates[-1] if price_dates else "--",
+        "latest_premium_date": premium_dates[-1] if premium_dates else "--",
+        "missing_nav_on_market_dates": missing_nav_on_market_dates,
+        "missing_price_on_nav_dates": missing_price_on_nav_dates,
+    }
+
+
+def find_nav_excel_columns(df: pd.DataFrame) -> tuple[str | None, str | None, str | None, str | None]:
+    columns = [str(col).strip() for col in df.columns]
+    date_candidates = {"日期", "date", "Date", "DATE", "交易日期", "淨值日期", "資料日期"}
+    nav_candidates = {"淨值", "NAV", "nav", "基金淨值", "每受益權單位淨資產價值", "每單位淨值"}
+    price_candidates = {"收盤價", "市價", "market_close", "market_price", "close", "Close"}
+    premium_candidates = {"折溢價率", "折溢價%", "premium_discount_pct", "折溢價", "折（溢）價率"}
+
+    def pick(candidates):
+        for original, normalized in zip(df.columns, columns):
+            if normalized in candidates:
+                return original
+        for original, normalized in zip(df.columns, columns):
+            for candidate in candidates:
+                if str(candidate).lower() in normalized.lower():
+                    return original
+        return None
+
+    return pick(date_candidates), pick(nav_candidates), pick(price_candidates), pick(premium_candidates)
+
+
+def read_nav_excel(uploaded_file) -> tuple[pd.DataFrame, dict]:
+    # Some Capital Fund exports place the real headers on the first data row.
+    excel_bytes = uploaded_file.getvalue() if hasattr(uploaded_file, "getvalue") else uploaded_file
+    excel_source = io.BytesIO(excel_bytes) if isinstance(excel_bytes, (bytes, bytearray)) else excel_bytes
+    raw = pd.read_excel(excel_source, sheet_name=0, header=0)
+    date_col, nav_col, price_col, premium_col = find_nav_excel_columns(raw)
+    if not date_col or not nav_col:
+        excel_source = io.BytesIO(excel_bytes) if isinstance(excel_bytes, (bytes, bytearray)) else excel_bytes
+        raw2 = pd.read_excel(excel_source, sheet_name=0, header=None)
+        if raw2.empty:
+            raise ValueError("Excel 檔案沒有可讀取的資料。")
+        header_row_index = None
+        for idx, row in raw2.head(10).iterrows():
+            texts = [str(v).strip() for v in row.tolist()]
+            if any(text in {"日期", "date", "Date"} for text in texts) and any(text in {"淨值", "NAV", "nav"} for text in texts):
+                header_row_index = idx
+                break
+        if header_row_index is None:
+            raise ValueError("找不到日期 / 淨值欄位，請確認 Excel 至少包含『日期』與『淨值』兩欄。")
+        headers = [str(v).strip() for v in raw2.iloc[header_row_index].tolist()]
+        raw = raw2.iloc[header_row_index + 1:].copy()
+        raw.columns = headers
+        date_col, nav_col, price_col, premium_col = find_nav_excel_columns(raw)
+    if not date_col or not nav_col:
+        raise ValueError("找不到日期 / 淨值欄位，請確認 Excel 至少包含『日期』與『淨值』兩欄。")
+
+    rows = []
+    bad_rows = 0
+    for _, item in raw.iterrows():
+        date_value = normalize_history_date(item.get(date_col))
+        nav_value = coerce_history_float(item.get(nav_col))
+        if not date_value and nav_value is None:
+            continue
+        if not date_value or nav_value is None:
+            bad_rows += 1
+            continue
+        row = {
+            "date": date_value,
+            "official_nav": nav_value,
+            "nav": nav_value,
+            "nav_source": "capitalfund_excel_import",
+            "is_estimated_nav": False,
+        }
+        if price_col:
+            price = coerce_history_float(item.get(price_col))
+            if price is not None:
+                row["market_close"] = price
+                row["market_price"] = price
+                row["price_source"] = "excel_import"
+        if premium_col:
+            premium = item.get(premium_col)
+            try:
+                premium_num = float(str(premium).replace("%", "").replace(",", "").strip())
+                if pd.notna(premium_num):
+                    row["imported_premium_discount_pct"] = round(premium_num, 4)
+            except Exception:
+                pass
+        rows.append(row)
+    df = pd.DataFrame(rows).drop_duplicates(subset=["date"], keep="last").sort_values("date") if rows else pd.DataFrame()
+    meta = {
+        "date_col": str(date_col),
+        "nav_col": str(nav_col),
+        "price_col": str(price_col) if price_col else None,
+        "premium_col": str(premium_col) if premium_col else None,
+        "bad_rows": bad_rows,
+    }
+    return df, meta
+
+
+def import_nav_rows_to_daily_history(rows: pd.DataFrame) -> dict:
+    history = load_daily_history_map()
+    now = datetime.now().isoformat(timespec="seconds")
+    imported = 0
+    updated = 0
+    for record in rows.to_dict("records"):
+        date_value = record.get("date")
+        if not date_value:
+            continue
+        old = history.get(date_value, {"date": date_value})
+        existed = date_value in history and coerce_history_float(history[date_value].get("official_nav")) is not None
+        merged = {**old, **{key: value for key, value in record.items() if value is not None and value != ""}}
+        merged["updated_at"] = now
+        history[date_value] = recalc_daily_history_row(merged)
+        if existed:
+            updated += 1
+        else:
+            imported += 1
+    save_daily_history_map(history)
+    sync_static_files()
+    return {"imported": imported, "updated": updated, "total": len(rows)}
+
+
+def refresh_dashboard_daily_from_history() -> None:
+    if not DASHBOARD_PATH.exists() or not DAILY_HISTORY_PATH.exists():
+        return
+    data = load_dashboard()
+    history = load_daily_history_map()
+    rows = [history[key] for key in sorted(history)]
+    if not rows:
+        return
+    data["daily"] = rows
+    latest_complete = next(
+        (row for row in reversed(rows) if row.get("market_price") is not None and row.get("nav") is not None),
+        rows[-1],
+    )
+    data["latest_daily"] = latest_complete
+    data["daily_history_meta"] = build_daily_history_status(history)
+    DASHBOARD_PATH.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    sync_static_files()
+
+
+def render_native_data_maintenance_page() -> None:
+    sync_static_files()
+    history = load_daily_history_map()
+    status = build_daily_history_status(history)
+    data = load_dashboard()
+
+    st.markdown(
+        """
+        <style>
+          .main .block-container {
+            max-width: 100% !important;
+            padding: 1rem 2.25rem 1.25rem !important;
+            background: #f5f7f7;
+          }
+          div[data-testid="stHorizontalBlock"]:has(.native-sidebar) {
+            gap: 1.1rem !important;
+            align-items: stretch !important;
+          }
+          .native-sidebar {
+            min-height: calc(100vh - 76px);
+            height: calc(100vh - 76px);
+            position: sticky;
+            top: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            padding: 24px 20px;
+            background: linear-gradient(180deg, #06251f 0%, #071723 100%);
+            color: #e5f2ef;
+            overflow: hidden;
+          }
+          .native-sidebar .brand { display:flex; gap:12px; align-items:center; padding-bottom:4px; }
+          .native-sidebar .brand-mark { display:inline-flex; width:44px; height:44px; align-items:center; justify-content:center; border:1px solid rgba(16,185,129,.85); border-radius:10px; color:#fff; font-weight:900; }
+          .native-sidebar h1 { margin:0; color:#fff; font-size:1.05rem; font-weight:900; }
+          .native-sidebar p { margin:4px 0 0; color:#b6c9c5; font-size:.78rem; }
+          .native-sidebar .nav { display:grid; gap:8px; }
+          .native-sidebar .nav a { display:flex; align-items:center; gap:10px; min-height:44px; padding:10px 12px; border-radius:10px; color:#d7e5e2; text-decoration:none; font-weight:800; font-size:.94rem; }
+          .native-sidebar .nav a.active, .native-sidebar .nav a[aria-current="page"] { background:linear-gradient(90deg, rgba(16,185,129,.24), rgba(255,255,255,.08)); color:#fff; box-shadow:inset 3px 0 0 #10b981; }
+          .native-sidebar [data-icon] { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:8px; background:rgba(255,255,255,.08); }
+          .native-sidebar .sidebar-signal, .native-sidebar .source-card { margin-top:auto; padding:14px; border:1px solid rgba(148,163,184,.22); border-radius:12px; background:rgba(255,255,255,.06); }
+          .native-sidebar .source-card { margin-top:0; }
+          .native-sidebar .sidebar-signal__dot { display:inline-flex; width:24px; height:24px; margin-right:8px; border-radius:999px; background:#10b981; vertical-align:middle; }
+          .native-sidebar .sidebar-signal strong, .native-sidebar .source-card strong { display:block; color:#fff; font-weight:900; }
+          .native-sidebar .sidebar-signal small, .native-sidebar .source-card small, .native-sidebar .source-card span { color:#b6c9c5; font-size:.78rem; }
+          .maintenance-hero { margin:0 0 14px; padding:22px 24px; border-radius:18px; background:linear-gradient(135deg,#059669 0%,#0891b2 48%,#1d4ed8 100%); color:white; box-shadow:0 18px 44px rgba(15,23,42,.16); }
+          .maintenance-hero p { margin:0 0 4px; opacity:.82; font-size:.78rem; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
+          .maintenance-hero h1 { margin:0; font-size:1.55rem; font-weight:950; }
+          .maintenance-hero small { display:block; margin-top:8px; opacity:.88; line-height:1.55; }
+          .maintenance-card { margin:8px 0; padding:12px 14px; border:1px solid #d9e2df; border-radius:16px; background:#fff; box-shadow:0 10px 24px rgba(15,23,42,.06); }
+          .maintenance-card h3 { margin:0 0 4px; color:#0f172a; font-size:1.08rem; font-weight:950; }
+          .maintenance-card p { margin:0; color:#64748b; font-size:.94rem; line-height:1.48; }
+          .compact-maintenance-row { padding:0 !important; }
+          .compact-maintenance-row h3 { margin:0 0 4px; color:#0f172a; font-size:1.08rem; font-weight:950; }
+          .compact-maintenance-row p { margin:0; color:#64748b; font-size:.94rem; line-height:1.48; }
+          div[data-testid="stHorizontalBlock"]:has(.maintenance-upload-marker),
+          div[data-testid="stHorizontalBlock"]:has(.maintenance-tools-marker) {
+            margin:8px 0 10px !important; padding:12px 14px !important; border:1px solid #d9e2df !important; border-radius:16px !important; background:#fff !important; box-shadow:0 10px 24px rgba(15,23,42,.06) !important; align-items:center !important; gap:14px !important;
+          }
+          div[data-testid="stHorizontalBlock"]:has(.maintenance-upload-marker) > div,
+          div[data-testid="stHorizontalBlock"]:has(.maintenance-tools-marker) > div { display:flex !important; align-items:center !important; }
+          div[data-testid="stFileUploader"] { margin:0 !important; width:100% !important; }
+          div[data-testid="stFileUploader"] > label { display:none !important; }
+          div[data-testid="stFileUploaderDropzone"] { min-height:42px !important; padding:4px 8px !important; border-radius:12px !important; background:#f8fafc !important; }
+          div[data-testid="stFileUploaderDropzone"] button { background:#059669 !important; color:#fff !important; border:0 !important; border-radius:10px !important; font-weight:900 !important; min-height:34px !important; }
+          div[data-testid="stFileUploaderDropzone"] small { font-size:.78rem !important; color:#64748b !important; }
+          .maintenance-kpis { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-top:12px; }
+          .maintenance-kpi { padding:14px; border:1px solid #d9e2df; border-radius:12px; background:#fbfcfc; }
+          .maintenance-kpi span { display:block; color:#64748b; font-size:.82rem; font-weight:850; }
+          .maintenance-kpi strong { display:block; margin-top:5px; color:#0f172a; font-size:1.18rem; font-weight:950; }
+          .maintenance-table-title { margin:18px 0 8px; color:#0f172a; font-size:1.16rem; font-weight:950; }
+          .maintenance-table-note { margin:0 0 10px; color:#475569; font-size:1rem; font-weight:800; }
+          .maintenance-gap-card { padding:11px 14px; }
+          .maintenance-card__head { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:6px; }
+          .gap-status { flex:0 0 auto; padding:7px 13px; border-radius:999px; font-size:.98rem; font-weight:950; }
+          .gap-status.ok { color:#047857; background:#ecfdf5; border:1px solid #a7f3d0; }
+          .gap-status.warn { color:#b45309; background:#fffbeb; border:1px solid #fde68a; }
+          .gap-summary { display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:8px 10px; border:1px solid #d9e2df; border-radius:12px; background:#fbfcfc; color:#0f172a; font-size:1.03rem; font-weight:900; line-height:1.45; }
+          .gap-summary span { color:#475569; font-weight:950; }
+          .gap-summary strong { color:#0f172a; font-weight:950; }
+          .gap-summary strong.is-empty { color:#059669; }
+          .daily-history-table-wrap { max-height:720px; overflow:auto; border:1px solid #d9e2df; border-radius:14px; background:#fff; box-shadow:0 12px 30px rgba(15,23,42,.06); }
+          .daily-history-table { width:max-content; min-width:100%; border-collapse:separate; border-spacing:0; font-size:16px; color:#0f172a; }
+          .daily-history-table th { position:sticky; top:0; z-index:2; background:#eef5f4; color:#334155; font-weight:950; text-align:left; white-space:nowrap; padding:12px 13px; border-bottom:1px solid #cbd5e1; }
+          .daily-history-table td { padding:11px 13px; border-bottom:1px solid #e5e7eb; white-space:nowrap; font-weight:780; }
+          .daily-history-table tbody tr:nth-child(even) td { background:#fbfcfc; }
+          .daily-history-table tbody tr:hover td { background:#ecfdf5; }
+          .daily-history-table tr.row-has-missing td:first-child { box-shadow:inset 4px 0 0 #f59e0b; }
+          .cell-missing { display:inline-flex; align-items:center; justify-content:center; min-width:30px; padding:3px 8px; border-radius:999px; color:#b45309; background:#fffbeb; border:1px solid #fde68a; font-weight:950; }
+          .mobile-maintenance-protection { display:none; }
+          div[data-testid="stForm"] { border:1px solid #d9e2df; border-radius:14px; padding:16px 18px 18px; background:#fbfcfc; }
+          div[data-testid="stForm"] [data-testid="stFormSubmitButton"] button,
+          div[data-testid="stButton"] button[kind="primary"] { background:#059669 !important; border:0 !important; border-radius:10px !important; color:#fff !important; font-weight:900 !important; min-height:42px !important; }
+          @media (max-width: 1100px) { .maintenance-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+          @media (max-width: 760px) {
+            .main .block-container { padding:0 !important; }
+            div[data-testid="stHorizontalBlock"]:has(.native-sidebar) { display:none !important; }
+            .mobile-maintenance-protection { display:block; margin:10px; padding:14px; border-radius:14px; background:#ecfdf5; color:#065f46; font-weight:850; line-height:1.55; }
+          }
+        </style>
+        <div class="mobile-maintenance-protection">手機版維持只顯示首頁總覽，只看不能修改；資料維護與 Excel 匯入請回到電腦版操作。</div>
+        """,
+        unsafe_allow_html=True,
+    )
+    install_native_sidebar_same_tab_guard()
+
+    left, right = st.columns([0.86, 6.2])
+    with left:
+        render_native_sidebar("data-maintenance")
+    with right:
+        st.markdown(
+            f"""
+            <section class="maintenance-hero">
+              <p>DATA MAINTENANCE</p>
+              <h1>資料維護</h1>
+              <small>用 navs.xlsx 建立上市以來 NAV 底稿，長期保存每日 NAV、收盤價與折溢價。更新資料時會從最後一筆 NAV 日期往前 10 天補資料。</small>
+            </section>
+            <section class="maintenance-card">
+              <h3>每日資料庫狀態</h3>
+              <p>正式檔案：data/daily_history.json；前端同步檔：static/data/daily_history.json。</p>
+              <div class="maintenance-kpis">
+                <div class="maintenance-kpi"><span>NAV 筆數</span><strong>{status['nav_count']}</strong></div>
+                <div class="maintenance-kpi"><span>收盤價筆數</span><strong>{status['price_count']}</strong></div>
+                <div class="maintenance-kpi"><span>折溢價可計算</span><strong>{status['premium_count']}</strong></div>
+                <div class="maintenance-kpi"><span>最新 NAV 日期</span><strong>{html.escape(str(status['latest_nav_date']))}</strong></div>
+              </div>
+            </section>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        upload_text_col, upload_btn_col = st.columns([5.1, 1.55], vertical_alignment="center")
+        with upload_text_col:
+            st.markdown(
+                '<div class="maintenance-upload-marker compact-maintenance-row">'
+                '<h3>NAV Excel 匯入</h3>'
+                '<p>固定格式至少包含「日期 / 淨值」兩欄；如果同時有收盤價，系統也會一併匯入並重算折溢價。</p>'
+                '</div>',
+                unsafe_allow_html=True,
+            )
+        with upload_btn_col:
+            uploaded_nav = st.file_uploader("選擇 navs.xlsx", type=["xlsx"], key="nav_excel_importer", label_visibility="collapsed")
+        if uploaded_nav is not None:
+            try:
+                preview_df, meta = read_nav_excel(uploaded_nav)
+                st.info(
+                    f"已讀取 {len(preview_df)} 筆；日期欄：{meta['date_col']}；淨值欄：{meta['nav_col']}；"
+                    f"收盤價欄：{meta['price_col'] or '無'}；折溢價欄：{meta['premium_col'] or '無'}；異常列：{meta['bad_rows']}。"
+                )
+                st.dataframe(preview_df.head(8), use_container_width=True, hide_index=True)
+                import_col, note_col = st.columns([1, 4])
+                with import_col:
+                    do_import = st.button("確認匯入 NAV", type="primary", use_container_width=True)
+                with note_col:
+                    st.caption("匯入後會寫入 daily_history.json，保留舊有效資料，並重新計算折溢價。")
+                if do_import:
+                    result = import_nav_rows_to_daily_history(preview_df)
+                    refresh_dashboard_daily_from_history()
+                    st.success(f"匯入完成：新增 {result['imported']} 筆，更新 {result['updated']} 筆，合計處理 {result['total']} 筆。")
+                    st.rerun()
+            except Exception as exc:
+                st.error("NAV Excel 讀取失敗")
+                st.code(f"{type(exc).__name__}: {exc}")
+
+        miss_nav = status["missing_nav_on_market_dates"][-30:]
+        miss_price = status["missing_price_on_nav_dates"][-30:]
+        miss_nav_text = "無" if not miss_nav else "、".join(miss_nav)
+        miss_price_text = "無" if not miss_price else "、".join(miss_price)
+        gap_total = len(status["missing_nav_on_market_dates"]) + len(status["missing_price_on_nav_dates"])
+        gap_class = "ok" if gap_total == 0 else "warn"
+        gap_label = "無缺漏" if gap_total == 0 else f"{gap_total} 筆需補"
+        st.markdown(
+            f"""
+            <section class="maintenance-card maintenance-gap-card">
+              <div class="maintenance-card__head">
+                <div>
+                  <h3>缺漏資料檢查</h3>
+                  <p>只檢查已有交易日資料內的 NAV / 收盤價互相缺漏，不把假日列入缺漏。</p>
+                </div>
+                <strong class="gap-status {gap_class}">{html.escape(gap_label)}</strong>
+              </div>
+              <div class="gap-summary">
+                <span>缺 NAV</span><strong class="{'is-empty' if not miss_nav else ''}">{html.escape(miss_nav_text)}</strong>
+                <span>｜缺收盤價</span><strong class="{'is-empty' if not miss_price else ''}">{html.escape(miss_price_text)}</strong>
+              </div>
+            </section>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        tool_text_col, tool_btn_col = st.columns([4.7, 2.0], vertical_alignment="center")
+        with tool_text_col:
+            st.markdown(
+                f"<div class='maintenance-tools-marker compact-maintenance-row'><h3>資料工具</h3>"
+                f"<p>重新計算折溢價屬於資料修復；下載 daily_history.json 則作為備份與檢查用。"
+                f"目前 dashboard_data.json 抓取時間：{html.escape(str(data.get('fetched_at', '--')))}。</p></div>",
+                unsafe_allow_html=True,
+            )
+        with tool_btn_col:
+            action_cols = st.columns([1, 1])
+            with action_cols[0]:
+                if st.button("重新計算折溢價", use_container_width=True):
+                    current = load_daily_history_map()
+                    save_daily_history_map(current)
+                    refresh_dashboard_daily_from_history()
+                    st.success("已用 NAV + 收盤價重新計算折溢價。")
+                    st.rerun()
+            with action_cols[1]:
+                if DAILY_HISTORY_PATH.exists():
+                    st.download_button(
+                        "備份下載 daily_history",
+                        DAILY_HISTORY_PATH.read_text(encoding="utf-8").encode("utf-8"),
+                        "daily_history.json",
+                        "application/json",
+                        use_container_width=True,
+                    )
+
+        if history:
+            st.markdown(
+                "<div class='maintenance-table-title'>每日資料明細（最近 30 筆）</div>"
+                "<div class='maintenance-table-note'>每一列代表一個交易日；欄位出現「缺」代表該日該項資料尚未補齊。</div>"
+                + build_daily_history_preview_html(history, limit=30),
+                unsafe_allow_html=True,
+            )
 
 def render_native_trade_dashboard_page() -> None:
     sync_static_files()
@@ -2435,11 +3094,10 @@ def render_embedded_html_ui(initial_hash: str = "#home") -> None:
                 ok, message = run_update()
                 if ok:
                     sync_static_files()
-                    current_target = str(st.query_params.get("target_page", "home") or "home")
-                    allowed_targets = {"home", "trades", "monthly", "quarterly", "holdings", "yearly", "signal-settings", "manual"}
-                    if current_target not in allowed_targets:
-                        current_target = "home"
-                    st.query_params["target_page"] = current_target
+                    # UI59: 更新完成一律回首頁總覽，避免沿用上一個 target_page
+                    # 導致更新後跳到燈號設定或其他分頁。
+                    st.query_params.clear()
+                    st.query_params["target_page"] = "home"
                     st.success("資料更新完成")
                     st.rerun()
                 st.error("資料更新失敗")
@@ -2660,11 +3318,15 @@ def main() -> None:
     consume_embedded_update_request()
 
     native_page = str(st.query_params.get("native_page", "") or "").strip()
+    target_page = str(st.query_params.get("target_page", "home") or "home").strip()
     if native_page in {"trade_entry", "add_trade"}:
         render_trade_entry_page()
         return
     if native_page == "trades":
         render_native_trade_dashboard_page()
+        return
+    if native_page in {"data_maintenance", "data-maintenance"}:
+        render_native_data_maintenance_page()
         return
 
     render_embedded_html_ui(target_page_hash_from_query())
