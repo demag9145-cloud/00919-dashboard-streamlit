@@ -1499,7 +1499,7 @@ function formatDividendFocusNote(dividend, estimatedDividendCash) {
 function renderMobileFocusCards({ position, dividend, totalReturn, totalCost, freshnessModel }) {
   const totalReturnRate = totalCost ? (totalReturn / totalCost) * 100 : 0;
   setText("mobileFocusTotalReturn", `$${fmt.money(totalReturn)}`);
-  setText("mobileFocusTotalReturnRate", fmt.pct(totalReturnRate));
+  setText("mobileFocusTotalReturnRate", `未實現報酬 ${fmt.pct(totalReturnRate)}`);
 
   const dividendPerShare = Number(dividend.dividend_per_share || 0);
   const dividendShares = dividend.ex_date ? calcSharesOnDate(state.trades || [], dividend.ex_date) : position.holdingShares;
@@ -1525,7 +1525,7 @@ function renderMobileFocusCards({ position, dividend, totalReturn, totalCost, fr
   setText("mobileFocusTop10", top10.length ? fmt.pct(top10Total) : "--");
   setText("mobileFocusTop10Note", holdings.data_date ? `資料日 ${holdings.data_date}` : "--");
   setText("mobileFocusTopHolding", top10[0] ? `${top10[0].name} ${top10[0].code || ""}` : "--");
-  setText("mobileFocusTopHoldingNote", top10[0] ? fmt.pct(Number(top10[0].weight_pct || 0)) : "--");
+  setText("mobileFocusTopHoldingNote", top10[0] ? `持股占比 ${fmt.pct(Number(top10[0].weight_pct || 0))}` : "--");
 }
 
 function renderMobileHome(model) {

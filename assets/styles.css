@@ -7487,3 +7487,36 @@ body[data-active-page="manual"] .nav a[href="#manual"] .icon-box {
 #homeLatestDividendDate {
   white-space: pre-line;
 }
+
+
+/* UI69: 手機版首頁重點總覽微調，不影響桌機版 */
+@media (max-width: 760px), (max-height: 520px) and (orientation: landscape), (hover: none) and (pointer: coarse) {
+  .mobile-focus-tile {
+    grid-template-columns: 38px minmax(0, 1fr) !important;
+    gap: 5px 8px !important;
+    padding: 12px !important;
+  }
+
+  .mobile-focus-tile small {
+    grid-column: 1 / -1 !important;
+    padding-left: 0 !important;
+    margin-top: 2px !important;
+    font-size: 12.5px !important;
+    line-height: 1.25 !important;
+    letter-spacing: -0.01em;
+  }
+
+  #mobileFocusDividendNote {
+    font-size: 12px !important;
+    line-height: 1.24 !important;
+    white-space: pre-line !important;
+  }
+
+  #mobileFocusTotalReturnRate,
+  #mobileFocusTopHoldingNote,
+  #mobileFocusBeneficiariesNote,
+  #mobileFocusAumNote,
+  #mobileFocusTop10Note {
+    white-space: nowrap !important;
+  }
+}
