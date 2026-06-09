@@ -1489,6 +1489,13 @@ function renderMobileCoreMetrics(model) {
   }
 }
 
+function formatDividendFocusNote(dividend, estimatedDividendCash) {
+  if (!dividend?.ex_date) return "--";
+  const lines = [`除息 ${dividend.ex_date} / 估 $${fmt.money(estimatedDividendCash)}`];
+  if (dividend.pay_date) lines.push(`發放 ${dividend.pay_date}`);
+  return lines.join("\n");
+}
+
 function renderMobileFocusCards({ position, dividend, totalReturn, totalCost, freshnessModel }) {
   const totalReturnRate = totalCost ? (totalReturn / totalCost) * 100 : 0;
   setText("mobileFocusTotalReturn", `$${fmt.money(totalReturn)}`);
@@ -1498,7 +1505,7 @@ function renderMobileFocusCards({ position, dividend, totalReturn, totalCost, fr
   const dividendShares = dividend.ex_date ? calcSharesOnDate(state.trades || [], dividend.ex_date) : position.holdingShares;
   const estimatedDividendCash = dividendShares * dividendPerShare;
   setText("mobileFocusDividend", dividendPerShare ? `${fmt.money(dividendPerShare, 2)} 元` : "--");
-  setText("mobileFocusDividendNote", dividend.ex_date ? `除息 ${dividend.ex_date} / 估 $${fmt.money(estimatedDividendCash)}` : "--");
+  setText("mobileFocusDividendNote", formatDividendFocusNote(dividend, estimatedDividendCash));
 
   const monthlySizeRows = (state.data?.monthly_history || state.data?.monthly_size || [])
     .filter((row) => row.month && (row.aum_million_twd != null || row.aum_100m_twd != null || row.beneficiary_count != null))
@@ -1597,7 +1604,7 @@ function renderDesktopFocusCards({ position, dividend, totalReturn, totalCost, f
   const dividendShares = dividend.ex_date ? calcSharesOnDate(state.trades || [], dividend.ex_date) : position.holdingShares;
   const estimatedDividendCash = dividendShares * dividendPerShare;
   setText("desktopFocusDividend", dividendPerShare ? `${fmt.money(dividendPerShare, 2)} 元` : "--");
-  setText("desktopFocusDividendNote", dividend.ex_date ? `除息 ${dividend.ex_date} / 估 $${fmt.money(estimatedDividendCash)}` : "--");
+  setText("desktopFocusDividendNote", formatDividendFocusNote(dividend, estimatedDividendCash));
 
   const monthlySizeRows = (state.data?.monthly_history || state.data?.monthly_size || [])
     .filter((row) => row.month && (row.aum_million_twd != null || row.aum_100m_twd != null || row.beneficiary_count != null))
@@ -1736,7 +1743,7 @@ function renderHomeFocus(position, latest, dividend, totalReturn, totalCost) {
   const healthPremium = estimated54c >= premiumThreshold ? estimated54c * premiumRate : 0;
 
   setText("homeLatestDividend", dividendPerShare ? `${fmt.money(dividendPerShare, 2)} 元` : "--");
-  setText("homeLatestDividendDate", dividend.ex_date ? `除息 ${dividend.ex_date} / 估 $${fmt.money(estimatedDividendCash)}` : "--");
+  setText("homeLatestDividendDate", formatDividendFocusNote(dividend, estimatedDividendCash));
   setText("homeLatest54c", `$${fmt.money(estimated54c)}`);
   setText("homeLatest54cNote", Number(dividend.dividend_income_pct) ? `股利所得 ${fmt.pct(Number(dividend.dividend_income_pct))}` : "本次股利所得 0%");
   setText("homePremiumWatch", healthPremium > 0 ? `$${fmt.money(healthPremium)}` : "未達");

@@ -1,4 +1,5 @@
 import json
+import hashlib
 import re
 import ssl
 import time
@@ -1196,6 +1197,72 @@ def update_monthly_history(daily_rows, monthly_size_rows, fetched_at):
     return rows
 
 
+def normalize_snapshot_date(value):
+    if not value:
+        return None
+    if isinstance(value, str):
+        value = value.strip().replace("/", "-")
+        match = re.search(r"(20\d{2})-(\d{1,2})-(\d{1,2})", value)
+        if match:
+            return f"{match.group(1)}-{int(match.group(2)):02d}-{int(match.group(3)):02d}"
+        match = re.search(r"(20\d{2})-(\d{1,2})", value)
+        if match:
+            return f"{match.group(1)}-{int(match.group(2)):02d}"
+    return None
+
+
+def holdings_top10_signature(row, include_weight=True):
+    top10 = row.get("top10") or row.get("holdings", [])[:10] if isinstance(row, dict) else []
+    if not top10:
+        return None
+    normalized = []
+    for item in top10[:10]:
+        code = str(item.get("code") or "").strip()
+        name = str(item.get("name") or "").strip()
+        weight = round(float(item.get("weight_pct") or 0), 2) if include_weight else None
+        normalized.append([code, name, weight] if include_weight else [code, name])
+    payload = json.dumps(normalized, ensure_ascii=False, sort_keys=True)
+    return hashlib.sha1(payload.encode("utf-8")).hexdigest()
+
+
+def derive_holdings_snapshot_date(holdings_data, fetched_at, existing_rows):
+    candidates = [
+        holdings_data.get("data_date"),
+        (holdings_data.get("portfolio") or {}).get("data_date"),
+        (holdings_data.get("buyback") or {}).get("data_date"),
+        (holdings_data.get("pcf") or {}).get("data_date"),
+    ]
+    for candidate in candidates:
+        normalized = normalize_snapshot_date(candidate)
+        if normalized:
+            return normalized
+
+    # If the source did not expose an official data date, do not create a new
+    # pseudo-snapshot on every button press.  Reuse the previous date when the
+    # top-10 composition is materially the same; this keeps 新增 / 跌出 stable.
+    current_sig = holdings_top10_signature(holdings_data, include_weight=False)
+    valid_existing = [row for row in existing_rows if isinstance(row, dict) and row.get("data_date")]
+    valid_existing.sort(key=lambda row: str(row.get("data_date")))
+    for old in reversed(valid_existing):
+        if current_sig and holdings_top10_signature(old, include_weight=False) == current_sig:
+            return old.get("data_date")
+    return fetched_at[:10]
+
+
+def prune_duplicate_holding_snapshots(rows):
+    pruned = []
+    last_sig = None
+    for row in sorted(rows, key=lambda item: str(item.get("data_date"))):
+        sig = holdings_top10_signature(row, include_weight=False)
+        if sig and sig == last_sig:
+            # Keep the earlier snapshot date as the rotation baseline.  The latest
+            # identical data is still available in dashboard_data.holdings.
+            continue
+        pruned.append(row)
+        last_sig = sig
+    return pruned
+
+
 def update_holdings_history(holdings_data, fetched_at):
     history_path = DATA_DIR / "holdings_history.json"
     existing_rows = []
@@ -1210,8 +1277,9 @@ def update_holdings_history(holdings_data, fetched_at):
         for row in existing_rows
         if isinstance(row, dict) and row.get("data_date")
     }
-    data_date = holdings_data.get("data_date") or fetched_at[:10]
-    by_date[data_date] = {
+    data_date = derive_holdings_snapshot_date(holdings_data, fetched_at, existing_rows)
+    holdings_data["data_date"] = data_date
+    snapshot = {
         "data_date": data_date,
         "industry_date": holdings_data.get("industry_date"),
         "top10": holdings_data.get("top10", []),
@@ -1228,9 +1296,12 @@ def update_holdings_history(holdings_data, fetched_at):
         "issued_lots": holdings_data.get("issued_lots"),
         "source": holdings_data.get("source", "MoneyDJ"),
         "source_details": holdings_data.get("source_details", {}),
+        "top10_signature": holdings_top10_signature(holdings_data, include_weight=True),
+        "top10_composition_signature": holdings_top10_signature(holdings_data, include_weight=False),
         "updated_at": fetched_at,
     }
-    rows = [by_date[date] for date in sorted(by_date)]
+    by_date[data_date] = snapshot
+    rows = prune_duplicate_holding_snapshots([by_date[date] for date in sorted(by_date)])
     history_path.write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
     return rows
 
