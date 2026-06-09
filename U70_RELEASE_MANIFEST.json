@@ -1,0 +1,14 @@
+{
+  "version": "U70_mobile_trade_entry",
+  "base": "U69_final_20260609",
+  "created_at": "2026-06-09T11:29:55",
+  "changed_files": [
+    "static/index.html",
+    "assets/app.js",
+    "static/assets/app.js",
+    "assets/styles.css",
+    "static/assets/styles.css",
+    "00919_Dashboard_U70_手機版新增交易_變更紀錄.md"
+  ],
+  "summary": "手機版首頁折溢價圖下方新增單筆交易輸入表單，寫入 Google Sheets Trades；桌機版不變。"
+}

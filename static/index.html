@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>00919 監控儀表板</title>
-    <link rel="stylesheet" href="assets/styles.css?v=20260522-1730" />
+    <link rel="stylesheet" href="assets/styles.css?v=20260604-ui67" />
   </head>
   <body>
     <div class="app-shell">
@@ -18,13 +18,13 @@
         </div>
         <nav class="nav">
           <a class="active" href="#home"><span data-icon="home" data-icon-color="green"></span>首頁總覽</a>
-          <a href="#daily"><span data-icon="barChart" data-icon-color="cyan"></span>每日總覽</a>
           <a href="#trades"><span data-icon="briefcase" data-icon-color="blue"></span>交易紀錄</a>
           <a href="#monthly"><span data-icon="activity" data-icon-color="green"></span>每月健康檢查</a>
           <a href="#quarterly"><span data-icon="coins" data-icon-color="orange"></span>每季 / 54C 檢視</a>
           <a href="#holdings"><span data-icon="pieChart" data-icon-color="purple"></span>持股分析</a>
           <a href="#yearly"><span data-icon="calculator" data-icon-color="pink"></span>年度稅務總覽</a>
           <a href="#signal-settings"><span data-icon="trafficCone" data-icon-color="green"></span>燈號設定</a>
+          <a href="#data-maintenance"><span data-icon="database" data-icon-color="blue"></span>資料維護</a>
           <a href="#manual"><span data-icon="user" data-icon-color="cyan"></span>使用說明</a>
         </nav>
         <div class="sidebar-signal">
@@ -36,7 +36,7 @@
         </div>
         <div class="source-card">
           <span>資料來源</span>
-          <strong>MoneyDJ / TWSE e添富 / TWSE</strong>
+          <strong class="source-card-summary" title="群益：官方確認；MoneyDJ：較快補配息事件/月度資料；TWSE：54C 與公告組成；Yahoo：每日市價與成交量。">群益 / MoneyDJ / TWSE / Yahoo</strong>
           <small id="fetchedAt">更新中...</small>
         </div>
       </aside>
@@ -210,6 +210,63 @@
               <span><i class="dot volume"></i>成交量</span>
             </div>
             <div id="mobileMainChart" class="mobile-chart"></div>
+          </section>
+
+          <section class="mobile-trade-entry-section" aria-label="手機新增交易">
+            <div class="mobile-section-head mobile-trade-entry-head">
+              <div class="mobile-section-title">
+                <span data-icon="briefcase" data-icon-color="green"></span>
+                <div>
+                  <h3>手機新增交易</h3>
+                  <p>直接寫入 Google Sheets Trades，送出後首頁股數會重新同步。</p>
+                </div>
+              </div>
+            </div>
+            <form id="mobileQuickTradeForm" class="mobile-quick-trade-form">
+              <div class="mobile-trade-action-row" role="radiogroup" aria-label="買入或賣出">
+                <label class="mobile-trade-radio active">
+                  <input type="radio" name="mobileQuickTradeAction" value="buy" checked>
+                  <span>買入</span>
+                </label>
+                <label class="mobile-trade-radio">
+                  <input type="radio" name="mobileQuickTradeAction" value="sell">
+                  <span>賣出</span>
+                </label>
+              </div>
+              <div class="mobile-trade-grid">
+                <label>
+                  <span>交易日期</span>
+                  <input id="mobileQuickTradeDate" type="date" required>
+                </label>
+                <label>
+                  <span>交易股數（股）</span>
+                  <input id="mobileQuickTradeShares" type="number" min="1" step="1" value="1" required inputmode="numeric">
+                </label>
+                <label>
+                  <span>平均成本 / 成交價</span>
+                  <input id="mobileQuickTradePrice" type="number" min="0.01" step="0.01" value="0.00" required inputmode="decimal">
+                </label>
+                <label>
+                  <span>資金來源 / 備註分類</span>
+                  <select id="mobileQuickTradeNoteType">
+                    <option value="股息再投入">股息再投入</option>
+                    <option value="薪資投入">薪資投入</option>
+                    <option value="年終投入">年終投入</option>
+                    <option value="定期投入">定期投入</option>
+                    <option value="閒置資金投入">閒置資金投入</option>
+                    <option value="再平衡調整">再平衡調整</option>
+                    <option value="部位調整">部位調整</option>
+                    <option value="其他">其他</option>
+                  </select>
+                </label>
+              </div>
+              <label class="mobile-trade-note-field">
+                <span>備註</span>
+                <input id="mobileQuickTradeNote" type="text" placeholder="可留空，例如：定期投入、加碼原因">
+              </label>
+              <button id="mobileQuickTradeSubmit" class="mobile-trade-submit" type="submit">新增交易並寫入 Google Sheets</button>
+              <p id="mobileQuickTradeStatus" class="mobile-trade-status">送出後頁面會重新整理；看首頁目前股數是否增加即可確認。</p>
+            </form>
           </section>
         </section>
 
@@ -467,7 +524,12 @@
                   <div class="desktop-status-row" data-status="green"><span>配息 / 54C</span><strong id="desktopFreshDividendStatus">--</strong><small id="desktopFreshDividendDate">--</small></div>
                   <div class="desktop-status-row" data-status="green"><span>前十大持股</span><strong id="desktopFreshHoldingsStatus">--</strong><small id="desktopFreshHoldingsDate">--</small></div>
                   <div class="desktop-status-row" data-status="green"><span>整體抓取</span><strong id="desktopFreshFetchedStatus">--</strong><small id="desktopFreshFetchedAt">--</small></div>
-                  <div class="desktop-status-row" data-status="green"><span>資料完整性</span><strong id="desktopFreshIntegrityStatus">--</strong><small id="desktopFreshIntegrityNote">--</small></div>
+                  <div class="desktop-status-row desktop-status-row--integrity" data-status="green"><span>資料完整性</span><strong id="desktopFreshIntegrityStatus">--</strong><small id="desktopFreshIntegrityNote">--</small></div>
+                </div>
+                <div class="desktop-integrity-detail" id="desktopIntegrityDetail" data-status="green">資料完整性正常：所有關鍵欄位可用。</div>
+                <div class="recent-anomaly-summary desktop-anomaly-summary" id="desktopAnomalySummary" data-status="green">
+                  <div class="recent-anomaly-head"><strong>最近異常摘要</strong><small id="desktopAnomalyCount">--</small></div>
+                  <div class="recent-anomaly-list" id="desktopAnomalyList">讀取中...</div>
                 </div>
               </section>
             </aside>
@@ -587,11 +649,16 @@
               <strong id="freshFetchedStatus">--</strong>
               <small id="freshFetchedAt">--</small>
             </article>
-            <article class="freshness-card">
+            <article class="freshness-card freshness-card--integrity">
               <span>資料完整性</span>
               <strong id="freshIntegrityStatus">--</strong>
               <small id="freshIntegrityNote">--</small>
             </article>
+          </div>
+          <div class="mobile-integrity-detail" id="mobileIntegrityDetail" data-status="green">資料完整性正常：所有關鍵欄位可用。</div>
+          <div class="recent-anomaly-summary mobile-anomaly-summary" id="mobileAnomalySummary" data-status="green">
+            <div class="recent-anomaly-head"><strong>最近異常摘要</strong><small id="mobileAnomalyCount">--</small></div>
+            <div class="recent-anomaly-list" id="mobileAnomalyList">讀取中...</div>
           </div>
           </section>
         </section>
@@ -677,12 +744,15 @@
         </section>
 
         <section class="trade-section" id="trades">
-          <div class="section-head">
-            <div>
+          <div class="section-head trade-section-head">
+            <div class="trade-title-block">
               <p class="eyebrow">Trade Log</p>
-              <h3>交易紀錄</h3>
+              <div class="trade-title-line">
+                <h3>交易紀錄</h3>
+                <a class="trade-entry-chip" href="/?native_page=trade_entry" target="_blank" rel="noopener noreferrer" data-trade-entry-link="true">＋ 新增交易</a>
+              </div>
             </div>
-            <small>交易紀錄會驅動首頁股數、成本與含息損益</small>
+            <small>只顯示正式交易紀錄；新增、匯入、匯出與下載範本集中在獨立交易頁。</small>
           </div>
 
           <div class="trade-stats trade-summary-stats">
@@ -716,44 +786,6 @@
             </div>
           </div>
 
-          <div class="trade-layout">
-            <form class="trade-form" id="tradeForm">
-              <div class="side-toggle" role="group" aria-label="買賣別">
-                <button class="active" type="button" data-action="buy">買入</button>
-                <button type="button" data-action="sell">賣出</button>
-              </div>
-              <label>
-                交易日期
-                <input id="tradeDateInput" type="date" required />
-              </label>
-              <label>
-                交易股數（股）
-                <input id="tradeSharesInput" type="number" min="1" step="1" required />
-              </label>
-              <label>
-                買入 / 賣出價位
-                <input id="tradePriceInput" type="number" min="0" step="0.01" required />
-              </label>
-              <label>
-                資金來源 / 備註分類
-                <select id="tradeNoteTypeInput">
-                  <option value="股息再投入">股息再投入</option>
-                  <option value="薪資投入">薪資投入</option>
-                  <option value="年終投入">年終投入</option>
-                  <option value="定期投入">定期投入</option>
-                  <option value="閒置資金投入">閒置資金投入</option>
-                  <option value="再平衡調整">再平衡調整</option>
-                  <option value="部位調整">部位調整</option>
-                  <option value="其他">其他</option>
-                </select>
-              </label>
-              <label class="trade-note">
-                備註
-                <input id="tradeNoteInput" type="text" placeholder="可留空或補充說明" />
-              </label>
-              <button class="submit-trade" id="tradeSubmitButton" type="submit">新增交易</button>
-            </form>
-          </div>
 
           <div class="table-wrap trade-table-wrap">
             <table class="trade-table">
@@ -773,14 +805,6 @@
             </table>
           </div>
 
-          <div class="trade-actions">
-            <button type="button" id="exportTradesButton">匯出資料</button>
-            <label class="import-button">
-              匯入資料
-              <input id="importTradesInput" type="file" accept=".csv,text/csv" />
-            </label>
-            <button type="button" id="downloadTemplateButton">下載範本</button>
-          </div>
         </section>
 
         <section class="monthly-section" id="monthly">
@@ -804,12 +828,12 @@
             <article class="monthly-chart-card">
               <div class="panel-title">
                 <span>我的含息報酬</span>
-                <small>成本 / 市值 / 含息總值</small>
+                <small>相對投入成本 / 市值損益 / 含息損益</small>
               </div>
               <div class="monthly-legend">
-                <span><i class="line cost"></i>投入成本</span>
-                <span><i class="line market"></i>月底市值</span>
-                <span><i class="line total"></i>含息總值</span>
+                <span><i class="line cost"></i>投入成本基準</span>
+                <span><i class="line market"></i>市值損益</span>
+                <span><i class="line total"></i>含息損益</span>
               </div>
               <div id="monthlyReturnChart" class="monthly-chart"></div>
             </article>
@@ -899,7 +923,7 @@
             <article class="dividend-card">
               <span>補充保費觀察</span>
               <strong id="latestDividendHealth">--</strong>
-              <small>暫以 54C 估算值觀察門檻</small>
+              <small>暫以54C估算值觀察</small>
             </article>
           </div>
 
@@ -1075,11 +1099,33 @@
 
           <div class="settings-intro">
             <div>
-              <strong>總燈號先看每日折溢價，再把每月含息報酬、年度 54C 與補充保費納入觀察。</strong>
-              <p>這裡只放會常調整的數字。預設值沿用目前討論版本，之後如果覺得太嚴或太鬆，直接改數字即可。</p>
+              <strong>總燈號會依照下方門檻重新計算：折溢價、受益人、54C / 補充保費與前十大持股觀察都會納入。</strong>
+              <p>市價與淨值 / 折溢價差 1 個交易日視為正常；落後 2 個交易日以上才提醒。前十大集中度只看「過度集中」：高於或等於門檻才黃燈，降低不會警報；門檻設 0 可停用集中度提醒。</p>
             </div>
             <span id="signalSettingsMessage" class="settings-message"></span>
           </div>
+
+          <article class="settings-card signal-diagnostics-card">
+            <div class="panel-title">
+              <span>目前燈號診斷</span>
+              <small>用目前資料對照你的設定門檻；儲存設定後會立即重算。</small>
+            </div>
+            <div class="settings-diagnostics-table-wrap">
+              <table class="settings-diagnostics-table">
+                <thead>
+                  <tr>
+                    <th>項目</th>
+                    <th>目前數值</th>
+                    <th>門檻</th>
+                    <th>狀態</th>
+                  </tr>
+                </thead>
+                <tbody id="signalDiagnosticsBody">
+                  <tr><td colspan="4">等待資料載入...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
 
           <form id="signalSettingsForm" class="settings-form">
             <article class="settings-card">
@@ -1144,11 +1190,11 @@
               </div>
               <div class="settings-fields">
                 <label>
-                  前十大汰換黃燈檔數
+                  前十大汰換黃燈檔數（0 = 停用）
                   <input id="settingTop10RotationWarningCount" type="number" step="1" min="0" max="10" />
                 </label>
                 <label>
-                  前十大集中度黃燈 (%)
+                  前十大集中度黃燈 (%)（0 = 停用）
                   <input id="settingTop10ConcentrationYellowPct" type="number" step="0.1" min="0" max="100" />
                 </label>
               </div>
@@ -1159,6 +1205,139 @@
               <button id="resetSignalSettingsButton" type="button">恢復預設</button>
             </div>
           </form>
+        </section>
+
+
+        <section class="data-maintenance-section" id="data-maintenance">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Data Maintenance</p>
+              <h3>資料維護</h3>
+            </div>
+            <small>HTML 快速檢視頁；Excel 匯入與重新修復才開啟 Streamlit 工具。</small>
+          </div>
+
+          <section class="dm-card dm-ops-card">
+            <div class="dm-ops-status">
+              <div>
+                <h4>每日資料庫狀態</h4>
+                <p>正式檔案：data/daily_history.json；前端同步檔：static/data/daily_history.json。</p>
+              </div>
+              <div class="dm-kpis">
+                <article><span>NAV 筆數</span><strong id="dmNavCount">--</strong></article>
+                <article><span>收盤價筆數</span><strong id="dmPriceCount">--</strong></article>
+                <article><span>折溢價可計算</span><strong id="dmPremiumCount">--</strong></article>
+                <article><span>最新 NAV 日期</span><strong id="dmLatestNavDate">--</strong></article>
+              </div>
+            </div>
+            <div class="dm-ops-tool">
+              <h4>NAV Excel 匯入</h4>
+              <p>缺口太大時，先下載群益 Excel，再開啟匯入工具補資料。</p>
+              <a class="dm-action" href="/?native_page=data_maintenance" target="_top" data-native-page="data_maintenance" data-native-url="/?native_page=data_maintenance">開啟匯入工具</a>
+            </div>
+            <div class="dm-ops-tool">
+              <h4>資料工具</h4>
+              <p>重新計算折溢價屬於資料修復；備份下載可保存目前 daily_history.json。</p>
+              <div class="dm-action-group">
+                <a class="dm-action" href="/?native_page=data_maintenance" target="_top" data-native-page="data_maintenance" data-native-url="/?native_page=data_maintenance">開啟修復工具</a>
+                <a class="dm-action dm-action-secondary" href="data/daily_history.json" download="daily_history.json">備份下載</a>
+              </div>
+            </div>
+          </section>
+
+          <section class="dm-card dm-source-card">
+            <div class="dm-card-head">
+              <div>
+                <h4>資料來源主備援規劃</h4>
+                <p>依信任度與穩定度排序；月度 AUM 與最新快照分開保存，避免互相污染。</p>
+              </div>
+              <div class="dm-snapshot-pill">
+                <span>最新 AUM 快照</span>
+                <strong id="dmLatestSnapshotAum">--</strong>
+                <small id="dmLatestSnapshotSource">--</small>
+                <small id="dmLatestSnapshotDate">--</small>
+              </div>
+            </div>
+            <div class="dm-table-wrap dm-source-table-wrap">
+              <table class="dm-table dm-source-table">
+                <thead>
+                  <tr>
+                    <th>資料類型</th>
+                    <th>主來源</th>
+                    <th>備援來源</th>
+                    <th>信任度</th>
+                    <th>穩定度</th>
+                    <th>可抓欄位</th>
+                    <th>規則</th>
+                  </tr>
+                </thead>
+                <tbody id="dmSourceTableBody">
+                  <tr><td colspan="7">讀取中...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+<section class="dm-card dm-table-card dm-monthly-card">
+            <div class="dm-card-head">
+              <div>
+                <h4>月度資料明細（AUM / 受益人）</h4>
+                <p>MoneyDJ 若已更新受益人但 AUM 為 N/A，表格會顯示「AUM 待補」，圖表只畫受益人折線、不畫假 AUM 直條。</p>
+              </div>
+            </div>
+            <div class="dm-table-wrap dm-monthly-table-wrap">
+              <table class="dm-table dm-monthly-table">
+                <thead>
+                  <tr>
+                    <th>月份</th>
+                    <th>受益人數</th>
+                    <th>月增率%</th>
+                    <th>月度 AUM</th>
+                    <th>AUM 來源</th>
+                    <th>受益人來源</th>
+                    <th>狀態</th>
+                    <th>缺漏說明</th>
+                  </tr>
+                </thead>
+                <tbody id="dmMonthlyTableBody">
+                  <tr><td colspan="8">讀取中...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+<section class="dm-card dm-table-card">
+            <div class="dm-card-head">
+              <div>
+                <h4>每日資料明細（最近 30 筆）</h4>
+                <p>每一列代表一個交易日；欄位出現「缺」代表該項資料尚未補齊。</p>
+              </div>
+            </div>
+            <div class="dm-table-wrap">
+              <table class="dm-table">
+                <thead>
+                  <tr>
+                    <th>日期</th>
+                    <th>市價</th>
+                    <th>收盤價</th>
+                    <th>還原收盤價</th>
+                    <th>成交股數</th>
+                    <th>成交張數</th>
+                    <th>收盤價來源</th>
+                    <th>官方淨值</th>
+                    <th>淨值</th>
+                    <th>淨值來源</th>
+                    <th>是否估算淨值</th>
+                    <th>折溢價金額</th>
+                    <th>折溢價率%</th>
+                    <th>折溢價來源</th>
+                    <th>更新時間</th>
+                  </tr>
+                </thead>
+                <tbody id="dmDailyTableBody">
+                  <tr><td colspan="15">讀取中...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
         </section>
 
         <section class="manual-section" id="manual">
@@ -1217,6 +1396,7 @@
               <ul>
                 <li><strong>市價缺漏：</strong>目前市值、未實現損益、含息報酬會失真，總燈號會轉紅。</li>
                 <li><strong>淨值或折溢價缺漏：</strong>折溢價圖表與每日燈號會失真，通常轉黃或紅。</li>
+                <li><strong>淨值/折溢價更新落後：</strong>市價比淨值或折溢價新 1 天通常視為資料傳遞時間差；落後 2 天以上才列入需留意。</li>
                 <li><strong>成交量缺漏：</strong>成交量觀察會缺資料，通常轉黃。</li>
                 <li><strong>AUM / 受益人數缺漏：</strong>ETF 規模健康與月度燈號會失真。</li>
                 <li><strong>配息 / 54C 缺漏：</strong>每季配息、年度 54C、補充保費估算會失真。</li>
@@ -1228,7 +1408,7 @@
               <h4>燈號規則</h4>
               <ul>
                 <li><strong>綠燈：</strong>目前沒有超過設定門檻，首頁顯示「所有數據正常」。</li>
-                <li><strong>黃燈：</strong>有需要觀察的項目，例如折溢價偏大、月度含息報酬轉弱、前十大集中度偏高、資料稍微過期。</li>
+                <li><strong>黃燈：</strong>有需要觀察的項目，例如折溢價偏大、月度含息報酬轉弱、前十大集中度偏高、資料稍微過期。市價與淨值/折溢價差 1 天不列黃燈，落後 2 天以上才提醒。</li>
                 <li><strong>紅燈：</strong>關鍵資料缺漏，或異常已經會明顯影響市值、損益、含息報酬等核心計算。</li>
                 <li><strong>門檻設定：</strong>折溢價、54C、補充保費、受益人數、前十大集中度等可到「燈號設定」調整。</li>
               </ul>
@@ -1261,12 +1441,15 @@
       </main>
     </div>
 
-    <script src="assets/signal_settings.js?v=20260522-1315"></script>
-    <script src="assets/app.js?v=20260522-1645"></script>
-    <script src="assets/dividend_quarterly_overrides.js?v=20260521-1555"></script>
-    <script src="assets/monthly_health.js?v=20260522-1245"></script>
-    <script src="assets/holdings.js?v=20260522-0915"></script>
-    <script src="assets/yearly_tax.js?v=20260522-1245"></script>
-    <script src="assets/navigation.js?v=20260522-1730"></script>
+    <script src="assets/signal_settings.js?v=20260604-ui67"></script>
+    <script src="assets/app.js?v=20260604-ui67"></script>
+    <script src="assets/dividend_quarterly_overrides.js?v=20260604-ui67"></script>
+    <script src="assets/monthly_health.js?v=20260604-ui67"></script>
+    <script src="assets/holdings.js?v=20260604-ui67"></script>
+    <script src="assets/yearly_tax.js?v=20260604-ui67"></script>
+    <script src="assets/navigation.js?v=20260604-ui67"></script>
   </body>
 </html>
+
+
+

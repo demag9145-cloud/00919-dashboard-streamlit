@@ -9,6 +9,57 @@ render = function renderWithMonthlyHealth() {
   renderMonthlyHealth();
 };
 
+function getMonthlyAum100mValue(row) {
+  if (!row) return NaN;
+  // Monthly health uses only true month-end AUM.  Latest snapshots from
+  // Capital Fund / TWSE must not be drawn as monthly bars.
+  if (row.aum_is_current_snapshot || row.monthly_aum_status === "pending" || row.aum_pending) return NaN;
+  const direct = Number(row.aum_100m_twd);
+  if (Number.isFinite(direct) && direct > 0) return direct;
+  const million = Number(row.aum_million_twd);
+  if (!Number.isFinite(million) || million <= 0) return NaN;
+  return million < 20000 ? million : million / 100;
+}
+
+
+function getSafeBeneficiaryCount(row) {
+  const raw = Number(row?.beneficiary_count);
+  if (!Number.isFinite(raw) || raw <= 0) return NaN;
+  if (raw >= 100000 && raw <= 5000000) return Math.round(raw);
+  const dividedBy10 = raw / 10;
+  if (raw > 5000000 && dividedBy10 >= 100000 && dividedBy10 <= 5000000) return Math.round(dividedBy10);
+  return NaN;
+}
+
+function enrichMonthlyEtfRows(rows) {
+  const enriched = rows.map((row) => ({
+    ...row,
+    _beneficiary_count_safe: getSafeBeneficiaryCount(row),
+    _aum_100m_safe: getMonthlyAum100mValue(row),
+  }));
+  enriched.forEach((row, index) => {
+    const previous = enriched[index - 1];
+    const currentCount = row._beneficiary_count_safe;
+    const previousCount = previous?._beneficiary_count_safe;
+    if (Number.isFinite(currentCount) && Number.isFinite(previousCount) && previousCount > 0) {
+      row._beneficiary_change_pct_safe = ((currentCount - previousCount) / previousCount) * 100;
+    } else if (Number.isFinite(Number(row.beneficiary_change_pct))) {
+      row._beneficiary_change_pct_safe = Number(row.beneficiary_change_pct);
+    }
+  });
+  return enriched;
+}
+
+function getPaddedDomain(values, minPaddingRatio = 0.08) {
+  const clean = values.filter((value) => Number.isFinite(value));
+  if (!clean.length) return [0, 1];
+  const rawMin = Math.min(...clean);
+  const rawMax = Math.max(...clean);
+  const span = Math.max(rawMax - rawMin, Math.abs(rawMax || 1) * minPaddingRatio, 1);
+  const pad = span * 0.18;
+  return [Math.max(0, rawMin - pad), rawMax + pad];
+}
+
 function renderMonthlyHealth() {
   if (!state?.data) return;
   const rows = calcMonthlyReturnRows(
@@ -164,41 +215,114 @@ function drawMonthlyReturnChart(rows) {
     chart.innerHTML = "<div class='empty'>尚無月度含息報酬資料</div>";
     return;
   }
-  const width = Math.max(980, rows.length * 46 + 140);
-  const height = 360;
-  const pad = { top: 26, right: 32, bottom: 48, left: 70 };
+
+  // 這張圖用「相對投入成本」顯示，避免投入本金 / 市值 / 含息總值太接近時折線重疊。
+  const displayRows = rows.map((row) => ({
+    ...row,
+    costBase: 0,
+    marketReturnValue: row.marketValue - row.cost,
+    totalReturnValue: row.totalValue - row.cost,
+  }));
+
+  const width = Math.max(980, displayRows.length * 64 + 170);
+  const height = 380;
+  const pad = { top: 34, right: 42, bottom: 54, left: 82 };
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
-  const values = rows.flatMap((row) => [row.cost, row.marketValue, row.totalValue]);
-  const minValue = Math.min(0, ...values) * 0.98;
-  const maxValue = Math.max(...values, 1) * 1.08;
-  const x = (_, index) => pad.left + (index / Math.max(rows.length - 1, 1)) * plotW;
+  const values = displayRows.flatMap((row) => [row.costBase, row.marketReturnValue, row.totalReturnValue]);
+  const clean = values.filter((value) => Number.isFinite(value));
+  const rawMin = clean.length ? Math.min(...clean) : 0;
+  const rawMax = clean.length ? Math.max(...clean) : 1;
+  const rawSpan = Math.max(rawMax - rawMin, Math.abs(rawMax || rawMin || 1) * 0.18, 1000);
+  let minValue = rawMin - rawSpan * 0.18;
+  let maxValue = rawMax + rawSpan * 0.22;
+  if (rawMin >= 0) minValue = Math.min(0, minValue);
+  if (rawMax <= 0) maxValue = Math.max(0, maxValue);
+
+  const x = (_, index) => pad.left + (index / Math.max(displayRows.length - 1, 1)) * plotW;
   const y = (value) => scale(value, minValue, maxValue, pad.top + plotH, pad.top);
-  const path = (key) => rows.map((row, index) => `${index ? "L" : "M"} ${x(row, index)} ${y(row[key])}`).join(" ");
+  const path = (key) => displayRows.map((row, index) => `${index ? "L" : "M"} ${x(row, index)} ${y(row[key])}`).join(" ");
+  const zeroY = y(0);
   const grid = [0, 1, 2, 3, 4].map((i) => {
     const yy = pad.top + (plotH / 4) * i;
     const value = maxValue - ((maxValue - minValue) / 4) * i;
-    return `<line class="grid-line" x1="${pad.left}" x2="${width - pad.right}" y1="${yy}" y2="${yy}" /><text class="axis-text" x="12" y="${yy + 4}">$${fmt.money(value)}</text>`;
+    const label = value < 0 ? `-$${fmt.money(Math.abs(value))}` : `$${fmt.money(value)}`;
+    return `<line class="grid-line" x1="${pad.left}" x2="${width - pad.right}" y1="${yy}" y2="${yy}" /><text class="axis-text" x="12" y="${yy + 4}">${label}</text>`;
   });
-  const labelStep = rows.length > 30 ? 4 : rows.length > 18 ? 3 : rows.length > 10 ? 2 : 1;
-  const labels = rows.map((row, index) => {
-    const show = index === 0 || index === rows.length - 1 || index % labelStep === 0;
-    return show ? `<text class="axis-text" text-anchor="middle" x="${x(row, index)}" y="${height - 20}">${row.month.slice(2)}</text>` : "";
+  const labelStep = displayRows.length > 30 ? 4 : displayRows.length > 18 ? 3 : displayRows.length > 10 ? 2 : 1;
+  const labels = displayRows.map((row, index) => {
+    const show = index === 0 || index === displayRows.length - 1 || index % labelStep === 0;
+    return show ? `<text class="axis-text" text-anchor="middle" x="${x(row, index)}" y="${height - 22}">${row.month.slice(2)}</text>` : "";
   });
+  const zones = displayRows.map((row, index) => {
+    const zoneW = plotW / Math.max(displayRows.length - 1, 1);
+    const xx = Math.max(pad.left, x(row, index) - zoneW / 2);
+    const widthValue = index === 0 || index === displayRows.length - 1 ? zoneW / 2 : zoneW;
+    const payload = encodeURIComponent(JSON.stringify(row));
+    return `<rect class="monthly-hover-zone" data-row="${payload}" data-x="${x(row, index).toFixed(2)}" x="${xx.toFixed(2)}" y="${pad.top}" width="${widthValue.toFixed(2)}" height="${plotH}" />`;
+  });
+  const points = displayRows.map((row, index) => `
+    <circle class="chart-point monthly-chart-point" cx="${x(row, index)}" cy="${y(row.costBase)}" r="4.2" fill="#172124" />
+    <circle class="chart-point monthly-chart-point" cx="${x(row, index)}" cy="${y(row.marketReturnValue)}" r="5" fill="#1f5fbf" />
+    <circle class="chart-point monthly-chart-point" cx="${x(row, index)}" cy="${y(row.totalReturnValue)}" r="5" fill="#198754" />
+  `).join("");
+
   chart.innerHTML = `
-    <svg viewBox="0 0 ${width} ${height}" style="width:${width}px; max-width:none;" role="img" aria-label="每月含息報酬折線圖">
+    <svg viewBox="0 0 ${width} ${height}" style="width:${width}px; max-width:none;" role="img" aria-label="每月含息報酬相對投入成本折線圖">
       ${grid.join("")}
-      <path d="${path("cost")}" fill="none" stroke="#172124" stroke-width="2.5" />
-      <path d="${path("marketValue")}" fill="none" stroke="#1f5fbf" stroke-width="3" />
-      <path d="${path("totalValue")}" fill="none" stroke="#198754" stroke-width="3" />
-      ${rows.map((row, index) => `
-        <circle cx="${x(row, index)}" cy="${y(row.cost)}" r="3" fill="#172124" />
-        <circle cx="${x(row, index)}" cy="${y(row.marketValue)}" r="3" fill="#1f5fbf" />
-        <circle cx="${x(row, index)}" cy="${y(row.totalValue)}" r="3" fill="#198754" />
-      `).join("")}
+      <line class="grid-line zero-line" x1="${pad.left}" x2="${width - pad.right}" y1="${zeroY}" y2="${zeroY}" stroke-dasharray="6 5" />
+      <line id="monthlyReturnGuide" class="hover-guide" x1="${pad.left}" x2="${pad.left}" y1="${pad.top}" y2="${pad.top + plotH}" />
+      <text class="axis-text chart-note" x="${pad.left}" y="20">相對投入成本顯示，避免絕對金額過近時線條重疊</text>
+      <path d="${path("costBase")}" fill="none" stroke="#172124" stroke-width="2.5" stroke-dasharray="7 5" />
+      <path d="${path("marketReturnValue")}" fill="none" stroke="#1f5fbf" stroke-width="3.5" />
+      <path d="${path("totalReturnValue")}" fill="none" stroke="#198754" stroke-width="3.5" />
+      ${points}
       ${labels.join("")}
+      ${zones.join("")}
     </svg>
+    <div id="monthlyReturnTooltip" class="chart-tooltip monthly-chart-tooltip"></div>
   `;
+  bindMonthlyReturnTooltip(chart);
+}
+
+
+
+function bindMonthlyReturnTooltip(chart) {
+  const tooltip = chart.querySelector("#monthlyReturnTooltip");
+  const guide = chart.querySelector("#monthlyReturnGuide");
+  if (!tooltip) return;
+  chart.querySelectorAll(".monthly-hover-zone").forEach((zone) => {
+    zone.addEventListener("mouseenter", () => {
+      const row = JSON.parse(decodeURIComponent(zone.dataset.row));
+      tooltip.innerHTML = `
+        <strong>${row.month}</strong>
+        <div><span>持有股數</span><b>${fmt.money(Number(row.shares))} 股</b></div>
+        <div><span>投入成本</span><b>$${fmt.money(Number(row.cost))}</b></div>
+        <div><span>月底市值</span><b>$${fmt.money(Number(row.marketValue))}</b></div>
+        <div><span>累積配息</span><b>$${fmt.money(Number(row.cumulativeDividend))}</b></div>
+        <div><span>含息總值</span><b>$${fmt.money(Number(row.totalValue))}</b></div>
+        <div><span>含息損益</span><b>$${fmt.money(Number(row.totalReturn))}</b></div>
+        <div><span>含息報酬率</span><b>${fmt.pct(Number(row.totalReturnPct))}</b></div>
+      `;
+      tooltip.classList.add("show");
+      if (guide) {
+        guide.classList.add("active");
+        guide.setAttribute("x1", zone.dataset.x);
+        guide.setAttribute("x2", zone.dataset.x);
+      }
+    });
+    zone.addEventListener("mousemove", (event) => {
+      const box = chart.getBoundingClientRect();
+      const left = Math.min(event.clientX - box.left + 18 + chart.scrollLeft, chart.scrollLeft + box.width - 300);
+      const top = Math.max(event.clientY - box.top - 16 + chart.scrollTop, chart.scrollTop + 10);
+      tooltip.style.left = `${left}px`;
+      tooltip.style.top = `${top}px`;
+    });
+    zone.addEventListener("mouseleave", () => {
+      tooltip.classList.remove("show");
+      if (guide) guide.classList.remove("active");
+    });
+  });
 }
 
 function renderMonthlyReturnTable(rows) {
@@ -222,30 +346,38 @@ function renderMonthlyReturnTable(rows) {
 
 function renderMonthlyEtfHealth() {
   const chart = $("monthlyEtfHealthChart");
-  const rows = (state.data.monthly_history || state.data.monthly_size || [])
+  const rows = enrichMonthlyEtfRows((state.data.monthly_history || state.data.monthly_size || [])
     .filter((row) => row.month && (row.aum_million_twd != null || row.aum_100m_twd != null || row.beneficiary_count != null))
-    .sort((a, b) => String(a.month).localeCompare(String(b.month)));
+    .sort((a, b) => String(a.month).localeCompare(String(b.month))));
   if (chart) drawMonthlyEtfHealthChart(chart, rows);
   const body = $("monthlyEtfTableBody");
   if (!body) return;
   body.innerHTML = rows.length
     ? [...rows].reverse().map((row, index, reversed) => {
       const newer = reversed[index - 1];
-      const rowAum = Number(row.aum_million_twd || Number(row.aum_100m_twd) * 100);
-      const newerAum = newer ? Number(newer.aum_million_twd || Number(newer.aum_100m_twd) * 100) : null;
-      const aumChangePct = newer && rowAum
-        ? ((newerAum - rowAum) / rowAum) * 100
+      const rowAum100m = row._aum_100m_safe;
+      const newerAum100m = newer ? newer._aum_100m_safe : NaN;
+      const aumChangePct = newer && Number.isFinite(rowAum100m) && rowAum100m > 0 && Number.isFinite(newerAum100m)
+        ? ((newerAum100m - rowAum100m) / rowAum100m) * 100
         : null;
       const changeText = [
-        Number.isFinite(Number(row.beneficiary_change_pct)) ? `受益人 ${fmt.pct(row.beneficiary_change_pct)}` : null,
+        Number.isFinite(row._beneficiary_change_pct_safe) ? `受益人 ${fmt.pct(row._beneficiary_change_pct_safe)}` : null,
         Number.isFinite(aumChangePct) ? `AUM ${fmt.pct(aumChangePct)}` : null,
+      ].filter(Boolean).join(" / ");
+      const aumPending = !Number.isFinite(rowAum100m) && row.beneficiary_count != null;
+      const aumText = Number.isFinite(rowAum100m)
+        ? `${fmt.money(rowAum100m)} 億${row.aum_is_current_snapshot ? "（最新）" : ""}`
+        : (aumPending ? "待補" : "--");
+      const detailText = [
+        changeText || null,
+        row.aum_pending ? "AUM 待月表補齊" : null,
       ].filter(Boolean).join(" / ");
       return `
         <tr>
           <td>${row.month}</td>
-          <td>${fmt.money(rowAum / 100)} 億</td>
-          <td>${fmt.money(row.beneficiary_count)} 人</td>
-          <td>${changeText || "--"}</td>
+          <td class="${aumPending ? "pending" : ""}">${aumText}</td>
+          <td>${Number.isFinite(row._beneficiary_count_safe) ? fmt.money(row._beneficiary_count_safe) : "--"} 人</td>
+          <td>${detailText || "--"}</td>
         </tr>
       `;
     }).join("")
@@ -258,25 +390,27 @@ function drawMonthlyEtfHealthChart(chart, rows) {
     return;
   }
   chart.classList.remove("etf-health-empty");
-  const width = Math.max(760, rows.length * 58 + 150);
+  const width = Math.max(760, rows.length * 62 + 160);
   const height = 360;
-  const pad = { top: 28, right: 76, bottom: 48, left: 70 };
+  const pad = { top: 28, right: 80, bottom: 48, left: 72 };
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
-  const aumValues = rows.map((row) => Number(row.aum_million_twd || Number(row.aum_100m_twd) * 100) / 100);
-  const beneficiaryValues = rows.map((row) => Number(row.beneficiary_count || 0) / 10000);
-  const minAum = Math.min(...aumValues) * 0.96;
-  const maxAum = Math.max(...aumValues) * 1.04;
-  const minBeneficiary = Math.min(...beneficiaryValues) * 0.96;
-  const maxBeneficiary = Math.max(...beneficiaryValues) * 1.04;
+  const aumValues = rows.map((row) => row._aum_100m_safe).filter((value) => Number.isFinite(value) && value > 0);
+  const beneficiaryValues = rows
+    .map((row) => row._beneficiary_count_safe / 10000)
+    .filter((value) => Number.isFinite(value) && value > 0);
+  const [minAum, maxAum] = getPaddedDomain(aumValues, 0.08);
+  const [minBeneficiary, maxBeneficiary] = getPaddedDomain(beneficiaryValues, 0.08);
   const band = plotW / Math.max(rows.length, 1);
-  const barW = Math.min(34, Math.max(16, band * 0.48));
+  const barW = Math.min(36, Math.max(18, band * 0.48));
   const x = (index) => pad.left + band * index + band / 2;
   const yAum = (value) => scale(value, minAum, maxAum, pad.top + plotH, pad.top);
   const yBeneficiary = (value) => scale(value, minBeneficiary, maxBeneficiary, pad.top + plotH, pad.top);
-  const linePath = rows.map((row, index) => {
-    const value = Number(row.beneficiary_count || 0) / 10000;
-    return `${index ? "L" : "M"} ${x(index)} ${yBeneficiary(value)}`;
+  const beneficiaryPoints = rows
+    .map((row, index) => ({ index, value: row._beneficiary_count_safe / 10000 }))
+    .filter((point) => Number.isFinite(point.value) && point.value > 0);
+  const linePath = beneficiaryPoints.map((point, index) => {
+    return `${index ? "L" : "M"} ${x(point.index)} ${yBeneficiary(point.value)}`;
   }).join(" ");
   const grid = [0, 1, 2, 3, 4].map((i) => {
     const yy = pad.top + (plotH / 4) * i;
@@ -292,33 +426,83 @@ function drawMonthlyEtfHealthChart(chart, rows) {
     const show = rows.length <= 8 || index % 2 === 0 || index === rows.length - 1;
     return show ? `<text class="axis-text" text-anchor="middle" x="${x(index)}" y="${height - 20}">${row.month.slice(5)}</text>` : "";
   });
-  const bars = rows.map((row, index) => {
-    const aum = Number(row.aum_million_twd || Number(row.aum_100m_twd) * 100) / 100;
-    const y = yAum(aum);
-    const h = pad.top + plotH - y;
-    const beneficiaries = Number(row.beneficiary_count || 0) / 10000;
-    return `
-      <rect class="aum-bar" x="${x(index) - barW / 2}" y="${y}" width="${barW}" height="${h}" rx="4">
-        <title>${row.month}
-AUM：${fmt.money(aum)} 億
-受益人數：${fmt.money(row.beneficiary_count)} 人
-受益人月增率：${fmt.pct(row.beneficiary_change_pct)}</title>
-      </rect>
-      <circle cx="${x(index)}" cy="${yBeneficiary(beneficiaries)}" r="3.5" fill="#c2410c">
-        <title>${row.month} 受益人數：${fmt.money(row.beneficiary_count)} 人</title>
-      </circle>
-    `;
+  const rowsWithChange = rows.map((row, index) => {
+    const previous = rows[index - 1];
+    const aumChangePct = previous && Number.isFinite(previous._aum_100m_safe) && previous._aum_100m_safe > 0 && Number.isFinite(row._aum_100m_safe)
+      ? ((row._aum_100m_safe - previous._aum_100m_safe) / previous._aum_100m_safe) * 100
+      : null;
+    return { ...row, _aum_change_pct_safe: aumChangePct };
+  });
+  const bars = rowsWithChange.map((row, index) => {
+    const aum = row._aum_100m_safe;
+    const beneficiaries = row._beneficiary_count_safe / 10000;
+    const bar = Number.isFinite(aum) && aum > 0 ? (() => {
+      const yy = yAum(aum);
+      const h = Math.max(2, pad.top + plotH - yy);
+      return `<rect class="aum-bar" x="${x(index) - barW / 2}" y="${yy}" width="${barW}" height="${h}" rx="4" />`;
+    })() : (row.aum_pending ? `<text class="axis-text" text-anchor="middle" x="${x(index)}" y="${pad.top + plotH - 6}">待補</text>` : "");
+    const point = Number.isFinite(beneficiaries) && beneficiaries > 0 ? `
+      <circle class="chart-point monthly-chart-point" cx="${x(index)}" cy="${yBeneficiary(beneficiaries)}" r="5.5" fill="#c2410c" />` : "";
+    return `${bar}${point}`;
+  });
+  const zones = rowsWithChange.map((row, index) => {
+    const payload = encodeURIComponent(JSON.stringify(row));
+    return `<rect class="monthly-hover-zone" data-row="${payload}" data-x="${x(index).toFixed(2)}" x="${(pad.left + band * index).toFixed(2)}" y="${pad.top}" width="${band.toFixed(2)}" height="${plotH}" />`;
   });
   chart.innerHTML = `
     <svg viewBox="0 0 ${width} ${height}" style="width:${width}px; max-width:none;" role="img" aria-label="ETF 規模健康">
       ${grid.join("")}
+      <line id="monthlyEtfGuide" class="hover-guide" x1="${pad.left}" x2="${pad.left}" y1="${pad.top}" y2="${pad.top + plotH}" />
       <text class="axis-text" x="${pad.left}" y="18">AUM</text>
       <text class="axis-text" text-anchor="end" x="${width - pad.right}" y="18">受益人數</text>
       ${bars.join("")}
       <path d="${linePath}" fill="none" stroke="#c2410c" stroke-width="3" />
       ${labels.join("")}
+      ${zones.join("")}
     </svg>
+    <div id="monthlyEtfTooltip" class="chart-tooltip monthly-chart-tooltip"></div>
   `;
+  bindMonthlyEtfTooltip(chart);
+}
+
+
+
+function bindMonthlyEtfTooltip(chart) {
+  const tooltip = chart.querySelector("#monthlyEtfTooltip");
+  const guide = chart.querySelector("#monthlyEtfGuide");
+  if (!tooltip) return;
+  chart.querySelectorAll(".monthly-hover-zone").forEach((zone) => {
+    zone.addEventListener("mouseenter", () => {
+      const row = JSON.parse(decodeURIComponent(zone.dataset.row));
+      const aum = Number(row._aum_100m_safe);
+      const beneficiaries = Number(row._beneficiary_count_safe);
+      tooltip.innerHTML = `
+        <strong>${row.month}</strong>
+        <div><span>AUM</span><b>${Number.isFinite(aum) ? `${fmt.money(aum)} 億` : "待補"}</b></div>
+        <div><span>AUM 月增率</span><b>${Number.isFinite(Number(row._aum_change_pct_safe)) ? fmt.pct(Number(row._aum_change_pct_safe)) : "--"}</b></div>
+        <div><span>受益人數</span><b>${Number.isFinite(beneficiaries) ? `${fmt.money(beneficiaries)} 人` : "--"}</b></div>
+        <div><span>受益人月增率</span><b>${Number.isFinite(Number(row._beneficiary_change_pct_safe)) ? fmt.pct(Number(row._beneficiary_change_pct_safe)) : "--"}</b></div>
+        <div><span>來源</span><b>${row.monthly_aum_source || row.beneficiary_source || row.source || "--"}</b></div>
+      `;
+      tooltip.classList.add("show");
+      if (guide) {
+        guide.classList.add("active");
+        guide.setAttribute("x1", zone.dataset.x);
+        guide.setAttribute("x2", zone.dataset.x);
+      }
+    });
+    zone.addEventListener("mousemove", (event) => {
+      const box = chart.getBoundingClientRect();
+      const left = Math.min(event.clientX - box.left + 18 + chart.scrollLeft, chart.scrollLeft + box.width - 300);
+      const top = Math.max(event.clientY - box.top - 16 + chart.scrollTop, chart.scrollTop + 10);
+      tooltip.style.left = `${left}px`;
+      tooltip.style.top = `${top}px`;
+    });
+    zone.addEventListener("mouseleave", () => {
+      tooltip.classList.remove("show");
+      if (guide) guide.classList.remove("active");
+    });
+  });
 }
 
 setTimeout(() => {

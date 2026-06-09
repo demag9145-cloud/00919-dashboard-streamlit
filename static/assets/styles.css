@@ -98,6 +98,7 @@ input {
 }
 
 .nav a.active,
+.nav a.is-active,
 .nav a:hover {
   color: #fff;
   background: rgba(255, 255, 255, 0.1);
@@ -149,12 +150,14 @@ input {
 }
 
 .nav a.active,
+.nav a.is-active,
 .nav a:hover {
   background: linear-gradient(90deg, rgba(16, 185, 129, 0.24), rgba(255, 255, 255, 0.08));
   box-shadow: inset 3px 0 0 #10b981;
 }
 
 .nav a.active .icon-box,
+.nav a.is-active .icon-box,
 .nav a:hover .icon-box {
   background: rgba(16, 185, 129, 0.16);
   color: #34d399;
@@ -211,6 +214,17 @@ input {
 .content > section,
 .page-header {
   scroll-margin-top: 24px;
+}
+
+.dashboard-page-hidden,
+.dashboard-page-hidden[hidden] {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
 }
 
 .page-header,
@@ -1122,6 +1136,14 @@ input {
   margin-top: 14px;
 }
 
+.streamlit-embedded .trade-layout {
+  display: none !important;
+}
+
+.streamlit-embedded #syncTradesButton {
+  display: none !important;
+}
+
 .trade-form {
   display: grid;
   grid-template-columns: 190px repeat(4, minmax(150px, 1fr)) minmax(220px, 1.2fr) 150px;
@@ -1192,7 +1214,7 @@ input {
   margin-top: 16px;
 }
 
-.trade-stats div {
+.trade-stats > div {
   min-height: 86px;
   padding: 14px 16px;
   border: 1px solid var(--line);
@@ -2295,11 +2317,83 @@ select {
     overflow: hidden;
   }
 
-  .desktop-core-grid .core-metric-tile > .icon-box,
-  .desktop-focus-card > .icon-box {
-    width: 48px;
-    height: 48px;
-    border-radius: 15px;
+  .desktop-home .icon-box {
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
+    border-radius: 16px;
+    opacity: 1;
+  }
+
+  .desktop-home .icon-box svg {
+    width: 28px;
+    height: 28px;
+    stroke-width: 2.35;
+    opacity: 1;
+  }
+
+  .desktop-home .icon-box--green {
+    background: rgba(16, 185, 129, 0.18);
+    color: #059669;
+  }
+
+  .desktop-home .icon-box--blue {
+    background: rgba(14, 165, 233, 0.18);
+    color: #0284c7;
+  }
+
+  .desktop-home .icon-box--purple {
+    background: rgba(139, 92, 246, 0.18);
+    color: #7c3aed;
+  }
+
+  .desktop-home .icon-box--orange {
+    background: rgba(245, 158, 11, 0.2);
+    color: #d97706;
+  }
+
+  .desktop-home .icon-box--pink {
+    background: rgba(236, 72, 153, 0.18);
+    color: #db2777;
+  }
+
+  .desktop-home .icon-box--cyan {
+    background: rgba(6, 182, 212, 0.18);
+    color: #0891b2;
+  }
+
+  .desktop-core-grid .core-metric-tile {
+    min-height: 104px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 22px;
+  }
+
+  .desktop-core-grid .core-metric-tile > .icon-box {
+    width: 58px;
+    height: 58px;
+    min-width: 58px;
+    border-radius: 18px;
+  }
+
+  .desktop-core-grid .core-metric-tile > .icon-box svg {
+    width: 31px;
+    height: 31px;
+    stroke-width: 2.45;
+  }
+
+  .desktop-core-grid .core-metric-tile > .icon-box {
+    flex: 0 0 auto;
+  }
+
+  .desktop-core-grid .core-metric-tile .metric-label {
+    display: block;
+    margin: 0;
+    margin-bottom: 8px;
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.25;
   }
 
   .desktop-core-grid .core-metric-tile strong,
@@ -2307,6 +2401,28 @@ select {
     color: var(--desktop-text);
     font-size: 26px;
     line-height: 1.08;
+  }
+
+  .desktop-core-grid .core-metric-tile strong {
+    display: block;
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: 0;
+  }
+
+  .desktop-home .metric-status-line,
+  .desktop-home .core-metric-status,
+  .desktop-home .metric-sync-note {
+    display: none !important;
+  }
+
+  .desktop-core-grid .core-metric-tile strong.positive,
+  .desktop-core-grid .core-metric-tile .positive,
+  #desktopMarketValue,
+  #desktopUnrealizedPnl.positive,
+  #desktopTotalReturn.positive,
+  #desktopAnnualDividend {
+    color: #047857;
   }
 
   .desktop-core-grid .core-metric-tile[data-status="green"] .metric-status-line { color: #059669; }
@@ -2322,6 +2438,52 @@ select {
 
   .desktop-focus-card {
     min-height: 134px;
+    padding-right: 108px;
+  }
+
+  .desktop-focus-card > .icon-box,
+  .desktop-home .focus-card .icon-box {
+    width: 78px;
+    height: 78px;
+    min-width: 78px;
+    border-radius: 24px;
+  }
+
+  .desktop-focus-card > .icon-box svg,
+  .desktop-home .focus-card .icon-box svg {
+    width: 42px;
+    height: 42px;
+    stroke-width: 2.5;
+  }
+
+  .desktop-focus-card > .icon-box {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    z-index: 2;
+    transform: translateY(-50%);
+  }
+
+  .desktop-focus-card > span:not(.icon-box),
+  .desktop-home .focus-card .focus-label {
+    max-width: 100%;
+    font-size: 17px;
+    font-weight: 700;
+  }
+
+  .desktop-focus-card strong,
+  .desktop-home .focus-card .focus-value {
+    max-width: 100%;
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+
+  .desktop-focus-card small,
+  .desktop-home .focus-card .focus-note {
+    max-width: 100%;
+    font-size: 14px;
+    color: #64748b;
   }
 
   .desktop-focus-card::after {
@@ -2332,7 +2494,7 @@ select {
     width: 96px;
     height: 96px;
     border-radius: 28px;
-    opacity: 0.18;
+    opacity: 0.08;
     transform: rotate(12deg);
   }
 
@@ -2424,32 +2586,57 @@ select {
   }
 
   .desktop-module-card {
-    min-height: 214px;
+    min-height: 176px;
     justify-items: center;
     text-align: center;
   }
 
-  .desktop-module-card > .icon-box {
-    width: 50px;
-    height: 50px;
-    border-radius: 16px;
+  .desktop-module-card > .icon-box,
+  .desktop-home .module-card .icon-box,
+  .desktop-home .quick-module-card .icon-box {
+    width: 58px;
+    height: 58px;
+    min-width: 58px;
+    border-radius: 18px;
   }
 
-  .desktop-module-card h4 {
+  .desktop-module-card > .icon-box svg,
+  .desktop-home .module-card .icon-box svg,
+  .desktop-home .quick-module-card .icon-box svg {
+    width: 30px;
+    height: 30px;
+    stroke-width: 2.4;
+  }
+
+  .desktop-module-card h4,
+  .desktop-home .module-card-title,
+  .desktop-home .quick-module-card-title {
     color: var(--desktop-text);
-    font-size: 16px;
+    font-size: 17px;
+    font-weight: 700;
     line-height: 1.2;
   }
 
   .desktop-module-card p,
   .desktop-module-card strong {
     margin: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
   }
 
-  .desktop-module-card strong {
+  .desktop-module-card strong,
+  .desktop-home .module-card-value,
+  .desktop-home .quick-module-card-value {
     color: var(--desktop-text);
-    font-size: 18px;
+    font-size: 24px;
+    font-weight: 800;
     line-height: 1.25;
+  }
+
+  .desktop-module-card p,
+  .desktop-home .module-card-note,
+  .desktop-home .quick-module-card-note {
+    font-size: 14px;
   }
 
   .desktop-action-button {
@@ -2467,8 +2654,23 @@ select {
 
   .desktop-mini-button {
     min-height: 36px;
-    padding: 0 12px;
-    background: #fff;
+    padding: 0 16px;
+    border: none;
+    background: #059669;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 800;
+  }
+
+  .desktop-mini-button:hover,
+  .desktop-mini-button.is-loading {
+    background: #047857;
+    color: #fff;
+  }
+
+  .desktop-hero__actions,
+  .desktop-data-status-compact .desktop-mini-button {
+    display: none !important;
   }
 
   .desktop-status-list {
@@ -2479,11 +2681,11 @@ select {
 
   .desktop-status-row {
     position: relative;
-    min-height: 86px;
+    min-height: 72px;
     display: grid;
     align-content: space-between;
-    gap: 4px;
-    padding: 12px 10px 10px 22px;
+    gap: 3px;
+    padding: 11px 10px 10px 24px;
     border: 1px solid rgba(226, 232, 240, 0.92);
     border-radius: 12px;
     background: #fff;
@@ -2494,8 +2696,8 @@ select {
     position: absolute;
     top: 17px;
     left: 10px;
-    width: 8px;
-    height: 8px;
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
     background: #10b981;
   }
@@ -2506,7 +2708,7 @@ select {
 
   .desktop-status-row strong {
     color: #059669;
-    font-size: 15px;
+    font-size: 16px;
   }
 
   .desktop-status-row[data-status="yellow"] strong { color: #d97706; }
@@ -2515,8 +2717,41 @@ select {
 
   .desktop-status-row small {
     color: var(--desktop-muted);
-    font-size: 12px;
+    font-size: 13px;
     line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .desktop-data-status-compact,
+  .desktop-status-row {
+    font-size: 15px;
+  }
+
+  .desktop-status-row span,
+  .desktop-home .data-status-compact .status-name,
+  .desktop-home .desktop-data-status-compact .status-name {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .desktop-status-row strong,
+  .desktop-home .data-status-compact .status-value,
+  .desktop-home .desktop-data-status-compact .status-value {
+    font-size: 17px;
+    font-weight: 800;
+  }
+
+  .nav a .icon-box {
+    width: 34px;
+    height: 34px;
+  }
+
+  .nav a .icon-box svg {
+    width: 19px;
+    height: 19px;
+    stroke-width: 2.25;
   }
 
   @media (max-width: 1300px) {
@@ -2571,6 +2806,137 @@ select {
 
   .dividend-summary-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 761px) {
+  .app-shell {
+    align-items: flex-start;
+    min-height: auto;
+  }
+
+  .sidebar {
+    align-self: flex-start;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+  }
+
+  .content {
+    width: 100%;
+    max-width: 1680px;
+    min-height: auto;
+    align-content: flex-start;
+    margin: 0 auto;
+    padding: 14px 16px 28px;
+    gap: 14px;
+  }
+
+  .content > .page-header:not(.dashboard-page-hidden),
+  .content > .desktop-home:not(.dashboard-page-hidden),
+  .content > section:not(.dashboard-page-hidden) {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  body:not([data-active-page="home"]) .content > section:not(.dashboard-page-hidden) {
+    max-width: 1440px;
+    padding-top: 16px;
+    padding-bottom: 20px;
+  }
+
+  body[data-active-page="home"] .desktop-home {
+    width: 100%;
+    max-width: 1680px;
+    margin: 0 auto;
+    gap: 12px;
+  }
+
+  .monthly-section,
+  .quarterly-section,
+  .holdings-section,
+  .yearly-section,
+  .settings-section,
+  .manual-section,
+  .trade-section {
+    gap: 14px;
+  }
+
+  .monthly-grid,
+  .quarterly-grid,
+  .holdings-grid,
+  .yearly-grid,
+  .settings-grid,
+  .manual-grid {
+    gap: 14px;
+  }
+
+  .desktop-hero {
+    min-height: 168px !important;
+    grid-template-columns: 132px minmax(320px, 1fr) minmax(360px, 0.68fr) !important;
+    gap: 18px !important;
+    padding: 18px 20px 18px 26px !important;
+  }
+
+  .desktop-hero__orb {
+    width: 112px !important;
+    height: 112px !important;
+    border-width: 5px !important;
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.16), 0 0 28px rgba(16, 185, 129, 0.42) !important;
+  }
+
+  .desktop-hero__orb.yellow {
+    box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.16), 0 0 28px rgba(245, 158, 11, 0.48) !important;
+  }
+
+  .desktop-hero__orb span {
+    font-size: 26px !important;
+  }
+
+  .desktop-hero__orb small {
+    font-size: 12px !important;
+  }
+
+  .desktop-hero__meta h2 {
+    font-size: clamp(28px, 2.3vw, 38px) !important;
+    line-height: 1.08 !important;
+  }
+
+  .desktop-hero__meta p {
+    margin: 6px 0 10px !important;
+    font-size: 15px !important;
+  }
+
+  .desktop-hero__actions {
+    top: 16px !important;
+    right: 16px !important;
+  }
+
+  .desktop-hero-button {
+    min-height: 38px !important;
+    padding: 0 14px !important;
+  }
+
+  .desktop-more-button,
+  .desktop-icon-button {
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  .desktop-hero-summary {
+    gap: 10px !important;
+    padding-top: 34px !important;
+  }
+
+  .desktop-hero-summary-card {
+    min-height: 82px !important;
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+    gap: 10px !important;
+    padding: 12px 14px !important;
+  }
+
+  .desktop-hero-summary-card strong {
+    font-size: 22px !important;
   }
 }
 
@@ -3140,5 +3506,4151 @@ select {
   .mobile-tabbar,
   .mobile-footer-nav {
     display: none !important;
+  }
+}
+
+/* === 2026-05-28 UI stabilization pack: desktop sticky hero, clean page switching, responsive fill === */
+@media (min-width: 761px) {
+  html,
+  body {
+    min-height: 100%;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+
+  .app-shell {
+    grid-template-columns: clamp(240px, 16vw, 280px) minmax(0, 1fr) !important;
+    min-height: 100vh !important;
+    align-items: flex-start !important;
+  }
+
+  .sidebar {
+    position: sticky !important;
+    top: 0 !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow-y: auto !important;
+  }
+
+  .content {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    min-height: 100vh !important;
+    margin: 0 !important;
+    padding: 10px clamp(12px, 1.15vw, 22px) 14px !important;
+    gap: 12px !important;
+    align-content: flex-start !important;
+  }
+
+  .desktop-home {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    gap: 12px !important;
+    align-content: flex-start !important;
+  }
+
+  .desktop-hero {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 80 !important;
+    min-height: 122px !important;
+    grid-template-columns: 92px minmax(260px, 1fr) minmax(320px, 0.72fr) !important;
+    gap: 14px !important;
+    padding: 14px 18px 14px 20px !important;
+    border-radius: 16px !important;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12) !important;
+  }
+
+  .desktop-hero__orb {
+    width: 78px !important;
+    height: 78px !important;
+    border-width: 4px !important;
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.15), 0 0 22px rgba(16, 185, 129, 0.38) !important;
+  }
+
+  .desktop-hero__orb.yellow {
+    box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.16), 0 0 22px rgba(245, 158, 11, 0.38) !important;
+  }
+
+  .desktop-hero__orb.red {
+    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.15), 0 0 22px rgba(239, 68, 68, 0.36) !important;
+  }
+
+  .desktop-hero__orb span {
+    font-size: 21px !important;
+  }
+
+  .desktop-hero__orb small {
+    max-width: 62px !important;
+    font-size: 10px !important;
+    line-height: 1.15 !important;
+  }
+
+  .desktop-hero__meta h2 {
+    font-size: clamp(24px, 2vw, 32px) !important;
+    line-height: 1.08 !important;
+  }
+
+  .desktop-hero__meta p {
+    margin: 4px 0 8px !important;
+    font-size: 12px !important;
+  }
+
+  .desktop-hero__meta .ui-status-chip {
+    min-height: 26px !important;
+    padding: 4px 10px !important;
+    font-size: 11px !important;
+  }
+
+  .desktop-hero-summary {
+    gap: 8px !important;
+    padding-top: 0 !important;
+    align-self: center !important;
+  }
+
+  .desktop-hero-summary-card {
+    min-height: 72px !important;
+    grid-template-columns: 34px minmax(0, 1fr) !important;
+    gap: 8px !important;
+    padding: 10px 12px !important;
+    border-radius: 12px !important;
+  }
+
+  .desktop-hero-summary-card .icon-box {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    border-radius: 11px !important;
+  }
+
+  .desktop-hero-summary-card .icon-box svg {
+    width: 19px !important;
+    height: 19px !important;
+  }
+
+  .desktop-hero-summary-card strong {
+    font-size: 19px !important;
+  }
+
+  .desktop-hero-summary-card small {
+    display: none !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-home {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 90 !important;
+    gap: 0 !important;
+    padding-bottom: 2px !important;
+    background: var(--desktop-bg) !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-home > :not(.desktop-hero) {
+    display: none !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero {
+    position: relative !important;
+    top: auto !important;
+    min-height: 78px !important;
+    grid-template-columns: 58px minmax(220px, 1fr) auto !important;
+    padding: 9px 14px 9px 15px !important;
+    gap: 12px !important;
+    border-radius: 15px !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero__orb {
+    width: 54px !important;
+    height: 54px !important;
+    border-width: 3px !important;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.14), 0 0 16px rgba(16, 185, 129, 0.32) !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero__orb.yellow {
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.14), 0 0 16px rgba(245, 158, 11, 0.32) !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero__orb.red {
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.14), 0 0 16px rgba(239, 68, 68, 0.3) !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero__orb span {
+    font-size: 16px !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero__orb small {
+    display: none !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero__meta h2 {
+    font-size: clamp(20px, 1.55vw, 25px) !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero__meta p {
+    display: none !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero-summary,
+  body:not([data-active-page="home"]) .desktop-hero__actions {
+    display: none !important;
+  }
+
+  body:not([data-active-page="home"]) .content > section:not(.dashboard-page-hidden) {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 16px clamp(16px, 1.35vw, 24px) 18px !important;
+  }
+
+  body:not([data-active-page="home"]) .section-head {
+    margin-bottom: 12px;
+  }
+
+  .monthly-section,
+  .quarterly-section,
+  .holdings-section,
+  .yearly-section,
+  .settings-section,
+  .manual-section,
+  .trade-section {
+    width: 100% !important;
+    max-width: none !important;
+    border-radius: 16px !important;
+  }
+
+  .table-wrap,
+  .monthly-table-wrap,
+  .dividend-table-wrap,
+  .yearly-tax-table-wrap {
+    max-width: 100% !important;
+  }
+
+  .dashboard-page-hidden,
+  .dashboard-page-hidden[hidden],
+  [hidden] {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    overflow: hidden !important;
+  }
+
+  body[data-active-page="home"] .content {
+    padding-bottom: 12px !important;
+  }
+
+  body[data-active-page="home"] .desktop-home {
+    max-width: none !important;
+  }
+}
+
+@media (min-width: 1181px) and (max-width: 1420px) {
+  .desktop-core-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .desktop-focus-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1180px) {
+  .app-shell {
+    grid-template-columns: 1fr !important;
+  }
+
+  .sidebar {
+    position: static !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  .desktop-home,
+  body:not([data-active-page="home"]) .desktop-home {
+    position: relative !important;
+    top: auto !important;
+  }
+}
+
+@media (max-width: 760px), (max-height: 520px) and (orientation: landscape), (hover: none) and (pointer: coarse) {
+  .mobile-home {
+    display: grid !important;
+  }
+
+  .page-header,
+  .hero-grid,
+  .data-freshness-section,
+  .desktop-home,
+  .home-focus-section,
+  .chart-section,
+  #daily,
+  #trades,
+  #monthly,
+  #quarterly,
+  #holdings,
+  #yearly,
+  #signal-settings,
+  #manual,
+  form,
+  .trade-form,
+  .native-trade-log,
+  .streamlit-trade-form-shell {
+    display: none !important;
+  }
+
+  .mobile-home .hero-actions,
+  .mobile-home .hero-action-button,
+  .mobile-home .hero-more-button {
+    display: none !important;
+  }
+
+  .content {
+    padding-bottom: 6px !important;
+  }
+}
+
+
+/* === 2026-05-28 UI2 patch: nav active sync, iframe-safe height, page title bar polish === */
+@media (min-width: 761px) {
+  body[data-active-page] .nav a[href^="#"] {
+    color: rgba(255, 255, 255, 0.78) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  body[data-active-page] .nav a[href^="#"] .icon-box {
+    background: rgba(255, 255, 255, 0.06) !important;
+    color: rgba(255, 255, 255, 0.78) !important;
+  }
+
+  body[data-active-page="home"] .nav a[href="#home"],
+  body[data-active-page="trades"] .nav a[href="#trades"],
+  body[data-active-page="monthly"] .nav a[href="#monthly"],
+  body[data-active-page="quarterly"] .nav a[href="#quarterly"],
+  body[data-active-page="holdings"] .nav a[href="#holdings"],
+  body[data-active-page="yearly"] .nav a[href="#yearly"],
+  body[data-active-page="signal-settings"] .nav a[href="#signal-settings"],
+  body[data-active-page="manual"] .nav a[href="#manual"],
+  .nav a:hover {
+    color: #fff !important;
+    background: linear-gradient(90deg, rgba(16, 185, 129, 0.24), rgba(255, 255, 255, 0.08)) !important;
+    box-shadow: inset 3px 0 0 #10b981 !important;
+  }
+
+  body[data-active-page="home"] .nav a[href="#home"] .icon-box,
+  body[data-active-page="trades"] .nav a[href="#trades"] .icon-box,
+  body[data-active-page="monthly"] .nav a[href="#monthly"] .icon-box,
+  body[data-active-page="quarterly"] .nav a[href="#quarterly"] .icon-box,
+  body[data-active-page="holdings"] .nav a[href="#holdings"] .icon-box,
+  body[data-active-page="yearly"] .nav a[href="#yearly"] .icon-box,
+  body[data-active-page="signal-settings"] .nav a[href="#signal-settings"] .icon-box,
+  body[data-active-page="manual"] .nav a[href="#manual"] .icon-box,
+  .nav a:hover .icon-box {
+    background: rgba(16, 185, 129, 0.16) !important;
+    color: #34d399 !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-home {
+    margin-bottom: 10px !important;
+  }
+
+  body:not([data-active-page="home"]) .content > section:not(.dashboard-page-hidden) {
+    overflow: visible !important;
+    padding-bottom: 26px !important;
+  }
+
+  body:not([data-active-page="home"]):not([data-active-page="trades"]) .content > section:not(.dashboard-page-hidden) > .section-head {
+    align-items: center !important;
+    margin: 0 0 14px !important;
+    padding: 14px 18px !important;
+    border: 1px solid rgba(20, 184, 166, 0.22) !important;
+    border-radius: 16px !important;
+    background:
+      radial-gradient(circle at 3% 0%, rgba(16, 185, 129, 0.12), transparent 34%),
+      linear-gradient(135deg, #ffffff 0%, #f8fffc 56%, #f0f9ff 100%) !important;
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06) !important;
+  }
+
+  body:not([data-active-page="home"]):not([data-active-page="trades"]) .content > section:not(.dashboard-page-hidden) > .section-head > div:first-child {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+
+  body:not([data-active-page="home"]):not([data-active-page="trades"]) .content > section:not(.dashboard-page-hidden) > .section-head > div:first-child::before {
+    content: "";
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    border-radius: 14px;
+    background:
+      radial-gradient(circle at 38% 36%, rgba(255, 255, 255, 0.9) 0 3px, transparent 4px),
+      linear-gradient(135deg, rgba(16, 185, 129, 0.22), rgba(14, 165, 233, 0.22));
+    box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.14);
+  }
+
+  body:not([data-active-page="home"]):not([data-active-page="trades"]) .content > section:not(.dashboard-page-hidden) > .section-head .eyebrow {
+    color: #047857 !important;
+    letter-spacing: 0.02em !important;
+  }
+
+  body:not([data-active-page="home"]):not([data-active-page="trades"]) .content > section:not(.dashboard-page-hidden) > .section-head h3 {
+    color: #0f172a !important;
+    font-size: clamp(20px, 1.45vw, 25px) !important;
+    line-height: 1.15 !important;
+  }
+
+  body:not([data-active-page="home"]):not([data-active-page="trades"]) .content > section:not(.dashboard-page-hidden) > .section-head small,
+  body:not([data-active-page="home"]):not([data-active-page="trades"]) .content > section:not(.dashboard-page-hidden) > .section-head .chart-tools {
+    color: #64748b !important;
+  }
+}
+
+/* === 2026-05-28 UI3 patch: active-page height model / remove fixed iframe blank === */
+@media (min-width: 761px) {
+  :root,
+  body {
+    --dashboard-shell-min-height: 720px;
+  }
+
+  html,
+  body.streamlit-embedded {
+    min-height: 0 !important;
+    overflow-x: hidden !important;
+  }
+
+  body.streamlit-embedded .app-shell {
+    min-height: var(--dashboard-shell-min-height) !important;
+    grid-template-rows: auto !important;
+    align-items: stretch !important;
+  }
+
+  body.streamlit-embedded .sidebar {
+    height: auto !important;
+    min-height: var(--dashboard-shell-min-height) !important;
+    max-height: none !important;
+    align-self: stretch !important;
+  }
+
+  body.streamlit-embedded .content {
+    min-height: 0 !important;
+    align-content: start !important;
+    grid-auto-rows: max-content !important;
+    padding-bottom: 10px !important;
+  }
+
+  body.streamlit-embedded:not([data-active-page="home"]) .content {
+    gap: 10px !important;
+  }
+
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-home {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  body.streamlit-embedded:not([data-active-page="home"]) .content > section:not(.dashboard-page-hidden) {
+    margin-bottom: 0 !important;
+    padding-bottom: 14px !important;
+  }
+
+  body.streamlit-embedded .dashboard-page-hidden,
+  body.streamlit-embedded .dashboard-page-hidden[hidden],
+  body.streamlit-embedded [hidden] {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+  }
+
+  body.streamlit-embedded .trade-table-wrap,
+  body.streamlit-embedded .monthly-table-wrap,
+  body.streamlit-embedded .dividend-table-wrap,
+  body.streamlit-embedded .yearly-tax-table-wrap {
+    max-height: none !important;
+  }
+}
+
+/* === 2026-05-28 UI4 patch: unified hero height + internal page/table scroll === */
+@media (min-width: 761px) {
+  :root,
+  body {
+    --dashboard-hero-height: 168px;
+    --dashboard-page-scroll-height: calc(var(--dashboard-shell-min-height, 720px) - var(--dashboard-hero-height) - 42px);
+    --dashboard-table-scroll-height: clamp(220px, 30vh, 340px);
+  }
+
+  /* 所有桌機分頁共用同一個 00919 Hero 尺寸，避免切頁時上方標題列跳動 */
+  body[data-active-page] .desktop-hero,
+  body:not([data-active-page="home"]) .desktop-hero {
+    min-height: var(--dashboard-hero-height) !important;
+    grid-template-columns: 132px minmax(320px, 1fr) minmax(360px, 0.68fr) !important;
+    gap: 18px !important;
+    align-items: center !important;
+    padding: 18px 20px 18px 26px !important;
+    border-radius: 18px !important;
+  }
+
+  body[data-active-page] .desktop-hero__orb,
+  body:not([data-active-page="home"]) .desktop-hero__orb {
+    width: 112px !important;
+    height: 112px !important;
+    border-width: 5px !important;
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.16), 0 0 28px rgba(16, 185, 129, 0.42) !important;
+  }
+
+  body[data-active-page] .desktop-hero__orb.yellow,
+  body:not([data-active-page="home"]) .desktop-hero__orb.yellow {
+    box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.16), 0 0 28px rgba(245, 158, 11, 0.48) !important;
+  }
+
+  body[data-active-page] .desktop-hero__orb.red,
+  body:not([data-active-page="home"]) .desktop-hero__orb.red {
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.16), 0 0 28px rgba(239, 68, 68, 0.44) !important;
+  }
+
+  body[data-active-page] .desktop-hero__orb span,
+  body:not([data-active-page="home"]) .desktop-hero__orb span {
+    font-size: 26px !important;
+  }
+
+  body[data-active-page] .desktop-hero__orb small,
+  body:not([data-active-page="home"]) .desktop-hero__orb small {
+    display: block !important;
+    font-size: 12px !important;
+  }
+
+  body[data-active-page] .desktop-hero__meta h2,
+  body:not([data-active-page="home"]) .desktop-hero__meta h2 {
+    font-size: clamp(28px, 2.3vw, 38px) !important;
+    line-height: 1.08 !important;
+    white-space: nowrap !important;
+  }
+
+  body[data-active-page] .desktop-hero__meta p,
+  body:not([data-active-page="home"]) .desktop-hero__meta p {
+    display: block !important;
+    margin: 6px 0 10px !important;
+    font-size: 15px !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero-summary {
+    display: grid !important;
+    grid-column: 3 !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    align-self: center !important;
+    padding-top: 0 !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero-summary-card {
+    min-height: 82px !important;
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+    gap: 10px !important;
+    padding: 12px 14px !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    border-radius: 14px !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box svg {
+    width: 23px !important;
+    height: 23px !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero-summary-card strong {
+    font-size: 22px !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero-summary-card small {
+    display: block !important;
+  }
+
+  body:not([data-active-page="home"]) .desktop-hero__actions {
+    display: none !important;
+  }
+
+  /* 首頁核心卡片：日期型數字縮小並禁止換行 */
+  #desktopFirstTradeDate {
+    font-size: clamp(20px, 1.65vw, 26px) !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.02em !important;
+    white-space: nowrap !important;
+    word-break: keep-all !important;
+  }
+
+  .desktop-core-grid .core-metric-tile .metric-label {
+    word-break: keep-all !important;
+  }
+
+  /* Streamlit iframe 內：左側導覽以一頁高為基準，長內容改在分頁內部捲動 */
+  body.streamlit-embedded:not([data-active-page="home"]) .content {
+    height: var(--dashboard-shell-min-height) !important;
+    max-height: var(--dashboard-shell-min-height) !important;
+    overflow: hidden !important;
+    grid-template-rows: auto minmax(0, 1fr) !important;
+  }
+
+  body.streamlit-embedded:not([data-active-page="home"]) .content > section:not(.dashboard-page-hidden):not([hidden]) {
+    max-height: var(--dashboard-page-scroll-height) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: contain !important;
+    scrollbar-gutter: stable both-edges;
+    padding-right: clamp(16px, 1.35vw, 24px) !important;
+  }
+
+  /* 表格資料越來越多時，用表格自己的捲軸承接，不再撐長整張 Dashboard */
+  body.streamlit-embedded .trade-table-wrap,
+  body.streamlit-embedded .monthly-table-wrap,
+  body.streamlit-embedded .dividend-table-wrap,
+  body.streamlit-embedded .holdings-table-wrap,
+  body.streamlit-embedded .yearly-tax-table-wrap {
+    max-height: var(--dashboard-table-scroll-height) !important;
+    overflow: auto !important;
+    overscroll-behavior: contain !important;
+    scrollbar-gutter: stable both-edges;
+  }
+
+  body.streamlit-embedded .monthly-table-wrap {
+    max-height: clamp(220px, 28vh, 320px) !important;
+  }
+
+  body.streamlit-embedded .dividend-table-wrap,
+  body.streamlit-embedded .yearly-tax-table-wrap {
+    max-height: clamp(240px, 32vh, 360px) !important;
+  }
+
+  body.streamlit-embedded .trade-table-wrap,
+  body.streamlit-embedded .holdings-table-wrap {
+    max-height: clamp(240px, 34vh, 380px) !important;
+  }
+
+  body.streamlit-embedded .table-wrap thead th,
+  body.streamlit-embedded .trade-table-wrap thead th,
+  body.streamlit-embedded .monthly-table-wrap thead th,
+  body.streamlit-embedded .dividend-table-wrap thead th,
+  body.streamlit-embedded .holdings-table-wrap thead th,
+  body.streamlit-embedded .yearly-tax-table-wrap thead th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 3 !important;
+    background: #f2f5f6 !important;
+  }
+
+  body.streamlit-embedded .monthly-table-grid,
+  body.streamlit-embedded .holdings-grid {
+    align-items: start !important;
+  }
+
+  body.streamlit-embedded .monthly-chart,
+  body.streamlit-embedded .holdings-chart,
+  body.streamlit-embedded .yearly-tax-chart,
+  body.streamlit-embedded .dividend-composition-chart {
+    overscroll-behavior: contain !important;
+  }
+
+  @media (max-width: 1300px) {
+    body[data-active-page] .desktop-hero,
+    body:not([data-active-page="home"]) .desktop-hero {
+      grid-template-columns: 112px minmax(260px, 1fr) !important;
+      min-height: 168px !important;
+    }
+
+    body:not([data-active-page="home"]) .desktop-hero-summary,
+    body[data-active-page] .desktop-hero-summary {
+      grid-column: 1 / -1 !important;
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+  }
+}
+
+
+
+/* UI11: embedded fallback shown only if the native Streamlit trade route is blocked. */
+.native-trades-fallback-card {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 16px;
+  padding: 16px 18px;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(236, 253, 245, 0.98), rgba(240, 249, 255, 0.98));
+  color: #0f172a;
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08);
+}
+.native-trades-fallback-card strong {
+  font-size: 1rem;
+  font-weight: 950;
+}
+.native-trades-fallback-card span {
+  color: #475569;
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+.native-trades-fallback-card a {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 10px;
+  background: #059669;
+  color: #ffffff !important;
+  font-weight: 900;
+  text-decoration: none;
+}
+body.streamlit-embedded #trades .native-trades-fallback-card ~ .trade-layout,
+body.streamlit-embedded #trades .native-trades-fallback-card ~ .trade-actions {
+  display: none !important;
+}
+
+
+/* UI17: keep the original HTML dashboard. Only trade entry/import opens a separate Streamlit page. */
+.streamlit-embedded .trade-layout.trade-entry-launcher {
+  display: block !important;
+}
+.trade-entry-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 20px;
+  border: 1px solid rgba(16, 185, 129, 0.26);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(236, 253, 245, 0.98), rgba(240, 249, 255, 0.98));
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.06);
+}
+.trade-entry-card h4 {
+  margin: 2px 0 6px;
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 950;
+}
+.trade-entry-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+.trade-entry-card__actions {
+  min-width: 260px;
+  display: grid;
+  gap: 8px;
+  justify-items: stretch;
+}
+.trade-entry-card__actions small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+.trade-entry-open,
+.trade-entry-secondary {
+  text-decoration: none !important;
+  justify-content: center;
+  background: #059669 !important;
+  color: #ffffff !important;
+  border-color: #059669 !important;
+  box-shadow: 0 10px 22px rgba(5, 150, 105, 0.22);
+}
+.trade-entry-open:hover,
+.trade-entry-secondary:hover {
+  background: #047857 !important;
+  border-color: #047857 !important;
+  color: #ffffff !important;
+}
+.row-readonly {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+@media (max-width: 960px) {
+  .trade-entry-card {
+    display: grid;
+  }
+  .trade-entry-card__actions {
+    min-width: 0;
+  }
+}
+@media (max-width: 760px), (hover: none) and (pointer: coarse) {
+  .trade-entry-card,
+  .trade-entry-secondary {
+    display: none !important;
+  }
+}
+
+/* === UI18: clean trade log + consistent hero title bar === */
+@media (min-width: 761px) {
+  body.streamlit-embedded .content {
+    padding-top: 10px !important;
+  }
+
+  body.streamlit-embedded .desktop-home,
+  body.streamlit-embedded .content > section:not(.dashboard-page-hidden):not([hidden]) {
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  body.streamlit-embedded body[data-active-page] .desktop-hero,
+  body.streamlit-embedded .desktop-hero,
+  body.streamlit-embedded body:not([data-active-page="home"]) .desktop-hero {
+    width: 100% !important;
+    min-height: 154px !important;
+    grid-template-columns: 118px minmax(340px, 1fr) minmax(360px, 0.68fr) !important;
+    gap: 18px !important;
+    padding: 18px 22px 18px 26px !important;
+    border-radius: 18px !important;
+    margin: 0 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__orb,
+  body.streamlit-embedded body[data-active-page] .desktop-hero__orb,
+  body.streamlit-embedded body:not([data-active-page="home"]) .desktop-hero__orb {
+    width: 96px !important;
+    height: 96px !important;
+    border-width: 5px !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__orb span,
+  body.streamlit-embedded body[data-active-page] .desktop-hero__orb span,
+  body.streamlit-embedded body:not([data-active-page="home"]) .desktop-hero__orb span {
+    font-size: 24px !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__orb small,
+  body.streamlit-embedded body[data-active-page] .desktop-hero__orb small,
+  body.streamlit-embedded body:not([data-active-page="home"]) .desktop-hero__orb small {
+    font-size: 11px !important;
+    line-height: 1.18 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__meta h2,
+  body.streamlit-embedded body[data-active-page] .desktop-hero__meta h2,
+  body.streamlit-embedded body:not([data-active-page="home"]) .desktop-hero__meta h2 {
+    font-size: clamp(29px, 2.25vw, 36px) !important;
+    line-height: 1.08 !important;
+    white-space: nowrap !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__meta p,
+  body.streamlit-embedded body[data-active-page] .desktop-hero__meta p,
+  body.streamlit-embedded body:not([data-active-page="home"]) .desktop-hero__meta p {
+    font-size: 14px !important;
+    margin: 6px 0 10px !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary,
+  body.streamlit-embedded body:not([data-active-page="home"]) .desktop-hero-summary {
+    grid-column: 3 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    align-self: center !important;
+    padding-top: 0 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary-card,
+  body.streamlit-embedded body:not([data-active-page="home"]) .desktop-hero-summary-card {
+    min-height: 76px !important;
+    grid-template-columns: 38px minmax(0, 1fr) !important;
+    gap: 10px !important;
+    padding: 11px 13px !important;
+    border-radius: 14px !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary-card .icon-box,
+  body.streamlit-embedded body:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary-card strong,
+  body.streamlit-embedded body:not([data-active-page="home"]) .desktop-hero-summary-card strong {
+    font-size: 20px !important;
+  }
+
+  .trade-section-head {
+    align-items: center !important;
+    margin-bottom: 14px !important;
+  }
+
+  .trade-title-block {
+    display: grid !important;
+    gap: 4px !important;
+  }
+
+  .trade-title-line {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .trade-title-line h3 {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin: 0 !important;
+  }
+
+  .trade-entry-chip {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 34px !important;
+    padding: 0 14px !important;
+    border-radius: 10px !important;
+    background: #059669 !important;
+    color: #ffffff !important;
+    font-size: 13px !important;
+    font-weight: 900 !important;
+    text-decoration: none !important;
+    box-shadow: 0 10px 20px rgba(5, 150, 105, 0.18) !important;
+    white-space: nowrap !important;
+  }
+
+  .trade-entry-chip:hover {
+    background: #047857 !important;
+    color: #ffffff !important;
+  }
+
+  .trade-entry-launcher,
+  .trade-entry-card,
+  .trade-actions {
+    display: none !important;
+  }
+
+  #trades .trade-table-wrap {
+    margin-top: 14px !important;
+  }
+
+  #trades .trade-summary-stats {
+    margin-top: 12px !important;
+  }
+
+  @media (max-width: 1300px) {
+    body.streamlit-embedded .desktop-hero,
+    body.streamlit-embedded body[data-active-page] .desktop-hero,
+    body.streamlit-embedded body:not([data-active-page="home"]) .desktop-hero {
+      min-height: 154px !important;
+      grid-template-columns: 104px minmax(240px, 1fr) !important;
+    }
+
+    body.streamlit-embedded .desktop-hero-summary,
+    body.streamlit-embedded body:not([data-active-page="home"]) .desktop-hero-summary {
+      grid-column: 1 / -1 !important;
+    }
+  }
+}
+
+
+/* === UI19: final HTML dashboard spacing + consistent hero sizing === */
+@media (min-width: 761px) {
+  body.streamlit-embedded {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  body.streamlit-embedded .content {
+    padding-top: 0 !important;
+  }
+
+  body.streamlit-embedded .desktop-home {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  /* Force the 00919 Hero to use one shared size on Home and all desktop pages. */
+  body.streamlit-embedded .desktop-hero,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero,
+  body[data-active-page] .desktop-hero,
+  body:not([data-active-page="home"]) .desktop-hero {
+    width: 100% !important;
+    min-height: 154px !important;
+    height: 154px !important;
+    max-height: 154px !important;
+    display: grid !important;
+    grid-template-columns: 104px minmax(320px, 1fr) minmax(380px, 0.72fr) !important;
+    align-items: center !important;
+    gap: 18px !important;
+    padding: 18px 22px 18px 24px !important;
+    margin: 0 0 12px !important;
+    border-radius: 18px !important;
+    position: relative !important;
+    top: auto !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__orb,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__orb,
+  body[data-active-page] .desktop-hero__orb,
+  body:not([data-active-page="home"]) .desktop-hero__orb {
+    width: 92px !important;
+    height: 92px !important;
+    min-width: 92px !important;
+    border-width: 5px !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__orb span,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__orb span,
+  body[data-active-page] .desktop-hero__orb span,
+  body:not([data-active-page="home"]) .desktop-hero__orb span {
+    font-size: 24px !important;
+    line-height: 1.05 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__orb small,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__orb small,
+  body[data-active-page] .desktop-hero__orb small,
+  body:not([data-active-page="home"]) .desktop-hero__orb small {
+    display: block !important;
+    max-width: 72px !important;
+    font-size: 11px !important;
+    line-height: 1.15 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__meta,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__meta,
+  body[data-active-page] .desktop-hero__meta,
+  body:not([data-active-page="home"]) .desktop-hero__meta {
+    min-width: 0 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__meta h2,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__meta h2,
+  body[data-active-page] .desktop-hero__meta h2,
+  body:not([data-active-page="home"]) .desktop-hero__meta h2 {
+    font-size: clamp(30px, 2.25vw, 36px) !important;
+    line-height: 1.08 !important;
+    letter-spacing: 0.02em !important;
+    white-space: nowrap !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__meta p,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__meta p,
+  body[data-active-page] .desktop-hero__meta p,
+  body:not([data-active-page="home"]) .desktop-hero__meta p {
+    display: block !important;
+    margin: 6px 0 10px !important;
+    font-size: 14px !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__actions,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__actions,
+  body:not([data-active-page="home"]) .desktop-hero__actions {
+    display: none !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary,
+  body[data-active-page] .desktop-hero-summary,
+  body:not([data-active-page="home"]) .desktop-hero-summary {
+    display: grid !important;
+    grid-column: 3 !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    align-self: center !important;
+    padding: 0 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary-card,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card,
+  body[data-active-page] .desktop-hero-summary-card,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card {
+    min-height: 76px !important;
+    height: 76px !important;
+    grid-template-columns: 38px minmax(0, 1fr) !important;
+    gap: 10px !important;
+    padding: 11px 13px !important;
+    border-radius: 14px !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary-card .icon-box,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box,
+  body[data-active-page] .desktop-hero-summary-card .icon-box,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    border-radius: 13px !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary-card strong,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card strong,
+  body[data-active-page] .desktop-hero-summary-card strong,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card strong {
+    font-size: 20px !important;
+    line-height: 1.15 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary-card small,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card small,
+  body[data-active-page] .desktop-hero-summary-card small,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card small {
+    display: block !important;
+  }
+
+  @media (max-width: 1300px) {
+    body.streamlit-embedded .desktop-hero,
+    body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero,
+    body[data-active-page] .desktop-hero,
+    body:not([data-active-page="home"]) .desktop-hero {
+      min-height: 142px !important;
+      height: 142px !important;
+      max-height: 142px !important;
+      grid-template-columns: 92px minmax(260px, 1fr) minmax(330px, 0.75fr) !important;
+    }
+  }
+}
+
+/* === UI21: final page sync + hero hard-normalize + home quick cards stretch === */
+@media (min-width: 761px) {
+  /* The hero is the same visual object on Home and every sub page.  Older
+     compact/non-home rules are intentionally neutralized here. */
+  body.streamlit-embedded .desktop-home,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-home,
+  body.streamlit-embedded[data-active-page="home"] .desktop-home {
+    position: relative !important;
+    top: auto !important;
+    z-index: 1 !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 0 12px 0 !important;
+    padding: 0 !important;
+    gap: 12px !important;
+    background: transparent !important;
+  }
+
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-home > :not(.desktop-hero) {
+    display: none !important;
+  }
+
+  body.streamlit-embedded .desktop-hero,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-height: 154px !important;
+    height: 154px !important;
+    max-height: 154px !important;
+    display: grid !important;
+    grid-template-columns: 104px minmax(320px, 1fr) minmax(380px, 0.72fr) !important;
+    align-items: center !important;
+    gap: 18px !important;
+    padding: 18px 22px 18px 24px !important;
+    margin: 0 !important;
+    border-radius: 18px !important;
+    overflow: hidden !important;
+    position: relative !important;
+    top: auto !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__orb,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero__orb,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__orb {
+    width: 92px !important;
+    height: 92px !important;
+    min-width: 92px !important;
+    border-width: 5px !important;
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.16), 0 0 28px rgba(16, 185, 129, 0.42) !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__orb.yellow,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero__orb.yellow,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__orb.yellow {
+    box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.16), 0 0 28px rgba(245, 158, 11, 0.44) !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__orb span,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero__orb span,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__orb span {
+    display: block !important;
+    font-size: 24px !important;
+    line-height: 1.05 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__orb small,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero__orb small,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__orb small {
+    display: block !important;
+    max-width: 72px !important;
+    font-size: 11px !important;
+    line-height: 1.15 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__meta,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero__meta,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__meta {
+    min-width: 0 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__meta h2,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero__meta h2,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__meta h2 {
+    font-size: clamp(30px, 2.25vw, 36px) !important;
+    line-height: 1.08 !important;
+    letter-spacing: 0.02em !important;
+    white-space: nowrap !important;
+    margin: 0 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__meta p,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero__meta p,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__meta p {
+    display: block !important;
+    margin: 6px 0 10px !important;
+    font-size: 14px !important;
+    line-height: 1.25 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero__actions,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero__actions,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero__actions {
+    display: none !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary {
+    display: grid !important;
+    grid-column: 3 !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    align-self: center !important;
+    padding: 0 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary-card,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card {
+    box-sizing: border-box !important;
+    min-height: 76px !important;
+    height: 76px !important;
+    grid-template-columns: 38px minmax(0, 1fr) !important;
+    gap: 10px !important;
+    padding: 11px 13px !important;
+    border-radius: 14px !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary-card .icon-box,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card .icon-box,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card .icon-box {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    border-radius: 13px !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary-card strong,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card strong,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card strong {
+    font-size: 20px !important;
+    line-height: 1.15 !important;
+  }
+
+  body.streamlit-embedded .desktop-hero-summary-card small,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card small,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card small {
+    display: block !important;
+    font-size: 11px !important;
+  }
+
+  /* Enlarge the five quick-view cards and make the right column bottom line up
+     with the left trend card more naturally. */
+  body.streamlit-embedded[data-active-page="home"] .desktop-lower-grid {
+    align-items: stretch !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-chart-panel,
+  body.streamlit-embedded[data-active-page="home"] .desktop-side-stack {
+    height: 100% !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-side-stack {
+    display: grid !important;
+    grid-template-rows: minmax(250px, 1fr) auto !important;
+    gap: 14px !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-module-panel {
+    min-height: 252px !important;
+    display: grid !important;
+    grid-template-rows: auto 1fr !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-module-grid {
+    height: 100% !important;
+    min-height: 188px !important;
+    align-items: stretch !important;
+    grid-auto-rows: 1fr !important;
+    gap: 12px !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-module-card {
+    min-height: 196px !important;
+    height: 100% !important;
+    display: grid !important;
+    grid-template-rows: auto auto auto 1fr auto !important;
+    align-content: stretch !important;
+    justify-items: center !important;
+    padding: 18px 14px 14px !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-module-card > .icon-box {
+    width: 60px !important;
+    height: 60px !important;
+    min-width: 60px !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-module-card h4 {
+    font-size: 18px !important;
+    margin-top: 8px !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-module-card strong {
+    font-size: 25px !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-action-button {
+    align-self: end !important;
+    min-height: 42px !important;
+  }
+
+  @media (max-width: 1300px) {
+    body.streamlit-embedded .desktop-hero,
+    body.streamlit-embedded[data-active-page="home"] .desktop-hero,
+    body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero {
+      min-height: 154px !important;
+      height: 154px !important;
+      max-height: 154px !important;
+      grid-template-columns: 104px minmax(260px, 1fr) minmax(330px, 0.75fr) !important;
+    }
+
+    body.streamlit-embedded .desktop-hero-summary,
+    body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary,
+    body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary {
+      grid-column: 3 !important;
+    }
+  }
+}
+
+/* === UI23: Home Focus panel stretch only (based on UI21) === */
+@media (min-width: 761px) {
+  body.streamlit-embedded[data-active-page="home"] .desktop-main-grid {
+    align-items: stretch !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-core-panel,
+  body.streamlit-embedded[data-active-page="home"] .desktop-focus-panel {
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-focus-panel {
+    display: grid !important;
+    grid-template-rows: auto 1fr !important;
+    align-content: stretch !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-focus-grid {
+    height: 100% !important;
+    min-height: 336px !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(2, minmax(162px, 1fr)) !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-focus-card {
+    min-height: 162px !important;
+    height: 100% !important;
+    padding: 20px 116px 18px 18px !important;
+    align-content: space-between !important;
+    gap: 9px !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-focus-card > .icon-box {
+    width: 88px !important;
+    height: 88px !important;
+    min-width: 88px !important;
+    right: 18px !important;
+    border-radius: 26px !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-focus-card > .icon-box svg {
+    width: 48px !important;
+    height: 48px !important;
+    stroke-width: 2.55 !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-focus-card > span:not(.icon-box) {
+    font-size: 18px !important;
+    line-height: 1.25 !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-focus-card strong {
+    font-size: 36px !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  body.streamlit-embedded[data-active-page="home"] .desktop-focus-card small {
+    font-size: 15px !important;
+    line-height: 1.25 !important;
+  }
+
+  @media (max-width: 1380px) {
+    body.streamlit-embedded[data-active-page="home"] .desktop-focus-grid {
+      min-height: 316px !important;
+      grid-template-rows: repeat(2, minmax(152px, 1fr)) !important;
+    }
+
+    body.streamlit-embedded[data-active-page="home"] .desktop-focus-card {
+      min-height: 152px !important;
+      padding-right: 106px !important;
+    }
+
+    body.streamlit-embedded[data-active-page="home"] .desktop-focus-card > .icon-box {
+      width: 80px !important;
+      height: 80px !important;
+      min-width: 80px !important;
+    }
+
+    body.streamlit-embedded[data-active-page="home"] .desktop-focus-card strong {
+      font-size: 32px !important;
+    }
+  }
+}
+
+/* UI26 signal diagnostics */
+.settings-intro strong {
+  display: block;
+  line-height: 1.5;
+}
+.signal-diagnostics-card {
+  margin: 16px 0 18px;
+  border-color: rgba(16, 185, 129, 0.22);
+  background: linear-gradient(135deg, rgba(236, 253, 245, 0.92), #ffffff);
+}
+.settings-diagnostics-table-wrap {
+  overflow-x: auto;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.86);
+}
+.settings-diagnostics-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+  font-size: 0.94rem;
+}
+.settings-diagnostics-table th,
+.settings-diagnostics-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.95);
+  text-align: left;
+  vertical-align: middle;
+}
+.settings-diagnostics-table th {
+  color: #475569;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: rgba(248, 250, 252, 0.95);
+}
+.settings-diagnostics-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.settings-diagnostics-table tr[data-status="green"] td:last-child {
+  color: #059669;
+  font-weight: 800;
+}
+.settings-diagnostics-table tr[data-status="yellow"] td:last-child {
+  color: #d97706;
+  font-weight: 800;
+}
+.settings-diagnostics-table tr[data-status="red"] td:last-child {
+  color: #dc2626;
+  font-weight: 800;
+}
+.settings-diagnostics-table tr[data-status="unknown"] td:last-child {
+  color: #64748b;
+  font-weight: 800;
+}
+
+/* UI29 mobile refresh button restore */
+@media (max-width: 760px) {
+  .mobile-home .hero-actions {
+    display: flex !important;
+    position: static !important;
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    margin-top: 8px !important;
+    padding: 0 !important;
+    justify-content: stretch !important;
+    align-items: stretch !important;
+    gap: 0 !important;
+    z-index: 3 !important;
+  }
+
+  .mobile-home .hero-action-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    min-height: 48px !important;
+    padding: 0 18px !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(16, 185, 129, 0.95) !important;
+    background: linear-gradient(90deg, #047857, #059669, #10b981) !important;
+    color: #ffffff !important;
+    font-size: 15px !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.03em !important;
+    box-shadow: 0 14px 28px rgba(4, 120, 87, 0.26) !important;
+  }
+
+  .mobile-home .hero-more-button {
+    display: none !important;
+  }
+
+  .mobile-home__hero.hero-banner,
+  .mobile-home .hero-banner {
+    padding-bottom: 18px !important;
+  }
+}
+
+
+
+/* === UI30: non-home readability + quarterly chart centering + trade table full-height === */
+@media (min-width: 761px) {
+  /* 1) 每季配息組成圖：短資料置中，資料變多才左右延伸並出現橫向捲軸 */
+  body.streamlit-embedded #quarterly .dividend-composition-chart {
+    display: block !important;
+    text-align: center !important;
+    min-height: 456px !important;
+    padding: 10px 8px 8px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-gutter: stable both-edges !important;
+  }
+
+  body.streamlit-embedded #quarterly .dividend-composition-chart svg {
+    display: block !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  body.streamlit-embedded #quarterly .dividend-composition-card {
+    padding: 20px !important;
+  }
+
+  body.streamlit-embedded #quarterly .dividend-composition-head h4 {
+    font-size: 20px !important;
+  }
+
+  body.streamlit-embedded #quarterly .dividend-composition-head p,
+  body.streamlit-embedded #quarterly .dividend-composition-legend {
+    font-size: 15px !important;
+  }
+
+  /* 2) 交易紀錄表：先往頁面下方延伸，真的不夠再由表格內部捲動 */
+  body.streamlit-embedded[data-active-page="trades"] #trades .trade-table-wrap {
+    height: clamp(430px, calc(100vh - 405px), 720px) !important;
+    max-height: clamp(430px, calc(100vh - 405px), 720px) !important;
+    min-height: 430px !important;
+    overflow-y: auto !important;
+    overflow-x: auto !important;
+    scrollbar-gutter: stable both-edges !important;
+  }
+
+  body.streamlit-embedded[data-active-page="trades"] #trades .trade-table {
+    min-height: 100% !important;
+  }
+
+  body.streamlit-embedded[data-active-page="trades"] #trades .trade-table th,
+  body.streamlit-embedded[data-active-page="trades"] #trades .trade-table td {
+    padding-top: 15px !important;
+    padding-bottom: 15px !important;
+  }
+
+  body.streamlit-embedded[data-active-page="trades"] #trades .trade-summary-stats div {
+    min-height: 72px !important;
+  }
+
+  /* 3) 除首頁總覽外，各分頁標題、註解、欄位、表格文字整體放大 */
+  body.streamlit-embedded:not([data-active-page="home"]) .content > section:not(.dashboard-page-hidden):not([hidden]) .section-head h3 {
+    font-size: 24px !important;
+    line-height: 1.2 !important;
+  }
+
+  body.streamlit-embedded:not([data-active-page="home"]) .content > section:not(.dashboard-page-hidden):not([hidden]) .section-head small,
+  body.streamlit-embedded:not([data-active-page="home"]) .content > section:not(.dashboard-page-hidden):not([hidden]) .section-head .chart-tools,
+  body.streamlit-embedded:not([data-active-page="home"]) .content > section:not(.dashboard-page-hidden):not([hidden]) .eyebrow {
+    font-size: 14px !important;
+    line-height: 1.55 !important;
+  }
+
+  body.streamlit-embedded:not([data-active-page="home"]) .dividend-card {
+    min-height: 112px !important;
+    padding: 16px !important;
+  }
+
+  body.streamlit-embedded:not([data-active-page="home"]) .dividend-card span,
+  body.streamlit-embedded:not([data-active-page="home"]) .dividend-card small,
+  body.streamlit-embedded:not([data-active-page="home"]) .panel-title small,
+  body.streamlit-embedded:not([data-active-page="home"]) .monthly-signal-card p,
+  body.streamlit-embedded:not([data-active-page="home"]) .holding-rotation-card small,
+  body.streamlit-embedded:not([data-active-page="home"]) .settings-intro p,
+  body.streamlit-embedded:not([data-active-page="home"]) .settings-intro small {
+    font-size: 15px !important;
+    line-height: 1.55 !important;
+  }
+
+  body.streamlit-embedded:not([data-active-page="home"]) .dividend-card strong,
+  body.streamlit-embedded:not([data-active-page="home"]) .monthly-signal-card strong,
+  body.streamlit-embedded:not([data-active-page="home"]) .panel-title span,
+  body.streamlit-embedded:not([data-active-page="home"]) .holding-rotation-card strong,
+  body.streamlit-embedded:not([data-active-page="home"]) .settings-intro strong {
+    font-size: 22px !important;
+    line-height: 1.28 !important;
+  }
+
+  body.streamlit-embedded:not([data-active-page="home"]) .trade-table th,
+  body.streamlit-embedded:not([data-active-page="home"]) .monthly-table th,
+  body.streamlit-embedded:not([data-active-page="home"]) .dividend-table th,
+  body.streamlit-embedded:not([data-active-page="home"]) .holdings-table th,
+  body.streamlit-embedded:not([data-active-page="home"]) .yearly-tax-table th,
+  body.streamlit-embedded:not([data-active-page="home"]) .settings-diagnostics-table th {
+    font-size: 14px !important;
+    line-height: 1.35 !important;
+  }
+
+  body.streamlit-embedded:not([data-active-page="home"]) .trade-table td,
+  body.streamlit-embedded:not([data-active-page="home"]) .monthly-table td,
+  body.streamlit-embedded:not([data-active-page="home"]) .dividend-table td,
+  body.streamlit-embedded:not([data-active-page="home"]) .holdings-table td,
+  body.streamlit-embedded:not([data-active-page="home"]) .yearly-tax-table td,
+  body.streamlit-embedded:not([data-active-page="home"]) .settings-diagnostics-table td {
+    font-size: 15px !important;
+    line-height: 1.45 !important;
+  }
+
+  body.streamlit-embedded:not([data-active-page="home"]) input,
+  body.streamlit-embedded:not([data-active-page="home"]) select,
+  body.streamlit-embedded:not([data-active-page="home"]) button,
+  body.streamlit-embedded:not([data-active-page="home"]) .settings-actions button {
+    font-size: 15px !important;
+  }
+}
+
+/* UI31: keep only the Streamlit top refresh button. Hide embedded title/hero refresh buttons. */
+#mobileRefreshButton,
+#desktopRefreshButton,
+#desktopStatusRefreshButton,
+#homeRefreshButton,
+#refreshButton,
+.mobile-home .hero-actions,
+.desktop-hero__actions,
+.desktop-data-status-compact .desktop-mini-button,
+.data-freshness-section .refresh-action,
+.header-actions {
+  display: none !important;
+}
+
+/* UI35: 資料完整性詳細說明 */
+@media (min-width: 761px) {
+  .desktop-status-row--integrity small {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.25;
+  }
+
+  .desktop-integrity-detail {
+    margin-top: 10px;
+    padding: 10px 12px 10px 34px;
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    border-radius: 12px;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 13px;
+    line-height: 1.55;
+    white-space: pre-line;
+    position: relative;
+  }
+
+  .desktop-integrity-detail::before {
+    content: "";
+    position: absolute;
+    top: 15px;
+    left: 14px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #10b981;
+  }
+
+  .desktop-integrity-detail[data-status="yellow"] {
+    background: #fffbeb;
+    border-color: rgba(245, 158, 11, 0.28);
+    color: #92400e;
+  }
+
+  .desktop-integrity-detail[data-status="yellow"]::before { background: #f59e0b; }
+
+  .desktop-integrity-detail[data-status="red"] {
+    background: #fef2f2;
+    border-color: rgba(239, 68, 68, 0.28);
+    color: #991b1b;
+  }
+
+  .desktop-integrity-detail[data-status="red"]::before { background: #ef4444; }
+}
+
+.mobile-integrity-detail {
+  margin: 12px 0 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 18px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 15px;
+  line-height: 1.65;
+  white-space: pre-line;
+}
+
+.mobile-integrity-detail[data-status="yellow"] {
+  background: #fffbeb;
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #92400e;
+}
+
+.mobile-integrity-detail[data-status="red"] {
+  background: #fef2f2;
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #991b1b;
+}
+
+
+/* UI39: 資料完整性說明補強 + 非首頁統計卡橫向排版 */
+@media (min-width: 761px) {
+  .desktop-integrity-detail {
+    font-size: 14px !important;
+    line-height: 1.7 !important;
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid,
+  body:not([data-active-page="home"]) .holdings-summary-grid,
+  body:not([data-active-page="home"]) .yearly-summary-grid {
+    align-items: stretch !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card {
+    min-height: 78px !important;
+    padding: 14px 18px !important;
+    display: grid !important;
+    grid-template-columns: minmax(92px, auto) minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 14px !important;
+    row-gap: 6px !important;
+    align-content: center !important;
+    align-items: baseline !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card > span,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card > span,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card > span {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card > strong,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card > strong,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card > strong {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    justify-self: start !important;
+    font-size: clamp(20px, 1.35vw, 28px) !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.02em !important;
+    white-space: nowrap !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card > small,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card > small,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card > small {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    font-size: 12.5px !important;
+    line-height: 1.35 !important;
+    margin-top: 0 !important;
+    white-space: normal !important;
+  }
+
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card > strong#topHoldingName {
+    white-space: normal !important;
+    font-size: clamp(18px, 1.15vw, 24px) !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-card.accent {
+    background: linear-gradient(135deg, rgba(236, 253, 245, 0.98), rgba(255,255,255,0.96)) !important;
+  }
+}
+
+
+/* UI40: 全分頁 icon 系統統一 + Hero 右側摘要卡放大 */
+@media (min-width: 761px) {
+  .desktop-hero-summary {
+    gap: 14px !important;
+    grid-template-columns: repeat(2, minmax(230px, 1fr)) !important;
+  }
+
+  .desktop-hero-summary-card {
+    min-height: 90px !important;
+    grid-template-columns: 50px minmax(0, 1fr) !important;
+    gap: 14px !important;
+    padding: 16px 18px !important;
+    border-radius: 16px !important;
+  }
+
+  .desktop-hero-summary-card .icon-box {
+    width: 50px !important;
+    height: 50px !important;
+    min-width: 50px !important;
+    border-radius: 16px !important;
+  }
+
+  .desktop-hero-summary-card .icon-box svg {
+    width: 27px !important;
+    height: 27px !important;
+  }
+
+  .desktop-hero-summary-card span:not(.icon-box) {
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    color: #64748b !important;
+  }
+
+  .desktop-hero-summary-card strong {
+    font-size: clamp(25px, 1.65vw, 34px) !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.03em !important;
+  }
+
+  .desktop-hero-summary-card small {
+    display: block !important;
+    font-size: 12px !important;
+    line-height: 1.25 !important;
+  }
+
+  .trade-stats > div.stat-icon-card {
+    min-height: 98px !important;
+    display: grid !important;
+    grid-template-columns: 48px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 14px !important;
+    row-gap: 4px !important;
+    align-content: center !important;
+    align-items: center !important;
+    padding: 16px 18px !important;
+  }
+
+  .trade-stats > div.stat-icon-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 / 3 !important;
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    border-radius: 16px !important;
+  }
+
+  .trade-stats > div.stat-icon-card > .icon-box svg {
+    width: 26px !important;
+    height: 26px !important;
+  }
+
+  .trade-stats > div.stat-icon-card > span {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    color: #64748b !important;
+  }
+
+  .trade-stats > div.stat-icon-card > strong {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    font-size: clamp(22px, 1.4vw, 30px) !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.02em !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card {
+    min-height: 92px !important;
+    padding: 14px 16px !important;
+    display: grid !important;
+    grid-template-columns: 46px minmax(88px, auto) minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 12px !important;
+    row-gap: 6px !important;
+    align-content: center !important;
+    align-items: center !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 / 3 !important;
+    width: 46px !important;
+    height: 46px !important;
+    min-width: 46px !important;
+    border-radius: 15px !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card > .icon-box svg {
+    width: 25px !important;
+    height: 25px !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > span,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > span,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > span {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    font-size: 14.5px !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > strong,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > strong,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > strong {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    justify-self: start !important;
+    font-size: clamp(22px, 1.45vw, 31px) !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.03em !important;
+    white-space: nowrap !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > small,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > small,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > small {
+    grid-column: 2 / 4 !important;
+    grid-row: 2 !important;
+    font-size: 13px !important;
+    line-height: 1.35 !important;
+    margin-top: 0 !important;
+    white-space: normal !important;
+  }
+
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > strong#topHoldingName {
+    white-space: normal !important;
+    font-size: clamp(19px, 1.22vw, 25px) !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card.accent {
+    background: linear-gradient(135deg, rgba(236, 253, 245, 0.98), rgba(255, 255, 255, 0.96)) !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid,
+  body:not([data-active-page="home"]) .holdings-summary-grid,
+  body:not([data-active-page="home"]) .yearly-summary-grid {
+    gap: 14px !important;
+  }
+}
+
+/* UI41: 非首頁統計卡 icon 與文字分離、icon 放大、依 icon 配色套用卡片淡色底 */
+@media (min-width: 761px) {
+  /* 交易紀錄統計卡：icon 左側大圖示，文字右側上下排列 */
+  .trade-stats > div.stat-icon-card {
+    min-height: 106px !important;
+    display: grid !important;
+    grid-template-columns: 62px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 18px !important;
+    row-gap: 6px !important;
+    align-content: center !important;
+    align-items: center !important;
+    padding: 18px 20px !important;
+    overflow: hidden !important;
+  }
+
+  .trade-stats > div.stat-icon-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 / 3 !important;
+    width: 58px !important;
+    height: 58px !important;
+    min-width: 58px !important;
+    border-radius: 18px !important;
+    justify-self: center !important;
+  }
+
+  .trade-stats > div.stat-icon-card > .icon-box svg {
+    width: 31px !important;
+    height: 31px !important;
+    stroke-width: 2.25 !important;
+  }
+
+  .trade-stats > div.stat-icon-card > span {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    font-size: 15px !important;
+    font-weight: 850 !important;
+    line-height: 1.2 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+  }
+
+  .trade-stats > div.stat-icon-card > strong {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    font-size: clamp(22px, 1.55vw, 32px) !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.025em !important;
+    white-space: nowrap !important;
+  }
+
+  /* 54C / 持股 / 年度等分頁統計卡：避免 icon、標題、數字擠成一排 */
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card {
+    min-height: 106px !important;
+    padding: 18px 20px !important;
+    display: grid !important;
+    grid-template-columns: 64px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto auto !important;
+    column-gap: 18px !important;
+    row-gap: 4px !important;
+    align-content: center !important;
+    align-items: center !important;
+    overflow: hidden !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 / 4 !important;
+    width: 60px !important;
+    height: 60px !important;
+    min-width: 60px !important;
+    border-radius: 19px !important;
+    justify-self: center !important;
+    align-self: center !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card > .icon-box svg {
+    width: 32px !important;
+    height: 32px !important;
+    stroke-width: 2.25 !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > span,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > span,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > span {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    font-size: 15px !important;
+    font-weight: 850 !important;
+    line-height: 1.22 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    margin: 0 !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > strong,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > strong,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > strong {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    justify-self: start !important;
+    font-size: clamp(22px, 1.55vw, 32px) !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.028em !important;
+    white-space: nowrap !important;
+    margin-top: 2px !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > small,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > small,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > small {
+    grid-column: 2 !important;
+    grid-row: 3 !important;
+    font-size: 13px !important;
+    line-height: 1.28 !important;
+    margin-top: 2px !important;
+    white-space: normal !important;
+    color: #64748b !important;
+  }
+
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > strong#topHoldingName {
+    white-space: normal !important;
+    font-size: clamp(21px, 1.45vw, 29px) !important;
+    line-height: 1.08 !important;
+  }
+
+  /* 依 icon 顏色給卡片淡色底，讓欄位類型更容易辨識 */
+  .trade-stats > div.stat-icon-card:has(.icon-box--green),
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card:has(.icon-box--green) {
+    background: linear-gradient(135deg, rgba(236, 253, 245, 0.98), rgba(255,255,255,0.98)) !important;
+    border-color: rgba(16, 185, 129, 0.24) !important;
+  }
+
+  .trade-stats > div.stat-icon-card:has(.icon-box--blue),
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card:has(.icon-box--blue) {
+    background: linear-gradient(135deg, rgba(239, 246, 255, 0.98), rgba(255,255,255,0.98)) !important;
+    border-color: rgba(59, 130, 246, 0.22) !important;
+  }
+
+  .trade-stats > div.stat-icon-card:has(.icon-box--cyan),
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card:has(.icon-box--cyan) {
+    background: linear-gradient(135deg, rgba(236, 254, 255, 0.98), rgba(255,255,255,0.98)) !important;
+    border-color: rgba(6, 182, 212, 0.23) !important;
+  }
+
+  .trade-stats > div.stat-icon-card:has(.icon-box--orange),
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card:has(.icon-box--orange) {
+    background: linear-gradient(135deg, rgba(255, 247, 237, 0.98), rgba(255,255,255,0.98)) !important;
+    border-color: rgba(245, 158, 11, 0.24) !important;
+  }
+
+  .trade-stats > div.stat-icon-card:has(.icon-box--pink),
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card:has(.icon-box--pink) {
+    background: linear-gradient(135deg, rgba(253, 242, 248, 0.98), rgba(255,255,255,0.98)) !important;
+    border-color: rgba(236, 72, 153, 0.22) !important;
+  }
+
+  .trade-stats > div.stat-icon-card:has(.icon-box--purple),
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card:has(.icon-box--purple) {
+    background: linear-gradient(135deg, rgba(245, 243, 255, 0.98), rgba(255,255,255,0.98)) !important;
+    border-color: rgba(139, 92, 246, 0.22) !important;
+  }
+
+  /* 統計卡列稍微加高並放鬆間距，避免內容貼在一起 */
+  body:not([data-active-page="home"]) .dividend-summary-grid,
+  body:not([data-active-page="home"]) .holdings-summary-grid,
+  body:not([data-active-page="home"]) .yearly-summary-grid,
+  .trade-stats {
+    gap: 16px !important;
+    align-items: stretch !important;
+  }
+}
+
+/* UI44: 真正套用到 static/assets。統計卡改成左側 ICON + 右側三段式，並修正 Hero 右側摘要卡 */
+@media (min-width: 761px) {
+  /* Hero 右側目前股數 / 含息報酬 */
+  .desktop-hero-summary {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(220px, 1fr)) !important;
+    gap: 14px !important;
+    align-items: stretch !important;
+  }
+
+  .desktop-hero-summary-card,
+  body.streamlit-embedded .desktop-hero-summary-card,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card,
+  body[data-active-page] .desktop-hero-summary-card,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card {
+    display: grid !important;
+    grid-template-columns: 50px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto auto !important;
+    align-items: center !important;
+    align-content: center !important;
+    column-gap: 12px !important;
+    row-gap: 2px !important;
+    min-height: 76px !important;
+    height: auto !important;
+    padding: 10px 14px !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+    overflow: hidden !important;
+  }
+
+  .desktop-hero-summary-card > .icon-box,
+  body.streamlit-embedded .desktop-hero-summary-card > .icon-box,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card > .icon-box,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card > .icon-box,
+  body[data-active-page] .desktop-hero-summary-card > .icon-box,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 / 4 !important;
+    position: static !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    border-radius: 14px !important;
+    justify-self: start !important;
+    align-self: center !important;
+    margin: 0 !important;
+    transform: none !important;
+  }
+
+  .desktop-hero-summary-card > .icon-box svg,
+  body.streamlit-embedded .desktop-hero-summary-card > .icon-box svg,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card > .icon-box svg,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card > .icon-box svg,
+  body[data-active-page] .desktop-hero-summary-card > .icon-box svg,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card > .icon-box svg {
+    width: 23px !important;
+    height: 23px !important;
+    stroke-width: 2.25 !important;
+  }
+
+  .desktop-hero-summary-card > span:not(.icon-box),
+  body.streamlit-embedded .desktop-hero-summary-card > span:not(.icon-box),
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card > span:not(.icon-box),
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card > span:not(.icon-box),
+  body[data-active-page] .desktop-hero-summary-card > span:not(.icon-box),
+  body:not([data-active-page="home"]) .desktop-hero-summary-card > span:not(.icon-box) {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    position: static !important;
+    justify-self: start !important;
+    align-self: end !important;
+    margin: 0 !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+  }
+
+  .desktop-hero-summary-card > strong,
+  body.streamlit-embedded .desktop-hero-summary-card > strong,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card > strong,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card > strong,
+  body[data-active-page] .desktop-hero-summary-card > strong,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card > strong {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    position: static !important;
+    justify-self: start !important;
+    align-self: center !important;
+    margin: 0 !important;
+    font-size: clamp(17px, 1.25vw, 22px) !important;
+    font-weight: 900 !important;
+    line-height: 1.08 !important;
+    letter-spacing: -0.02em !important;
+    white-space: nowrap !important;
+  }
+
+  .desktop-hero-summary-card > small,
+  body.streamlit-embedded .desktop-hero-summary-card > small,
+  body.streamlit-embedded[data-active-page="home"] .desktop-hero-summary-card > small,
+  body.streamlit-embedded:not([data-active-page="home"]) .desktop-hero-summary-card > small,
+  body[data-active-page] .desktop-hero-summary-card > small,
+  body:not([data-active-page="home"]) .desktop-hero-summary-card > small {
+    grid-column: 2 !important;
+    grid-row: 3 !important;
+    position: static !important;
+    justify-self: start !important;
+    align-self: start !important;
+    display: block !important;
+    margin: 0 !important;
+    font-size: 10.5px !important;
+    line-height: 1.15 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+  }
+
+  /* 各分頁上方統計卡：交易 / 54C / 持股 / 年度 */
+  .trade-stats > div.stat-icon-card,
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card {
+    display: grid !important;
+    grid-template-columns: 50px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto auto !important;
+    align-items: center !important;
+    align-content: center !important;
+    column-gap: 12px !important;
+    row-gap: 2px !important;
+    min-height: 82px !important;
+    height: auto !important;
+    padding: 10px 14px !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+    overflow: hidden !important;
+  }
+
+  .trade-stats > div.stat-icon-card > .icon-box,
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 / 4 !important;
+    position: static !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    border-radius: 14px !important;
+    justify-self: start !important;
+    align-self: center !important;
+    margin: 0 !important;
+    transform: none !important;
+  }
+
+  .trade-stats > div.stat-icon-card > .icon-box svg,
+  body:not([data-active-page="home"]) .dividend-card.stat-icon-card > .icon-box svg {
+    width: 23px !important;
+    height: 23px !important;
+    stroke-width: 2.25 !important;
+  }
+
+  .trade-stats > div.stat-icon-card > span,
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > span,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > span,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > span {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    position: static !important;
+    justify-self: start !important;
+    align-self: end !important;
+    margin: 0 !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+  }
+
+  .trade-stats > div.stat-icon-card > strong,
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > strong,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > strong,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > strong {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    position: static !important;
+    justify-self: start !important;
+    align-self: center !important;
+    margin: 0 !important;
+    font-size: clamp(17px, 1.25vw, 22px) !important;
+    font-weight: 900 !important;
+    line-height: 1.08 !important;
+    letter-spacing: -0.02em !important;
+    white-space: nowrap !important;
+  }
+
+  .trade-stats > div.stat-icon-card > small,
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > small,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > small,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > small {
+    grid-column: 2 !important;
+    grid-row: 3 !important;
+    position: static !important;
+    justify-self: start !important;
+    align-self: start !important;
+    display: block !important;
+    margin: 0 !important;
+    font-size: 10.5px !important;
+    line-height: 1.15 !important;
+    color: #64748b !important;
+    white-space: normal !important;
+  }
+
+  body:not([data-active-page="home"]) .dividend-summary-grid .dividend-card.stat-icon-card > strong#latestDividendHealth,
+  body:not([data-active-page="home"]) .holdings-summary-grid .dividend-card.stat-icon-card > strong#topHoldingName,
+  body:not([data-active-page="home"]) .yearly-summary-grid .dividend-card.stat-icon-card > strong#yearlyLatestPremium {
+    white-space: normal !important;
+    font-size: clamp(16px, 1.08vw, 20px) !important;
+    line-height: 1.08 !important;
+  }
+}
+
+/* UI45: final metric-card layout fix
+   目的：真正把統計卡改成「左側 icon + 右側三段式」。
+   修正 UI44 問題：舊 selector 會把 .icon-box 也當成 span 套到文字欄，導致 icon 跑到上方/與標題擠在一起。 */
+@media (min-width: 761px) {
+  /* Hero 右上：目前股數 / 含息報酬。HTML 文字區包在 div 內，所以要針對 > div 設定。 */
+  html body .desktop-hero-summary {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(220px, 1fr)) !important;
+    gap: 14px !important;
+    align-items: stretch !important;
+  }
+
+  html body .desktop-hero-summary-card {
+    display: grid !important;
+    grid-template-columns: 48px minmax(0, 1fr) !important;
+    column-gap: 12px !important;
+    align-items: center !important;
+    align-content: center !important;
+    min-height: 78px !important;
+    height: auto !important;
+    padding: 10px 14px !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+    overflow: hidden !important;
+  }
+
+  html body .desktop-hero-summary-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    position: static !important;
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    min-height: 42px !important;
+    border-radius: 14px !important;
+    justify-self: start !important;
+    align-self: center !important;
+    margin: 0 !important;
+    transform: none !important;
+  }
+
+  html body .desktop-hero-summary-card > .icon-box svg {
+    width: 22px !important;
+    height: 22px !important;
+    stroke-width: 2.25 !important;
+  }
+
+  html body .desktop-hero-summary-card > div {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    gap: 3px !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: static !important;
+    text-align: left !important;
+  }
+
+  html body .desktop-hero-summary-card > div > span {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    line-height: 1.12 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    position: static !important;
+    text-align: left !important;
+  }
+
+  html body .desktop-hero-summary-card > div > strong {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: clamp(18px, 1.28vw, 23px) !important;
+    font-weight: 900 !important;
+    line-height: 1.08 !important;
+    letter-spacing: -0.02em !important;
+    white-space: nowrap !important;
+    position: static !important;
+    text-align: left !important;
+  }
+
+  html body .desktop-hero-summary-card > div > small {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 10.5px !important;
+    line-height: 1.15 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    position: static !important;
+    text-align: left !important;
+  }
+
+  /* 各分頁摘要卡：不要依賴 body[data-active-page]，避免頁面切換狀態沒更新時 CSS 失效。 */
+  html body .trade-stats > div.stat-icon-card,
+  html body .dividend-summary-grid .dividend-card.stat-icon-card,
+  html body .holdings-summary-grid .dividend-card.stat-icon-card,
+  html body .yearly-summary-grid .dividend-card.stat-icon-card {
+    display: grid !important;
+    grid-template-columns: 48px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto auto !important;
+    column-gap: 12px !important;
+    row-gap: 2px !important;
+    align-items: center !important;
+    align-content: center !important;
+    min-height: 78px !important;
+    height: auto !important;
+    padding: 10px 14px !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+    overflow: hidden !important;
+  }
+
+  /* 必須放在 > span 規則之後也能壓過：icon 永遠固定在左側。 */
+  html body .trade-stats > div.stat-icon-card > .icon-box,
+  html body .dividend-summary-grid .dividend-card.stat-icon-card > .icon-box,
+  html body .holdings-summary-grid .dividend-card.stat-icon-card > .icon-box,
+  html body .yearly-summary-grid .dividend-card.stat-icon-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 / 4 !important;
+    position: static !important;
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    min-height: 42px !important;
+    border-radius: 14px !important;
+    justify-self: start !important;
+    align-self: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+  }
+
+  html body .trade-stats > div.stat-icon-card > .icon-box svg,
+  html body .dividend-summary-grid .dividend-card.stat-icon-card > .icon-box svg,
+  html body .holdings-summary-grid .dividend-card.stat-icon-card > .icon-box svg,
+  html body .yearly-summary-grid .dividend-card.stat-icon-card > .icon-box svg {
+    width: 22px !important;
+    height: 22px !important;
+    stroke-width: 2.25 !important;
+  }
+
+  /* 文字三段式：一定要排除 .icon-box，否則 icon 會被當成標題 span 擠到右側。 */
+  html body .trade-stats > div.stat-icon-card > span:not(.icon-box),
+  html body .dividend-summary-grid .dividend-card.stat-icon-card > span:not(.icon-box),
+  html body .holdings-summary-grid .dividend-card.stat-icon-card > span:not(.icon-box),
+  html body .yearly-summary-grid .dividend-card.stat-icon-card > span:not(.icon-box) {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    position: static !important;
+    justify-self: start !important;
+    align-self: end !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    line-height: 1.12 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+  }
+
+  html body .trade-stats > div.stat-icon-card > strong,
+  html body .dividend-summary-grid .dividend-card.stat-icon-card > strong,
+  html body .holdings-summary-grid .dividend-card.stat-icon-card > strong,
+  html body .yearly-summary-grid .dividend-card.stat-icon-card > strong {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    position: static !important;
+    justify-self: start !important;
+    align-self: center !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: clamp(18px, 1.28vw, 23px) !important;
+    font-weight: 900 !important;
+    line-height: 1.08 !important;
+    letter-spacing: -0.02em !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+  }
+
+  html body .trade-stats > div.stat-icon-card > small,
+  html body .dividend-summary-grid .dividend-card.stat-icon-card > small,
+  html body .holdings-summary-grid .dividend-card.stat-icon-card > small,
+  html body .yearly-summary-grid .dividend-card.stat-icon-card > small {
+    grid-column: 2 !important;
+    grid-row: 3 !important;
+    position: static !important;
+    justify-self: start !important;
+    align-self: start !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 10.5px !important;
+    line-height: 1.15 !important;
+    color: #64748b !important;
+    white-space: normal !important;
+    text-align: left !important;
+  }
+
+  html body .dividend-summary-grid .dividend-card.stat-icon-card > strong#latestDividendHealth,
+  html body .holdings-summary-grid .dividend-card.stat-icon-card > strong#topHoldingName,
+  html body .yearly-summary-grid .dividend-card.stat-icon-card > strong#yearlyLatestPremium {
+    white-space: normal !important;
+    font-size: clamp(17px, 1.12vw, 21px) !important;
+    line-height: 1.08 !important;
+  }
+}
+
+
+/* UI46: 左 icon + 右側標題/數字 + 最右側小字說明
+   目標：每季 54C、持股分析、年度稅務、交易紀錄與 Hero 摘要卡統一版型。
+   小字說明移到最右邊，讓 icon、標題、數字更清楚，卡片高度也壓低。 */
+@media (min-width: 761px) {
+  /* ===== Hero 右上兩張摘要卡：左 icon，右區塊內小字移到最右 ===== */
+  html body .desktop-hero-summary {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(230px, 1fr)) !important;
+    gap: 12px !important;
+    align-items: stretch !important;
+  }
+
+  html body .desktop-hero-summary-card {
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) !important;
+    column-gap: 12px !important;
+    align-items: center !important;
+    min-height: 76px !important;
+    height: auto !important;
+    padding: 10px 14px !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+  }
+
+  html body .desktop-hero-summary-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    border-radius: 13px !important;
+    justify-self: start !important;
+    align-self: center !important;
+    margin: 0 !important;
+    position: static !important;
+  }
+
+  html body .desktop-hero-summary-card > .icon-box svg {
+    width: 21px !important;
+    height: 21px !important;
+    stroke-width: 2.25 !important;
+  }
+
+  html body .desktop-hero-summary-card > div {
+    grid-column: 2 !important;
+    display: grid !important;
+    grid-template-columns: minmax(82px, max-content) minmax(72px, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 10px !important;
+    row-gap: 2px !important;
+    align-items: center !important;
+    min-width: 0 !important;
+  }
+
+  html body .desktop-hero-summary-card > div > span {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    margin: 0 !important;
+    font-size: 12.5px !important;
+    font-weight: 850 !important;
+    line-height: 1.12 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+  }
+
+  html body .desktop-hero-summary-card > div > strong {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    margin: 0 !important;
+    font-size: clamp(18px, 1.35vw, 22px) !important;
+    font-weight: 950 !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.02em !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+  }
+
+  html body .desktop-hero-summary-card > div > small {
+    grid-column: 2 !important;
+    grid-row: 1 / 3 !important;
+    justify-self: end !important;
+    align-self: center !important;
+    display: block !important;
+    margin: 0 !important;
+    max-width: 100px !important;
+    font-size: 10.5px !important;
+    font-weight: 700 !important;
+    line-height: 1.16 !important;
+    color: #64748b !important;
+    white-space: normal !important;
+    text-align: right !important;
+  }
+
+  /* ===== 分頁摘要卡：左 icon，中間標題/數字，最右小字 ===== */
+  html body .trade-stats > div.stat-icon-card,
+  html body .dividend-summary-grid .dividend-card.stat-icon-card,
+  html body .holdings-summary-grid .dividend-card.stat-icon-card,
+  html body .yearly-summary-grid .dividend-card.stat-icon-card {
+    display: grid !important;
+    grid-template-columns: 44px minmax(72px, max-content) minmax(64px, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 10px !important;
+    row-gap: 2px !important;
+    align-items: center !important;
+    align-content: center !important;
+    min-height: 72px !important;
+    height: auto !important;
+    padding: 8px 12px !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+    overflow: hidden !important;
+  }
+
+  html body .trade-stats > div.stat-icon-card > .icon-box,
+  html body .dividend-summary-grid .dividend-card.stat-icon-card > .icon-box,
+  html body .holdings-summary-grid .dividend-card.stat-icon-card > .icon-box,
+  html body .yearly-summary-grid .dividend-card.stat-icon-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 / 3 !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    border-radius: 13px !important;
+    justify-self: start !important;
+    align-self: center !important;
+    margin: 0 !important;
+    position: static !important;
+  }
+
+  html body .trade-stats > div.stat-icon-card > .icon-box svg,
+  html body .dividend-summary-grid .dividend-card.stat-icon-card > .icon-box svg,
+  html body .holdings-summary-grid .dividend-card.stat-icon-card > .icon-box svg,
+  html body .yearly-summary-grid .dividend-card.stat-icon-card > .icon-box svg {
+    width: 21px !important;
+    height: 21px !important;
+    stroke-width: 2.25 !important;
+  }
+
+  html body .trade-stats > div.stat-icon-card > span:not(.icon-box),
+  html body .dividend-summary-grid .dividend-card.stat-icon-card > span:not(.icon-box),
+  html body .holdings-summary-grid .dividend-card.stat-icon-card > span:not(.icon-box),
+  html body .yearly-summary-grid .dividend-card.stat-icon-card > span:not(.icon-box) {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    align-self: end !important;
+    justify-self: start !important;
+    margin: 0 !important;
+    font-size: 12.5px !important;
+    font-weight: 850 !important;
+    line-height: 1.12 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+    position: static !important;
+  }
+
+  html body .trade-stats > div.stat-icon-card > strong,
+  html body .dividend-summary-grid .dividend-card.stat-icon-card > strong,
+  html body .holdings-summary-grid .dividend-card.stat-icon-card > strong,
+  html body .yearly-summary-grid .dividend-card.stat-icon-card > strong {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    align-self: start !important;
+    justify-self: start !important;
+    margin: 0 !important;
+    font-size: clamp(18px, 1.35vw, 23px) !important;
+    font-weight: 950 !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.02em !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+    position: static !important;
+  }
+
+  html body .trade-stats > div.stat-icon-card > small,
+  html body .dividend-summary-grid .dividend-card.stat-icon-card > small,
+  html body .holdings-summary-grid .dividend-card.stat-icon-card > small,
+  html body .yearly-summary-grid .dividend-card.stat-icon-card > small {
+    grid-column: 3 !important;
+    grid-row: 1 / 3 !important;
+    align-self: center !important;
+    justify-self: end !important;
+    display: block !important;
+    margin: 0 !important;
+    max-width: 112px !important;
+    font-size: 10.5px !important;
+    font-weight: 700 !important;
+    line-height: 1.16 !important;
+    color: #64748b !important;
+    white-space: normal !important;
+    text-align: right !important;
+    position: static !important;
+  }
+
+  /* 長字值微縮，避免塞爆卡片 */
+  html body .dividend-summary-grid .dividend-card.stat-icon-card > strong#latestDividendHealth,
+  html body .holdings-summary-grid .dividend-card.stat-icon-card > strong#topHoldingName,
+  html body .yearly-summary-grid .dividend-card.stat-icon-card > strong#yearlyLatestPremium {
+    font-size: clamp(16px, 1.16vw, 21px) !important;
+    white-space: normal !important;
+    line-height: 1.06 !important;
+  }
+}
+
+/* UI47: 非首頁摘要卡最終排版修正
+   - 左側：大 ICON
+   - 中間：標題 + 數字
+   - 右側：小字說明
+   本段不依賴 data-active-page，也不依賴是否有 stat-icon-card，避免分頁狀態或 hydrate timing 造成樣式沒套到。 */
+@media (min-width: 761px) {
+  html body .desktop-hero-summary-card,
+  html body .trade-stats > div,
+  html body .dividend-summary-grid .dividend-card,
+  html body .holdings-summary-grid .dividend-card,
+  html body .yearly-summary-grid .dividend-card {
+    display: grid !important;
+    grid-template-columns: 52px minmax(72px, 1fr) minmax(66px, 104px) !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 12px !important;
+    row-gap: 2px !important;
+    align-items: center !important;
+    align-content: center !important;
+    min-height: 78px !important;
+    height: auto !important;
+    padding: 9px 14px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    text-align: left !important;
+  }
+
+  /* Hero 右上兩張卡本身內部有一層 div，另外處理。 */
+  html body .desktop-hero-summary-card {
+    grid-template-columns: 52px minmax(0, 1fr) !important;
+  }
+
+  html body .desktop-hero-summary-card > .icon-box,
+  html body .trade-stats > div > .icon-box,
+  html body .dividend-summary-grid .dividend-card > .icon-box,
+  html body .holdings-summary-grid .dividend-card > .icon-box,
+  html body .yearly-summary-grid .dividend-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 / 3 !important;
+    width: 46px !important;
+    height: 46px !important;
+    min-width: 46px !important;
+    min-height: 46px !important;
+    border-radius: 15px !important;
+    justify-self: start !important;
+    align-self: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: static !important;
+    z-index: 1 !important;
+  }
+
+  html body .desktop-hero-summary-card > .icon-box svg,
+  html body .trade-stats > div > .icon-box svg,
+  html body .dividend-summary-grid .dividend-card > .icon-box svg,
+  html body .holdings-summary-grid .dividend-card > .icon-box svg,
+  html body .yearly-summary-grid .dividend-card > .icon-box svg {
+    width: 24px !important;
+    height: 24px !important;
+    stroke-width: 2.35 !important;
+  }
+
+  /* 一般分頁摘要卡：標題與數字固定在中間欄，小字固定最右欄。 */
+  html body .trade-stats > div > span:not(.icon-box),
+  html body .dividend-summary-grid .dividend-card > span:not(.icon-box),
+  html body .holdings-summary-grid .dividend-card > span:not(.icon-box),
+  html body .yearly-summary-grid .dividend-card > span:not(.icon-box) {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    justify-self: start !important;
+    align-self: end !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 13px !important;
+    font-weight: 850 !important;
+    line-height: 1.12 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+    position: static !important;
+    max-width: 100% !important;
+  }
+
+  html body .trade-stats > div > strong,
+  html body .dividend-summary-grid .dividend-card > strong,
+  html body .holdings-summary-grid .dividend-card > strong,
+  html body .yearly-summary-grid .dividend-card > strong {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    justify-self: start !important;
+    align-self: start !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: clamp(19px, 1.35vw, 24px) !important;
+    font-weight: 950 !important;
+    line-height: 1.06 !important;
+    letter-spacing: -0.02em !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+    position: static !important;
+    max-width: 100% !important;
+  }
+
+  html body .trade-stats > div > small,
+  html body .dividend-summary-grid .dividend-card > small,
+  html body .holdings-summary-grid .dividend-card > small,
+  html body .yearly-summary-grid .dividend-card > small {
+    grid-column: 3 !important;
+    grid-row: 1 / 3 !important;
+    justify-self: end !important;
+    align-self: center !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 104px !important;
+    font-size: 10.8px !important;
+    font-weight: 720 !important;
+    line-height: 1.2 !important;
+    color: #64748b !important;
+    white-space: normal !important;
+    text-align: right !important;
+    position: static !important;
+  }
+
+  /* Hero：標題與數字在中間，小字說明在右側。 */
+  html body .desktop-hero-summary-card > div {
+    grid-column: 2 !important;
+    grid-row: 1 / 3 !important;
+    display: grid !important;
+    grid-template-columns: minmax(70px, 1fr) minmax(64px, 98px) !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 10px !important;
+    row-gap: 2px !important;
+    align-items: center !important;
+    align-content: center !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  html body .desktop-hero-summary-card > div > span {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    justify-self: start !important;
+    align-self: end !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 13px !important;
+    font-weight: 850 !important;
+    line-height: 1.12 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+    position: static !important;
+  }
+
+  html body .desktop-hero-summary-card > div > strong {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    justify-self: start !important;
+    align-self: start !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: clamp(19px, 1.35vw, 24px) !important;
+    font-weight: 950 !important;
+    line-height: 1.06 !important;
+    letter-spacing: -0.02em !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+    position: static !important;
+  }
+
+  html body .desktop-hero-summary-card > div > small {
+    grid-column: 2 !important;
+    grid-row: 1 / 3 !important;
+    justify-self: end !important;
+    align-self: center !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 98px !important;
+    font-size: 10.8px !important;
+    font-weight: 720 !important;
+    line-height: 1.2 !important;
+    color: #64748b !important;
+    white-space: normal !important;
+    text-align: right !important;
+    position: static !important;
+  }
+
+  /* 長文字數值可換行，避免推擠。 */
+  html body .dividend-summary-grid .dividend-card > strong#latestDividendHealth,
+  html body .holdings-summary-grid .dividend-card > strong#topHoldingName,
+  html body .yearly-summary-grid .dividend-card > strong#yearlyLatestPremium {
+    white-space: normal !important;
+    font-size: clamp(17px, 1.18vw, 22px) !important;
+    line-height: 1.08 !important;
+  }
+}
+
+
+/* UI48: 真正固定「左 ICON + 中間標題/數字 + 右側小字」。
+   這段搭配 app.js 的 normalizeNoteRightCards()，不再只靠直接子層 selector 猜結構。 */
+@media (min-width: 761px) {
+  html body .trade-stats > div.note-right-card,
+  html body .dividend-summary-grid .dividend-card.note-right-card,
+  html body .holdings-summary-grid .dividend-card.note-right-card,
+  html body .yearly-summary-grid .dividend-card.note-right-card {
+    display: grid !important;
+    grid-template-columns: 50px minmax(92px, 1fr) minmax(72px, 124px) !important;
+    grid-template-rows: auto !important;
+    column-gap: 12px !important;
+    align-items: center !important;
+    align-content: center !important;
+    min-height: 76px !important;
+    height: auto !important;
+    padding: 10px 14px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    text-align: left !important;
+  }
+
+  html body .trade-stats > div.note-right-card > .icon-box,
+  html body .dividend-summary-grid .dividend-card.note-right-card > .icon-box,
+  html body .holdings-summary-grid .dividend-card.note-right-card > .icon-box,
+  html body .yearly-summary-grid .dividend-card.note-right-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    border-radius: 14px !important;
+    justify-self: start !important;
+    align-self: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: static !important;
+  }
+
+  html body .trade-stats > div.note-right-card > .icon-box svg,
+  html body .dividend-summary-grid .dividend-card.note-right-card > .icon-box svg,
+  html body .holdings-summary-grid .dividend-card.note-right-card > .icon-box svg,
+  html body .yearly-summary-grid .dividend-card.note-right-card > .icon-box svg {
+    width: 23px !important;
+    height: 23px !important;
+    stroke-width: 2.35 !important;
+  }
+
+  html body .trade-stats > div.note-right-card > .stat-main,
+  html body .dividend-summary-grid .dividend-card.note-right-card > .stat-main,
+  html body .holdings-summary-grid .dividend-card.note-right-card > .stat-main,
+  html body .yearly-summary-grid .dividend-card.note-right-card > .stat-main {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    gap: 3px !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  html body .trade-stats > div.note-right-card > .stat-main > span,
+  html body .dividend-summary-grid .dividend-card.note-right-card > .stat-main > span,
+  html body .holdings-summary-grid .dividend-card.note-right-card > .stat-main > span,
+  html body .yearly-summary-grid .dividend-card.note-right-card > .stat-main > span {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 13.5px !important;
+    font-weight: 850 !important;
+    line-height: 1.12 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+    position: static !important;
+  }
+
+  html body .trade-stats > div.note-right-card > .stat-main > strong,
+  html body .dividend-summary-grid .dividend-card.note-right-card > .stat-main > strong,
+  html body .holdings-summary-grid .dividend-card.note-right-card > .stat-main > strong,
+  html body .yearly-summary-grid .dividend-card.note-right-card > .stat-main > strong {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: clamp(19px, 1.35vw, 24px) !important;
+    font-weight: 950 !important;
+    line-height: 1.06 !important;
+    letter-spacing: -0.02em !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+    position: static !important;
+    max-width: 100% !important;
+  }
+
+  html body .trade-stats > div.note-right-card > small.stat-note,
+  html body .dividend-summary-grid .dividend-card.note-right-card > small.stat-note,
+  html body .holdings-summary-grid .dividend-card.note-right-card > small.stat-note,
+  html body .yearly-summary-grid .dividend-card.note-right-card > small.stat-note {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    justify-self: end !important;
+    align-self: center !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 124px !important;
+    font-size: 10.8px !important;
+    font-weight: 720 !important;
+    line-height: 1.22 !important;
+    color: #64748b !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    text-align: right !important;
+    position: static !important;
+  }
+
+  html body .dividend-summary-grid .dividend-card.note-right-card > .stat-main > strong#latestDividendHealth,
+  html body .holdings-summary-grid .dividend-card.note-right-card > .stat-main > strong#topHoldingName,
+  html body .yearly-summary-grid .dividend-card.note-right-card > .stat-main > strong#yearlyLatestPremium {
+    white-space: normal !important;
+    font-size: clamp(17px, 1.18vw, 22px) !important;
+    line-height: 1.08 !important;
+  }
+
+  /* Hero 右上兩張卡：同樣是左 ICON，中間標題/數字，右側小字。 */
+  html body .desktop-hero-summary-card.hero-note-right-card {
+    display: grid !important;
+    grid-template-columns: 50px minmax(0, 1fr) !important;
+    column-gap: 12px !important;
+    align-items: center !important;
+    min-height: 76px !important;
+    height: auto !important;
+    padding: 10px 14px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  html body .desktop-hero-summary-card.hero-note-right-card > .icon-box {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    border-radius: 14px !important;
+    justify-self: start !important;
+    align-self: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: static !important;
+  }
+
+  html body .desktop-hero-summary-card.hero-note-right-card > .icon-box svg {
+    width: 23px !important;
+    height: 23px !important;
+    stroke-width: 2.35 !important;
+  }
+
+  html body .desktop-hero-summary-card.hero-note-right-card > .stat-main {
+    grid-column: 2 !important;
+    display: grid !important;
+    grid-template-columns: minmax(70px, 1fr) minmax(62px, 104px) !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 10px !important;
+    row-gap: 3px !important;
+    align-items: center !important;
+    align-content: center !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  html body .desktop-hero-summary-card.hero-note-right-card > .stat-main > span {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    justify-self: start !important;
+    align-self: end !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 13.5px !important;
+    font-weight: 850 !important;
+    line-height: 1.12 !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+    position: static !important;
+  }
+
+  html body .desktop-hero-summary-card.hero-note-right-card > .stat-main > strong {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    justify-self: start !important;
+    align-self: start !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: clamp(19px, 1.35vw, 24px) !important;
+    font-weight: 950 !important;
+    line-height: 1.06 !important;
+    letter-spacing: -0.02em !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+    position: static !important;
+  }
+
+  html body .desktop-hero-summary-card.hero-note-right-card > .stat-main > small.stat-note {
+    grid-column: 2 !important;
+    grid-row: 1 / 3 !important;
+    justify-self: end !important;
+    align-self: center !important;
+    display: block !important;
+    max-width: 104px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 10.8px !important;
+    font-weight: 720 !important;
+    line-height: 1.22 !important;
+    color: #64748b !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    text-align: right !important;
+    position: static !important;
+  }
+}
+
+/* UI49: 修正交易紀錄卡片內 stat-main 被 .trade-stats div 當成卡片造成的小方塊。
+   同時放大右側小字說明，並確保三區塊排列穩定。 */
+@media (min-width: 761px) {
+  /* 舊規則 .trade-stats div 會誤套到內層 .stat-main，這裡直接清掉。 */
+  html body .trade-stats .stat-main {
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    outline: 0 !important;
+  }
+
+  html body .trade-stats > div.note-right-card > .stat-main,
+  html body .dividend-summary-grid .dividend-card.note-right-card > .stat-main,
+  html body .holdings-summary-grid .dividend-card.note-right-card > .stat-main,
+  html body .yearly-summary-grid .dividend-card.note-right-card > .stat-main {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+  }
+
+  html body .trade-stats > div.note-right-card > small.stat-note,
+  html body .dividend-summary-grid .dividend-card.note-right-card > small.stat-note,
+  html body .holdings-summary-grid .dividend-card.note-right-card > small.stat-note,
+  html body .yearly-summary-grid .dividend-card.note-right-card > small.stat-note,
+  html body .desktop-hero-summary-card.hero-note-right-card > .stat-main > small.stat-note,
+  html body .desktop-hero-summary-card > div > small {
+    font-size: 12.2px !important;
+    line-height: 1.25 !important;
+    font-weight: 760 !important;
+    max-width: 132px !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    text-align: right !important;
+  }
+
+  html body .trade-stats > div.note-right-card > .stat-main > span,
+  html body .dividend-summary-grid .dividend-card.note-right-card > .stat-main > span,
+  html body .holdings-summary-grid .dividend-card.note-right-card > .stat-main > span,
+  html body .yearly-summary-grid .dividend-card.note-right-card > .stat-main > span,
+  html body .desktop-hero-summary-card.hero-note-right-card > .stat-main > span {
+    font-size: 13.8px !important;
+    line-height: 1.12 !important;
+  }
+
+  html body .trade-stats > div.note-right-card > .stat-main > strong,
+  html body .dividend-summary-grid .dividend-card.note-right-card > .stat-main > strong,
+  html body .holdings-summary-grid .dividend-card.note-right-card > .stat-main > strong,
+  html body .yearly-summary-grid .dividend-card.note-right-card > .stat-main > strong,
+  html body .desktop-hero-summary-card.hero-note-right-card > .stat-main > strong {
+    font-size: clamp(20px, 1.42vw, 25px) !important;
+    line-height: 1.05 !important;
+  }
+
+  html body .trade-stats > div.note-right-card,
+  html body .dividend-summary-grid .dividend-card.note-right-card,
+  html body .holdings-summary-grid .dividend-card.note-right-card,
+  html body .yearly-summary-grid .dividend-card.note-right-card {
+    grid-template-columns: 50px minmax(86px, 1fr) minmax(88px, 132px) !important;
+    column-gap: 12px !important;
+  }
+}
+
+/* UI58: HTML-native data maintenance dashboard page */
+.data-maintenance-section {
+  display: block;
+}
+.dm-card {
+  background: #fff;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+  padding: 16px 18px;
+  margin: 14px 0;
+}
+.dm-card h4 {
+  margin: 0 0 5px;
+  font-size: 17px;
+  color: #0f172a;
+  letter-spacing: 0.01em;
+}
+.dm-card p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.dm-status-card {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.7fr) minmax(520px, 1.3fr);
+  gap: 18px;
+  align-items: center;
+}
+.dm-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.dm-kpis article {
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 13px;
+  padding: 13px 14px;
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+}
+.dm-kpis span {
+  display: block;
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.dm-kpis strong {
+  display: block;
+  font-size: 22px;
+  color: #0f172a;
+  letter-spacing: 0.02em;
+}
+.dm-compact-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding-top: 13px;
+  padding-bottom: 13px;
+}
+.dm-action-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+.dm-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 152px;
+  min-height: 38px;
+  border-radius: 10px;
+  background: #078b5c;
+  color: #fff !important;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 13px;
+  box-shadow: 0 8px 18px rgba(7, 139, 92, 0.18);
+}
+.dm-action-secondary {
+  background: #0f766e;
+}
+.dm-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.dm-gap-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 88px;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 900;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: #475569;
+  background: #f8fafc;
+}
+.dm-gap-badge.ok {
+  color: #047857;
+  background: #ecfdf5;
+  border-color: rgba(16, 185, 129, 0.32);
+}
+.dm-gap-badge.warn {
+  color: #b45309;
+  background: #fffbeb;
+  border-color: rgba(245, 158, 11, 0.38);
+}
+.dm-gap-line {
+  margin-top: 10px !important;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  font-size: 14px !important;
+  color: #0f172a !important;
+  font-weight: 700;
+}
+.dm-table-card {
+  padding: 14px;
+}
+.dm-table-wrap {
+  margin-top: 12px;
+  overflow: auto;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 13px;
+  max-height: 560px;
+  background: #fff;
+}
+.dm-table {
+  width: 100%;
+  min-width: 1380px;
+  border-collapse: collapse;
+  font-size: 14px;
+  color: #0f172a;
+}
+.dm-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #eef6f5;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 900;
+  text-align: left;
+  padding: 11px 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.32);
+  white-space: nowrap;
+}
+.dm-table tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.95);
+  white-space: nowrap;
+  font-weight: 700;
+}
+.dm-table tbody tr:hover {
+  background: #f8fafc;
+}
+.dm-missing {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  min-height: 22px;
+  border-radius: 999px;
+  color: #b45309;
+  background: #fffbeb;
+  border: 1px solid rgba(245, 158, 11, 0.38);
+  font-size: 12px;
+  font-weight: 900;
+}
+@media (max-width: 760px) {
+  .data-maintenance-section { display: none !important; }
+}
+
+/* UI59: fallback active state for hash pages when class restoration lags inside Streamlit iframe */
+body[data-active-page="home"] .nav a[href="#home"],
+body[data-active-page="trades"] .nav a[href="#trades"],
+body[data-active-page="monthly"] .nav a[href="#monthly"],
+body[data-active-page="quarterly"] .nav a[href="#quarterly"],
+body[data-active-page="holdings"] .nav a[href="#holdings"],
+body[data-active-page="yearly"] .nav a[href="#yearly"],
+body[data-active-page="signal-settings"] .nav a[href="#signal-settings"],
+body[data-active-page="data-maintenance"] .nav a[href="#data-maintenance"],
+body[data-active-page="manual"] .nav a[href="#manual"] {
+  color: #fff !important;
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.24), rgba(255, 255, 255, 0.08)) !important;
+  box-shadow: inset 3px 0 0 #10b981 !important;
+}
+
+body[data-active-page="home"] .nav a[href="#home"] .icon-box,
+body[data-active-page="trades"] .nav a[href="#trades"] .icon-box,
+body[data-active-page="monthly"] .nav a[href="#monthly"] .icon-box,
+body[data-active-page="quarterly"] .nav a[href="#quarterly"] .icon-box,
+body[data-active-page="holdings"] .nav a[href="#holdings"] .icon-box,
+body[data-active-page="yearly"] .nav a[href="#yearly"] .icon-box,
+body[data-active-page="signal-settings"] .nav a[href="#signal-settings"] .icon-box,
+body[data-active-page="data-maintenance"] .nav a[href="#data-maintenance"] .icon-box,
+body[data-active-page="manual"] .nav a[href="#manual"] .icon-box {
+  background: rgba(16, 185, 129, 0.16) !important;
+  color: #34d399 !important;
+}
+
+/* UI61: monthly AUM pending marker */
+.monthly-table td.pending,
+#monthlyEtfTableBody td.pending {
+  color: #b45309;
+  font-weight: 800;
+  background: #fffbeb;
+}
+
+/* UI62: data source inventory and monthly AUM pending diagnostics */
+.dm-source-card .dm-card-head { align-items: flex-start; }
+.dm-snapshot-pill {
+  min-width: 210px;
+  border: 1px solid rgba(14, 165, 233, 0.28);
+  background: linear-gradient(180deg, #f0f9ff, #ffffff);
+  border-radius: 14px;
+  padding: 10px 12px;
+  text-align: right;
+}
+.dm-snapshot-pill span,
+.dm-snapshot-pill small {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+}
+.dm-snapshot-pill strong {
+  display: block;
+  color: #0369a1;
+  font-size: 22px;
+  font-weight: 950;
+  line-height: 1.15;
+  margin: 4px 0;
+}
+.dm-source-table-wrap { max-height: 260px; }
+.dm-source-table { min-width: 1500px; }
+.dm-source-table td:nth-child(6),
+.dm-source-table td:nth-child(7) { white-space: normal; min-width: 220px; line-height: 1.45; }
+.dm-monthly-table-wrap { max-height: 360px; }
+.dm-monthly-table { min-width: 1120px; }
+.dm-monthly-table td:nth-child(8) { white-space: normal; min-width: 260px; line-height: 1.45; color: #92400e; }
+.dm-missing-text { padding: 3px 8px; min-width: auto; }
+.monthly-table .pending,
+.trade-table .pending { color: #b45309; font-weight: 900; }
+
+/* UI64: dividend pending / source labels */
+.legend-dot.pending {
+  background: #b9c3c8;
+  border: 1px dashed rgba(78, 94, 104, 0.6);
+}
+.pending-label {
+  font-size: 10px;
+  fill: #64748b;
+  font-weight: 800;
+}
+.dividend-pending,
+.source-note-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 800;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.pending-dividend-row td {
+  background: rgba(241, 245, 249, 0.45);
+}
+.dividend-table td small {
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.composition-tooltip div:last-child b {
+  max-width: 260px;
+  white-space: normal;
+  text-align: right;
+}
+
+
+/* UI65: readability, monthly tooltips, and data maintenance layout */
+.monthly-chart .hover-guide.active {
+  opacity: 0.72;
+}
+.monthly-hover-zone {
+  fill: transparent;
+  cursor: crosshair;
+}
+.monthly-chart-tooltip {
+  min-width: 260px;
+  font-size: 14px;
+}
+.monthly-chart-tooltip div {
+  font-size: 14px;
+  gap: 18px;
+}
+.monthly-chart-point {
+  stroke: #fff;
+  stroke-width: 1.8;
+  paint-order: stroke;
+}
+.axis-text {
+  font-size: 13px;
+}
+.monthly-legend,
+.dividend-composition-legend,
+.desktop-chart-legend,
+.mobile-chart-legend {
+  font-size: 14px;
+}
+.trade-table th,
+.monthly-table th,
+.dividend-table th,
+.holdings-table th,
+.yearly-tax-table th {
+  font-size: 14px;
+}
+.trade-table td,
+.monthly-table td,
+.dividend-table td,
+.holdings-table td,
+.yearly-tax-table td {
+  font-size: 15px;
+}
+.dividend-table {
+  min-width: 1040px;
+}
+.dividend-table th,
+.dividend-table td {
+  padding: 13px 15px;
+  vertical-align: top;
+}
+.dividend-table th:nth-child(8),
+.dividend-table td:nth-child(8) {
+  min-width: 280px;
+  white-space: normal;
+  line-height: 1.55;
+}
+.dividend-pending,
+.source-note-pill {
+  font-size: 13px;
+  padding: 4px 10px;
+}
+.dividend-table td small {
+  display: inline-block;
+  margin-top: 5px;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.55;
+  max-width: 340px;
+  white-space: normal;
+}
+.dividend-composition-head p,
+.chart-note,
+.composition-tooltip div,
+.chart-tooltip div {
+  font-size: 14px;
+}
+.dm-ops-card {
+  display: grid;
+  grid-template-columns: minmax(520px, 1.45fr) minmax(230px, 0.72fr) minmax(310px, 0.92fr);
+  gap: 14px;
+  align-items: stretch;
+}
+.dm-ops-status,
+.dm-ops-tool {
+  min-width: 0;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  padding: 14px;
+}
+.dm-ops-status {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.58fr) minmax(360px, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+.dm-ops-tool {
+  display: grid;
+  align-content: space-between;
+  gap: 10px;
+}
+.dm-ops-tool .dm-action,
+.dm-ops-tool .dm-action-group {
+  justify-self: start;
+}
+.dm-ops-tool .dm-action-group {
+  justify-content: flex-start;
+}
+.dm-card h4 {
+  font-size: 18px;
+}
+.dm-card p {
+  font-size: 14px;
+}
+.dm-kpis span {
+  font-size: 13px;
+}
+.dm-kpis strong {
+  font-size: 23px;
+}
+.dm-action {
+  font-size: 14px;
+}
+.dm-table {
+  font-size: 14.5px;
+}
+.dm-table thead th {
+  font-size: 14px;
+}
+.dm-table tbody td {
+  font-size: 14.5px;
+  line-height: 1.45;
+}
+.dm-source-table { min-width: 1420px; }
+.dm-source-table td:nth-child(7) {
+  min-width: 320px;
+  color: #334155;
+}
+.dm-monthly-table td:nth-child(8),
+.dm-reason-cell {
+  white-space: normal;
+  min-width: 260px;
+  line-height: 1.5;
+  color: #475569 !important;
+}
+@media (max-width: 1320px) {
+  .dm-ops-card {
+    grid-template-columns: 1fr;
+  }
+  .dm-ops-status {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* UI66: holdings rotation wrap layout + larger left navigation labels */
+@media (min-width: 761px) {
+  .nav a {
+    font-size: 17px !important;
+    line-height: 1.25 !important;
+    min-height: 48px !important;
+    padding: 12px 14px !important;
+    gap: 12px !important;
+    letter-spacing: 0.02em;
+  }
+
+  .nav a .icon-box {
+    width: 31px !important;
+    height: 31px !important;
+    flex: 0 0 31px !important;
+  }
+
+  .nav a .icon-box svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .brand h1 {
+    font-size: 21px !important;
+  }
+
+  .brand p,
+  .source-card span,
+  .source-card small,
+  .sidebar-signal strong,
+  .sidebar-signal small {
+    font-size: 14px !important;
+    line-height: 1.45 !important;
+  }
+
+  .holding-rotation-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    align-items: stretch !important;
+    gap: 14px !important;
+  }
+
+  .rotation-group {
+    padding: 14px 16px !important;
+    min-height: 150px;
+    overflow: visible !important;
+  }
+
+  .rotation-group strong {
+    font-size: 20px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .rotation-group ul {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px 12px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    list-style: none !important;
+    line-height: 1.35 !important;
+  }
+
+  .rotation-group li {
+    display: flex;
+    align-items: center;
+    min-height: 34px;
+    padding: 6px 10px;
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    border-radius: 999px;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 15px;
+    font-weight: 750;
+    white-space: normal;
+  }
+
+  .rotation-added li {
+    border-color: rgba(16, 185, 129, 0.26);
+    background: rgba(236, 253, 245, 0.75);
+    color: #047857;
+  }
+
+  .rotation-removed li {
+    border-color: rgba(248, 113, 113, 0.24);
+    background: rgba(254, 242, 242, 0.7);
+    color: #b42318;
+  }
+
+  .rotation-group .change-flat {
+    font-size: 15px !important;
+    font-weight: 750;
+  }
+}
+
+
+/* UI67: source tooltips + homepage anomaly summary + shorter holding chips */
+.source-card-summary,
+.source-hint {
+  cursor: help;
+}
+
+.source-hint {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: rgba(15, 118, 110, 0.08);
+  color: #0f766e;
+  font-weight: 800;
+  border-bottom: 1px dotted currentColor;
+  line-height: 1.35;
+}
+
+.source-hint--moneydj { background: rgba(245, 158, 11, 0.12); color: #92400e; }
+.source-hint--twse { background: rgba(59, 130, 246, 0.10); color: #1d4ed8; }
+.source-hint--capital { background: rgba(16, 185, 129, 0.12); color: #047857; }
+.source-hint--yahoo { background: rgba(99, 102, 241, 0.10); color: #4338ca; }
+
+.recent-anomaly-summary {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(226, 232, 240, 0.96);
+  background: #f8fafc;
+}
+
+.recent-anomaly-summary[data-status="yellow"] {
+  background: #fffbeb;
+  border-color: rgba(245, 158, 11, 0.28);
+}
+
+.recent-anomaly-summary[data-status="red"] {
+  background: #fef2f2;
+  border-color: rgba(239, 68, 68, 0.30);
+}
+
+.recent-anomaly-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.recent-anomaly-head strong {
+  font-size: 15px;
+  color: #0f172a;
+}
+
+.recent-anomaly-head small {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(15, 118, 110, 0.10);
+  color: #0f766e;
+  font-weight: 850;
+  font-size: 12px;
+}
+
+.recent-anomaly-list {
+  display: grid;
+  gap: 7px;
+}
+
+.recent-anomaly-item {
+  display: grid;
+  gap: 3px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  color: inherit;
+  text-decoration: none;
+}
+
+.recent-anomaly-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+}
+
+.recent-anomaly-item b {
+  font-size: 13.5px;
+  color: #0f172a;
+}
+
+.recent-anomaly-item span,
+.recent-anomaly-item small,
+.recent-anomaly-empty {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: #64748b;
+}
+
+.recent-anomaly-item[data-status="yellow"] { border-left: 4px solid #f59e0b; }
+.recent-anomaly-item[data-status="red"] { border-left: 4px solid #ef4444; }
+
+@media (min-width: 761px) {
+  .rotation-group ul {
+    grid-template-columns: repeat(auto-fit, minmax(122px, 1fr)) !important;
+  }
+
+  .rotation-group li {
+    min-height: 30px !important;
+    padding: 5px 10px !important;
+    font-size: 14px !important;
+    white-space: nowrap !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .desktop-anomaly-summary .recent-anomaly-list {
+    max-height: 190px;
+    overflow: auto;
+  }
+}
+
+#mobileFocusDividendNote,
+#desktopFocusDividendNote,
+#homeLatestDividendDate {
+  white-space: pre-line;
+}
+
+
+/* UI69: 手機版首頁重點總覽微調，不影響桌機版 */
+@media (max-width: 760px), (max-height: 520px) and (orientation: landscape), (hover: none) and (pointer: coarse) {
+  .mobile-focus-tile {
+    grid-template-columns: 38px minmax(0, 1fr) !important;
+    gap: 5px 8px !important;
+    padding: 12px !important;
+  }
+
+  .mobile-focus-tile small {
+    grid-column: 1 / -1 !important;
+    padding-left: 0 !important;
+    margin-top: 2px !important;
+    font-size: 12.5px !important;
+    line-height: 1.25 !important;
+    letter-spacing: -0.01em;
+  }
+
+  #mobileFocusDividendNote {
+    font-size: 12px !important;
+    line-height: 1.24 !important;
+    white-space: pre-line !important;
+  }
+
+  #mobileFocusTotalReturnRate,
+  #mobileFocusTopHoldingNote,
+  #mobileFocusBeneficiariesNote,
+  #mobileFocusAumNote,
+  #mobileFocusTop10Note {
+    white-space: nowrap !important;
+  }
+}
+
+
+/* UI70: Mobile home quick trade entry. Desktop is unaffected because this block lives inside .mobile-home. */
+.mobile-trade-entry-section {
+  display: none;
+}
+
+@media (max-width: 760px), (max-height: 520px) and (orientation: landscape), (hover: none) and (pointer: coarse) {
+  .mobile-trade-entry-section {
+    display: block;
+    margin: 14px 0 0;
+    padding: 20px 18px 18px;
+    border-radius: 22px;
+    background: #ffffff;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08);
+  }
+
+  .mobile-trade-entry-head {
+    margin-bottom: 14px;
+  }
+
+  .mobile-trade-entry-head .mobile-section-title p {
+    margin: 3px 0 0;
+    color: #64748b;
+    font-size: .84rem;
+    font-weight: 700;
+    line-height: 1.45;
+  }
+
+  .mobile-quick-trade-form {
+    display: grid;
+    gap: 12px;
+  }
+
+  .mobile-trade-action-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .mobile-trade-radio {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    border-radius: 14px;
+    border: 1px solid rgba(16, 185, 129, 0.26);
+    background: #f8fafc;
+    color: #334155;
+    font-size: .98rem;
+    font-weight: 900;
+  }
+
+  .mobile-trade-radio input {
+    accent-color: #059669;
+  }
+
+  .mobile-trade-radio.active {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(14, 165, 233, 0.10));
+    color: #065f46;
+    border-color: rgba(16, 185, 129, 0.48);
+  }
+
+  .mobile-trade-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 10px;
+  }
+
+  .mobile-quick-trade-form label {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .mobile-quick-trade-form label span {
+    color: #475569;
+    font-size: .78rem;
+    font-weight: 900;
+  }
+
+  .mobile-quick-trade-form input,
+  .mobile-quick-trade-form select {
+    width: 100%;
+    min-height: 44px;
+    box-sizing: border-box;
+    border: 1px solid rgba(148, 163, 184, 0.55);
+    border-radius: 13px;
+    background: #f8fafc;
+    color: #0f172a;
+    padding: 0 12px;
+    font-size: 1rem;
+    font-weight: 800;
+    outline: none;
+  }
+
+  .mobile-quick-trade-form input:focus,
+  .mobile-quick-trade-form select:focus {
+    border-color: rgba(5, 150, 105, 0.62);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.14);
+    background: #ffffff;
+  }
+
+  .mobile-trade-note-field {
+    grid-column: 1 / -1;
+  }
+
+  .mobile-trade-submit {
+    width: 100%;
+    min-height: 48px;
+    border: 0;
+    border-radius: 14px;
+    background: #059669;
+    color: #ffffff;
+    font-size: .98rem;
+    font-weight: 950;
+    box-shadow: 0 12px 22px rgba(5, 150, 105, 0.22);
+  }
+
+  .mobile-trade-submit.is-loading,
+  .mobile-trade-submit:disabled {
+    opacity: .76;
+  }
+
+  .mobile-trade-status {
+    margin: 0;
+    color: #64748b;
+    font-size: .78rem;
+    font-weight: 750;
+    line-height: 1.45;
   }
 }

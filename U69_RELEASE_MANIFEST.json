@@ -1,0 +1,11 @@
+{
+  "version": "U69 final",
+  "date": "2026-06-09",
+  "package": "00919_dashboard_U69_final_20260609.zip",
+  "notes": [
+    "Based on UI69 mobile focus polish package.",
+    "Production package excludes __pycache__ and _compare_mobile_versions.",
+    "Includes updated project markdown documentation and U69 final changelog.",
+    "Adds readable 啟動00919儀表板.bat while preserving existing batch file for compatibility."
+  ]
+}

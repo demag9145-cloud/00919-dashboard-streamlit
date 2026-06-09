@@ -1,6 +1,7 @@
-﻿const state = {
+const state = {
   data: null,
   trades: [],
+  dailyHistory: {},
   tradeAction: "buy",
   editingTradeId: "",
 };
@@ -86,6 +87,7 @@ function hydrateDesktopIcons() {
     [".holdings-section .section-head h3", "pieChart", "purple"],
     [".yearly-section .section-head h3", "calculator", "pink"],
     [".settings-section .section-head h3", "activity", "blue"],
+    [".data-maintenance-section .section-head h3", "database", "blue"],
   ];
   iconTargets.forEach(([selector, iconName, colorClass]) => prependDesktopIcon(selector, iconName, colorClass));
 
@@ -115,6 +117,87 @@ function hydrateDesktopIcons() {
     if (!card || card.querySelector(":scope > .icon-box")) return;
     card.insertAdjacentHTML("afterbegin", renderIcon(iconName, colorClass));
   });
+
+  [
+    ["tradeStatShares", "layers", "green"],
+    ["tradeStatAvgCost", "circleDollar", "blue"],
+    ["tradeStatCost", "wallet", "blue"],
+    ["tradeStatDividend", "coins", "orange"],
+    ["tradeStatMarketValue", "trendingUp", "green"],
+    ["tradeStatPnl", "pieChart", "orange"],
+    ["tradeStatTotalReturn", "lineChart", "pink"],
+  ].forEach(([valueId, iconName, colorClass]) => {
+    const card = $(valueId)?.closest(".trade-stats > div");
+    if (!card || card.querySelector(":scope > .icon-box")) return;
+    card.classList.add("stat-icon-card");
+    card.insertAdjacentHTML("afterbegin", renderIcon(iconName, colorClass));
+  });
+
+  [
+    ["latestDividendExDate", "calendarDays", "purple"],
+    ["latestDividendPerShare", "coins", "orange"],
+    ["latestDividendShares", "layers", "green"],
+    ["latestDividendCash", "wallet", "blue"],
+    ["latestDividend54c", "calculator", "pink"],
+    ["latestDividendHealth", "activity", "orange"],
+    ["holdingsLatestDate", "calendarDays", "purple"],
+    ["top10TotalWeight", "pieChart", "cyan"],
+    ["topHoldingName", "cpu", "pink"],
+    ["holdingRotationCount", "activity", "orange"],
+    ["yearlyLatestCash", "coins", "orange"],
+    ["yearlyLatest54c", "calculator", "pink"],
+    ["yearlyLatestPremium", "activity", "orange"],
+    ["yearlyLatestCount", "calendarDays", "purple"],
+  ].forEach(([valueId, iconName, colorClass]) => {
+    const card = $(valueId)?.closest(".dividend-card");
+    if (!card || card.querySelector(":scope > .icon-box")) return;
+    card.classList.add("stat-icon-card");
+    card.insertAdjacentHTML("afterbegin", renderIcon(iconName, colorClass));
+  });
+}
+
+
+/* UI48: 將統計卡 DOM 正規化，確保不是靠 CSS 猜結構。
+   一般卡片：icon + div.stat-main(標題/數字) + small.stat-note
+   Hero 卡片：icon + div.stat-main，其中 small 由 CSS 放到右側 */
+function normalizeNoteRightCard(card) {
+  if (!card || card.dataset.noteRightReady === "1") return;
+  const icon = card.querySelector(":scope > .icon-box");
+  const children = Array.from(card.children);
+  const label = children.find((node) => node.tagName === "SPAN" && !node.classList.contains("icon-box"));
+  const value = children.find((node) => node.tagName === "STRONG");
+  const note = children.find((node) => node.tagName === "SMALL");
+  if (!icon || !label || !value) return;
+
+  const main = document.createElement("div");
+  main.className = "stat-main";
+  card.insertBefore(main, label);
+  main.appendChild(label);
+  main.appendChild(value);
+
+  if (note) note.classList.add("stat-note");
+  card.classList.add("note-right-card");
+  card.dataset.noteRightReady = "1";
+}
+
+function normalizeHeroNoteRightCard(card) {
+  if (!card || card.dataset.noteRightReady === "1") return;
+  const icon = card.querySelector(":scope > .icon-box");
+  const main = card.querySelector(":scope > div");
+  if (!icon || !main) return;
+  main.classList.add("stat-main");
+  const note = main.querySelector("small");
+  if (note) note.classList.add("stat-note");
+  card.classList.add("note-right-card", "hero-note-right-card");
+  card.dataset.noteRightReady = "1";
+}
+
+function normalizeNoteRightCards() {
+  document.querySelectorAll(".desktop-hero-summary-card").forEach(normalizeHeroNoteRightCard);
+  document.querySelectorAll(".trade-stats > div").forEach(normalizeNoteRightCard);
+  document.querySelectorAll(".dividend-summary-grid .dividend-card").forEach(normalizeNoteRightCard);
+  document.querySelectorAll(".holdings-summary-grid .dividend-card").forEach(normalizeNoteRightCard);
+  document.querySelectorAll(".yearly-summary-grid .dividend-card").forEach(normalizeNoteRightCard);
 }
 
 function signalText(level) {
@@ -169,6 +252,19 @@ function signalSeverity(level) {
   return { red: 3, yellow: 2, unknown: 1, green: 0 }[level || "unknown"] ?? 1;
 }
 
+function getTop10RotationInfo(top10, holdings, history) {
+  const previous = [...(history || [])]
+    .filter((row) => row.data_date && row.data_date !== holdings.data_date)
+    .sort((a, b) => String(a.data_date).localeCompare(String(b.data_date)))
+    .at(-1);
+  if (!previous) return { count: 0, hasPrevious: false };
+  const currentCodes = new Set((top10 || []).map((row) => row.code).filter(Boolean));
+  const previousCodes = new Set((previous.top10 || []).map((row) => row.code).filter(Boolean));
+  const addedCount = [...currentCodes].filter((code) => !previousCodes.has(code)).length;
+  const removedCount = [...previousCodes].filter((code) => !currentCodes.has(code)).length;
+  return { count: addedCount + removedCount, hasPrevious: true, addedCount, removedCount };
+}
+
 function calcHoldingSignalForSummary() {
   const settings = getAppSignalSettings();
   const holdings = state.data?.holdings || {};
@@ -182,31 +278,159 @@ function calcHoldingSignalForSummary() {
   }
   const top10Total = top10.reduce((sum, row) => sum + Number(row.weight_pct || 0), 0);
   const concentrationThreshold = Number(settings.top10ConcentrationYellowPct ?? 75);
-  if (top10Total >= concentrationThreshold) {
+  if (concentrationThreshold > 0 && top10Total >= concentrationThreshold) {
     return {
       level: "yellow",
       reason: `持股：前十大集中度 ${fmt.pct(top10Total)} 達到門檻，請到持股頁查看持股占比。`,
     };
   }
-  const previous = [...history]
-    .filter((row) => row.data_date && row.data_date !== holdings.data_date)
-    .sort((a, b) => String(a.data_date).localeCompare(String(b.data_date)))
-    .at(-1);
-  if (previous) {
-    const currentCodes = new Set(top10.map((row) => row.code).filter(Boolean));
-    const previousCodes = new Set((previous.top10 || []).map((row) => row.code).filter(Boolean));
-    const addedCount = [...currentCodes].filter((code) => !previousCodes.has(code)).length;
-    const removedCount = [...previousCodes].filter((code) => !currentCodes.has(code)).length;
-    const rotationCount = addedCount + removedCount;
-    const rotationThreshold = Number(settings.top10RotationWarningCount ?? 1);
-    if (rotationThreshold > 0 && rotationCount >= rotationThreshold) {
-      return {
-        level: "yellow",
-        reason: `持股：前十大汰換 ${rotationCount} 檔，請到持股頁查看新增與淘汰紀錄。`,
-      };
-    }
+
+  const rotationInfo = getTop10RotationInfo(top10, holdings, history);
+  const rotationThreshold = Number(settings.top10RotationWarningCount ?? 1);
+  if (rotationThreshold > 0 && rotationInfo.hasPrevious && rotationInfo.count >= rotationThreshold) {
+    return {
+      level: "yellow",
+      reason: `持股：前十大汰換 ${rotationInfo.count} 檔，請到持股頁查看新增與淘汰紀錄。`,
+    };
   }
   return { level: "green", reason: "所有數據正常" };
+}
+
+function calcBeneficiarySignalForSummary() {
+  const settings = getAppSignalSettings();
+  const declineThreshold = Math.max(1, Math.round(Number(settings.beneficiaryDeclineMonths ?? 3)));
+  const rows = (state.data?.monthly_history || state.data?.monthly_size || [])
+    .filter((row) => row.month && isFiniteValue(row.beneficiary_count))
+    .sort((a, b) => String(a.month).localeCompare(String(b.month)));
+  if (rows.length < 2) {
+    return { level: "green", reason: "受益人數：資料不足，暫不列入主燈號。" };
+  }
+  let declineCount = 0;
+  for (let i = rows.length - 1; i > 0; i -= 1) {
+    const current = Number(rows[i].beneficiary_count);
+    const previous = Number(rows[i - 1].beneficiary_count);
+    if (Number.isFinite(current) && Number.isFinite(previous) && current < previous) {
+      declineCount += 1;
+    } else {
+      break;
+    }
+  }
+  if (declineCount >= declineThreshold) {
+    const latest = rows[rows.length - 1];
+    return {
+      level: "yellow",
+      reason: `受益人數：已連續 ${declineCount} 個月下降，達到設定門檻 ${declineThreshold} 個月。`,
+      detail: `${latest.month} 受益人 ${fmt.money(Number(latest.beneficiary_count))} 人`,
+    };
+  }
+  return { level: "green", reason: `受益人數：未達連續下降 ${declineThreshold} 個月門檻。` };
+}
+
+function calcTaxSignalForSummary() {
+  const settings = getAppSignalSettings();
+  const single54cThreshold = Math.max(0, Number(settings.single54cThreshold ?? HEALTH_PREMIUM_THRESHOLD));
+  const supplementalPremiumRate = Math.max(0, Number(settings.supplementalPremiumRatePct ?? HEALTH_PREMIUM_RATE * 100)) / 100;
+  const supplementalPremiumWarningAmount = Math.max(0, Number(settings.supplementalPremiumWarningAmount ?? 0));
+  const dividend = state.data?.latest_dividend || {};
+  if (!dividend.ex_date || !isFiniteValue(dividend.estimated_54c_per_share)) {
+    return { level: "green", reason: "54C：目前沒有可用的最新 54C 資料，暫不列入主燈號。" };
+  }
+  const shares = calcSharesOnDate(state.trades || [], dividend.ex_date);
+  const estimated54c = shares * Number(dividend.estimated_54c_per_share || 0);
+  const premium = estimated54c >= single54cThreshold ? estimated54c * supplementalPremiumRate : 0;
+  if (estimated54c >= single54cThreshold) {
+    return {
+      level: "yellow",
+      reason: `54C：單次估算 $${fmt.money(estimated54c)} 達到觀察門檻 $${fmt.money(single54cThreshold)}。`,
+    };
+  }
+  if (supplementalPremiumWarningAmount > 0 && premium >= supplementalPremiumWarningAmount) {
+    return {
+      level: "yellow",
+      reason: `補充保費：估算 $${fmt.money(premium)} 達到黃燈門檻 $${fmt.money(supplementalPremiumWarningAmount)}。`,
+    };
+  }
+  return { level: "green", reason: "54C 與補充保費未達設定觀察門檻。" };
+}
+
+function calcCurrentSignalDiagnostics(latest = getLatestCompleteDailyRow()) {
+  const settings = getAppSignalSettings();
+  const holdings = state.data?.holdings || {};
+  const top10 = holdings.top10 || [];
+  const top10Total = top10.reduce((sum, row) => sum + Number(row.weight_pct || 0), 0);
+  const latestMarket = getLatestMarketRow();
+  const navLagBusinessDays = businessDaysBetweenDates(latest?.date, latestMarket?.date);
+  const dividend = state.data?.latest_dividend || {};
+  const sharesOnDividend = dividend.ex_date ? calcSharesOnDate(state.trades || [], dividend.ex_date) : 0;
+  const estimated54c = sharesOnDividend * Number(dividend.estimated_54c_per_share || 0);
+  const beneficiaryRows = (state.data?.monthly_history || state.data?.monthly_size || [])
+    .filter((row) => row.month && isFiniteValue(row.beneficiary_count))
+    .sort((a, b) => String(a.month).localeCompare(String(b.month)));
+  const latestBeneficiary = beneficiaryRows[beneficiaryRows.length - 1] || {};
+  return {
+    premium: {
+      value: isFiniteValue(latest?.premium_discount_pct) ? fmt.pct(Number(latest.premium_discount_pct)) : "--",
+      threshold: `黃燈 ≥ ${fmt.pct(Number(settings.premiumDiscountYellowPct ?? 1))}，紅燈 ≥ ${fmt.pct(Number(settings.premiumDiscountRedPct ?? 2))}`,
+      status: calcDailySignal(latest).level,
+    },
+    navLag: {
+      value: latestMarket?.date && latest?.date ? `市價 ${latestMarket.date} / 淨值 ${latest.date}` : "--",
+      threshold: "落後 1 個交易日內正常；2 個交易日以上提醒",
+      status: Number.isFinite(navLagBusinessDays) && navLagBusinessDays >= 2 ? "yellow" : "green",
+    },
+    top10: {
+      value: top10.length ? fmt.pct(top10Total) : "--",
+      threshold: Number(settings.top10ConcentrationYellowPct ?? 75) > 0
+        ? `黃燈 ≥ ${fmt.pct(Number(settings.top10ConcentrationYellowPct ?? 75))}`
+        : "已停用集中度提醒",
+      status: top10.length && Number(settings.top10ConcentrationYellowPct ?? 75) > 0 && top10Total >= Number(settings.top10ConcentrationYellowPct ?? 75) ? "yellow" : "green",
+    },
+    top10Rotation: {
+      value: (() => {
+        const info = getTop10RotationInfo(top10, holdings, state.data?.holdings_history || []);
+        return info.hasPrevious ? `${info.count} 檔` : "尚無前期比較";
+      })(),
+      threshold: Number(settings.top10RotationWarningCount ?? 1) > 0
+        ? `汰換 ≥ ${Math.round(Number(settings.top10RotationWarningCount ?? 1))} 檔提醒`
+        : "已停用汰換提醒",
+      status: (() => {
+        const info = getTop10RotationInfo(top10, holdings, state.data?.holdings_history || []);
+        const threshold = Math.round(Number(settings.top10RotationWarningCount ?? 1));
+        return threshold > 0 && info.hasPrevious && info.count >= threshold ? "yellow" : "green";
+      })(),
+    },
+    beneficiary: {
+      value: latestBeneficiary.month ? `${latestBeneficiary.month}：${fmt.money(Number(latestBeneficiary.beneficiary_count))} 人` : "--",
+      threshold: `連續下降 ${Math.max(1, Math.round(Number(settings.beneficiaryDeclineMonths ?? 3)))} 個月提醒`,
+      status: calcBeneficiarySignalForSummary().level,
+    },
+    tax: {
+      value: dividend.ex_date ? `估算 54C $${fmt.money(estimated54c)}` : "--",
+      threshold: `單次 54C ≥ $${fmt.money(Number(settings.single54cThreshold ?? HEALTH_PREMIUM_THRESHOLD))}`,
+      status: calcTaxSignalForSummary().level,
+    },
+  };
+}
+
+function renderSignalDiagnostics(model = calcCurrentSignalDiagnostics()) {
+  const target = $("signalDiagnosticsBody");
+  if (!target) return;
+  const rows = [
+    ["折溢價", model.premium],
+    ["淨值 / 折溢價日期", model.navLag],
+    ["前十大集中度", model.top10],
+    ["前十大汰換", model.top10Rotation],
+    ["受益人數", model.beneficiary],
+    ["54C / 補充保費", model.tax],
+  ];
+  target.innerHTML = rows.map(([label, item]) => `
+    <tr data-status="${item.status || "green"}">
+      <td>${label}</td>
+      <td>${item.value || "--"}</td>
+      <td>${item.threshold || "--"}</td>
+      <td>${signalText(item.status || "green")}</td>
+    </tr>
+  `).join("");
 }
 
 function isFiniteValue(value) {
@@ -218,13 +442,157 @@ function asNumber(value) {
   return isFiniteValue(value) ? Number(value) : NaN;
 }
 
+function getAum100mValue(row) {
+  if (!row) return NaN;
+  const direct = Number(row.aum_100m_twd);
+  if (Number.isFinite(direct) && direct > 0) return direct;
+  const million = Number(row.aum_million_twd);
+  if (!Number.isFinite(million) || million <= 0) return NaN;
+  // Normal data stores AUM in NT$ million, but some scraped tables already
+  // provide the value in 億.  Treat values below 20,000 as 億 to avoid
+  // showing 3,633 億 as 36.33 億 or 0 億.
+  return million < 20000 ? million : million / 100;
+}
+
+function hasValidAum(row) {
+  return Number.isFinite(getAum100mValue(row));
+}
+
+function latestRowWithValidAum(rows = []) {
+  return [...rows].reverse().find((row) => hasValidAum(row) && !row.aum_is_current_snapshot && row.monthly_aum_status !== "pending") || {};
+}
+
+function getLatestAumSnapshot() {
+  const snap = state.data?.latest_snapshot || {};
+  const snapAum = getAum100mValue(snap);
+  if (Number.isFinite(snapAum)) return { ...snap, aum_100m_twd: snapAum, source: snap.source || "最新快照" };
+  const candidates = snap.candidates || [];
+  const found = candidates.find((row) => Number.isFinite(getAum100mValue(row)));
+  if (found) return { ...found, aum_100m_twd: getAum100mValue(found) };
+  return {};
+}
+
+function pickAumDisplayRow(monthlyRows = []) {
+  const snapshot = getLatestAumSnapshot();
+  if (Number.isFinite(getAum100mValue(snapshot))) return { row: snapshot, isSnapshot: true };
+  const monthly = latestRowWithValidAum(monthlyRows);
+  return { row: monthly, isSnapshot: false };
+}
+
 function getLatestMarketRow(rows = state.data?.daily || []) {
   return [...rows].reverse().find((row) => isFiniteValue(row.market_price)) || {};
 }
 
+function daysBetweenDates(startDate, endDate) {
+  if (!startDate || !endDate) return NaN;
+  const start = new Date(`${startDate}T00:00:00Z`);
+  const end = new Date(`${endDate}T00:00:00Z`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return NaN;
+  return Math.floor((end.getTime() - start.getTime()) / 86400000);
+}
+
+function businessDaysBetweenDates(startDate, endDate) {
+  if (!startDate || !endDate) return NaN;
+  const start = new Date(`${startDate}T00:00:00Z`);
+  const end = new Date(`${endDate}T00:00:00Z`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return NaN;
+  if (end < start) return 0;
+  let count = 0;
+  const cursor = new Date(start);
+  cursor.setUTCDate(cursor.getUTCDate() + 1);
+  while (cursor <= end) {
+    const day = cursor.getUTCDay();
+    if (day !== 0 && day !== 6) count += 1;
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return count;
+}
+
+function getLatestCompleteDailyRow(rows = state.data?.daily || []) {
+  const latestDaily = state.data?.latest_daily || {};
+  if (
+    latestDaily.date &&
+    isFiniteValue(latestDaily.market_price) &&
+    isFiniteValue(latestDaily.nav) &&
+    isFiniteValue(latestDaily.premium_discount_pct)
+  ) {
+    return latestDaily;
+  }
+  return [...rows].reverse().find((row) =>
+    isFiniteValue(row.market_price) &&
+    isFiniteValue(row.nav) &&
+    isFiniteValue(row.premium_discount_pct)
+  ) || latestDaily || rows[rows.length - 1] || {};
+}
+
+
+function normalizeIntegrityWarning(warning = {}) {
+  const label = String(warning.label || "資料欄位").trim() || "資料欄位";
+  const sourceMap = {
+    "日價格歷史": "Yahoo 每日價格歷史資料",
+    "最新交易日": "Yahoo 每日價格最新交易日",
+    "市價": "Yahoo 每日價格 / 即時市價",
+    "淨值": "群益淨值與績效走勢 / MoneyDJ 備援",
+    "折溢價": "系統自行計算（收盤價 - NAV）",
+    "成交量": "Yahoo 每日成交量",
+    "淨值/折溢價更新落後": "MoneyDJ 每日淨值 / 折溢價尚未更新到最新市價交易日",
+    "每月規模歷史": "MoneyDJ 每月規模 / 受益人歷史資料尚未取得",
+    "最新月資料": "MoneyDJ 每月規模 / 受益人尚未更新最新月份資料",
+    "AUM": "MoneyDJ 月度 AUM 尚未補齊；首頁可用群益 / TWSE 最新快照",
+    "受益人數": "MoneyDJ 每月規模 / 受益人尚未更新最新月份資料或受益人數欄位缺值",
+    "配息歷史": "TWSE ETF 配息公告 / 54C 歷史資料",
+    "最新除息日": "TWSE ETF 配息公告尚未更新最新除息日",
+    "每股配息": "TWSE ETF 配息公告每股配息欄位",
+    "54C 組成": "TWSE ETF 配息公告 / 54C 組成欄位",
+    "持股資料日": "MoneyDJ 持股 / 前十大資料日尚未更新",
+    "前十大持股": "MoneyDJ 持股 / 前十大持股明細",
+  };
+  const impactMap = {
+    "日價格歷史": "折溢價圖表、月報酬與首頁市值都無法可靠計算",
+    "最新交易日": "無法判斷每日價格是否過期",
+    "市價": "目前市值、未實現損益、含息報酬會失真",
+    "淨值": "折溢價與淨值線會失真",
+    "折溢價": "每日燈號與折溢價警示會失真",
+    "成交量": "成交量觀察會缺資料",
+    "淨值/折溢價更新落後": "折溢價圖會停在最近完整資料日；落後 1 個交易日不列警示，2 個交易日以上才提醒",
+    "每月規模歷史": "AUM、受益人數與月度健康檢查無法判斷趨勢",
+    "最新月資料": "ETF 規模健康與受益人數趨勢會停在上一個有效月份",
+    "AUM": "ETF 規模健康、AUM 長期趨勢與首頁 AUM 欄位會失真或停留在上一筆有效資料",
+    "受益人數": "受益人數趨勢、月度燈號與首頁受益人數欄位會失真或停留在上一筆有效資料",
+    "配息歷史": "每季配息、年度配息與 54C 統計會缺資料",
+    "最新除息日": "無法判斷最新一季配息資料是否已公布",
+    "每股配息": "本次配息估算與年度配息會失真",
+    "54C 組成": "54C 與補充保費估算會失真",
+    "持股資料日": "無法判斷前十大持股資料是否過期",
+    "前十大持股": "集中度、第一大持股、產業分布與汰換紀錄會缺資料",
+  };
+  return {
+    level: warning.level === "red" ? "red" : "yellow",
+    label,
+    source: warning.source || sourceMap[label] || "整體抓取流程",
+    impact: warning.impact || impactMap[label] || "可能影響相關欄位判斷",
+  };
+}
+
+function formatIntegritySummary(warnings = [], maxItems = 3) {
+  const normalized = (warnings || []).map(normalizeIntegrityWarning);
+  if (!normalized.length) return "關鍵欄位完整";
+  const labels = normalized.slice(0, maxItems).map((warning) => warning.label).join("、");
+  const extra = normalized.length > maxItems ? ` 等 ${normalized.length} 項` : "";
+  return `需檢查：${labels}${extra}`;
+}
+
+function formatIntegrityFullDetail(warnings = []) {
+  const normalized = (warnings || []).map(normalizeIntegrityWarning);
+  if (!normalized.length) return "資料完整性正常：所有關鍵欄位可用。";
+  return normalized
+    .map((warning, index) => `${index + 1}. ${warning.label}｜來源：${warning.source}｜影響：${warning.impact}`)
+    .join("\n");
+}
+
 function collectDataIntegrityWarnings(latest = {}, dividend = {}, latestMonthly = {}, holdings = {}) {
   const warnings = [];
-  const add = (level, label, impact) => warnings.push({ level, label, impact });
+  const add = (level, label, impact, source = null) => warnings.push(normalizeIntegrityWarning({ level, label, impact, source }));
   const dailyRows = state.data?.daily || [];
   const dividendRows = state.data?.dividends || [];
   const monthlyRows = state.data?.monthly_history || state.data?.monthly_size || [];
@@ -238,11 +606,12 @@ function collectDataIntegrityWarnings(latest = {}, dividend = {}, latestMonthly 
   if (!isFiniteValue(latest.volume_lots)) add("yellow", "成交量", "成交量觀察會缺資料");
 
   const latestMarket = getLatestMarketRow(dailyRows);
-  if (latestMarket.date && latest.date && latestMarket.date > latest.date) {
+  const navLagBusinessDays = businessDaysBetweenDates(latest.date, latestMarket.date);
+  if (Number.isFinite(navLagBusinessDays) && navLagBusinessDays >= 2) {
     add(
       "yellow",
       "淨值/折溢價更新落後",
-      `市價已到 ${latestMarket.date}，但淨值與折溢價只到 ${latest.date}，折溢價圖會停在完整資料日`
+      `市價已到 ${latestMarket.date}，但淨值與折溢價只到 ${latest.date}，已落後 ${navLagBusinessDays} 個交易日，折溢價圖會停在完整資料日`
     );
   }
 
@@ -268,19 +637,31 @@ function collectDataIntegrityWarnings(latest = {}, dividend = {}, latestMonthly 
 
 function calcDataIntegrityStatus(latest, dividend, latestMonthly, holdings) {
   const warnings = collectDataIntegrityWarnings(latest, dividend, latestMonthly, holdings);
+  const latestMarket = getLatestMarketRow();
+  const navLagBusinessDays = businessDaysBetweenDates(latest?.date, latestMarket?.date);
+  const navDelayNote = latestMarket?.date && latest?.date && latestMarket.date > latest.date
+    ? `市價 ${latestMarket.date}；淨值/折溢價 ${latest.date}，落後 ${Number.isFinite(navLagBusinessDays) ? navLagBusinessDays : "?"} 個交易日`
+    : "關鍵欄位完整";
+
   if (!warnings.length) {
     return {
-      status: { label: "正常", className: "green", note: "關鍵欄位完整" },
+      status: {
+        label: "正常",
+        className: "green",
+        note: navDelayNote,
+        detail: "資料完整性正常：所有關鍵欄位可用。",
+      },
       warnings,
     };
   }
+
   const hasRed = warnings.some((warning) => warning.level === "red");
-  const firstItems = warnings.slice(0, 2).map((warning) => warning.label).join("、");
   return {
     status: {
       label: hasRed ? "嚴重缺漏" : "需檢查",
       className: hasRed ? "red" : "yellow",
-      note: `${warnings.length} 項：${firstItems}`,
+      note: formatIntegritySummary(warnings),
+      detail: formatIntegrityFullDetail(warnings),
     },
     warnings,
   };
@@ -296,52 +677,43 @@ function calcDataIntegritySignalForSummary(latest) {
   const integrity = calcDataIntegrityStatus(latest, dividend, latestMonthly, holdings);
   if (!integrity.warnings.length) return { level: "green", reason: "資料完整性正常" };
   const level = integrity.warnings.some((warning) => warning.level === "red") ? "red" : "yellow";
-  const firstWarning = integrity.warnings[0];
+  const firstWarning = normalizeIntegrityWarning(integrity.warnings[0]);
   return {
     level,
-    reason: `資料完整性：缺少 ${firstWarning.label}，${firstWarning.impact}，請看首頁資料更新狀態。`,
+    reason: `資料完整性：${firstWarning.label} 需檢查（${firstWarning.source}），${firstWarning.impact}。`,
   };
 }
 
 function calcDashboardSignal(latest) {
+  // UI26: 主燈號重新納入「燈號設定」中可調整的核心觀察項。
+  // 市價與淨值/折溢價差 1 個交易日仍視為正常；落後 2 個交易日以上才提醒。
   const checks = [
     {
       ...calcDailySignal(latest),
-      summaryReason: (signal) => `每日總覽：${signal.reason}，請看每日圖表的折溢價與成交量。`,
+      summaryReason: (signal) => `折溢價：${signal.reason}`,
+    },
+    {
+      ...calcHoldingSignalForSummary(),
+      summaryReason: (signal) => signal.reason,
+    },
+    {
+      ...calcBeneficiarySignalForSummary(),
+      summaryReason: (signal) => signal.reason,
+    },
+    {
+      ...calcTaxSignalForSummary(),
+      summaryReason: (signal) => signal.reason,
     },
   ];
 
-  checks.push({
-    ...calcDataIntegritySignalForSummary(latest),
-    summaryReason: (signal) => signal.reason,
-  });
-
-  if (typeof calcMonthlyReturnRows === "function" && typeof calcMonthlySignal === "function") {
-    const monthlyRows = calcMonthlyReturnRows(
-      state.data.monthly_history || [],
-      state.data.daily || [],
-      state.trades || [],
-      state.data.dividends || []
-    );
+  const integrity = calcDataIntegritySignalForSummary(latest);
+  // 資料完整性只有「紅燈等級」才拉動主燈號；一般黃燈提醒留在資料更新狀態區。
+  if (integrity.level === "red") {
     checks.push({
-      ...calcMonthlySignal(monthlyRows),
-      summaryReason: (signal) => `每月：${signal.reason} 請到每月頁查看含息報酬與 ETF 規模健康。`,
+      ...integrity,
+      summaryReason: (signal) => signal.reason,
     });
   }
-
-  if (typeof calcYearlyTaxRows === "function" && typeof calcYearlyTaxSignal === "function") {
-    const yearlyRows = calcYearlyTaxRows(state.data.dividends || [], state.trades || []);
-    checks.push({
-      ...calcYearlyTaxSignal(yearlyRows),
-      summaryReason: (signal) => `每年：${signal.reason} 請到每年頁查看 54C 與補充保費。`,
-    });
-  }
-
-  const holdingSignal = calcHoldingSignalForSummary();
-  checks.push({
-    ...holdingSignal,
-    summaryReason: (signal) => signal.reason,
-  });
 
   const abnormal = checks
     .filter((item) => signalSeverity(item.level) > 0)
@@ -353,7 +725,7 @@ function calcDashboardSignal(latest) {
 
   const level = abnormal.some((item) => item.level === "red") ? "red" : "yellow";
   const reason = abnormal
-    .slice(0, 3)
+    .slice(0, 2)
     .map((item) => (typeof item.summaryReason === "function" ? item.summaryReason(item) : item.reason))
     .join("；");
   return { level, reason };
@@ -365,9 +737,10 @@ function setText(id, value) {
 }
 
 async function loadData() {
-  const [dashboardResponse, tradesResponse] = await Promise.all([
+  const [dashboardResponse, tradesResponse, dailyHistoryResponse] = await Promise.all([
     fetch(`data/dashboard_data.json?ts=${Date.now()}`),
     fetch(`data/trades.json?ts=${Date.now()}`),
+    fetch(`data/daily_history.json?ts=${Date.now()}`).catch(() => null),
   ]);
   if (!dashboardResponse.ok) {
     throw new Error(`資料檔讀取失敗：HTTP ${dashboardResponse.status}`);
@@ -376,8 +749,12 @@ async function loadData() {
     throw new Error(`交易紀錄讀取失敗：HTTP ${tradesResponse.status}`);
   }
   state.data = await dashboardResponse.json();
-  const storedTrades = localStorage.getItem("00919_trades");
-  state.trades = normalizeTrades(storedTrades ? JSON.parse(storedTrades) : await tradesResponse.json());
+  state.dailyHistory = dailyHistoryResponse && dailyHistoryResponse.ok ? await dailyHistoryResponse.json() : {};
+  const serverTrades = normalizeTrades(await tradesResponse.json());
+  state.trades = serverTrades;
+  if (window.__00919_TRADES_SOURCE?.message) {
+    console.info(`[00919] ${window.__00919_TRADES_SOURCE.message}`);
+  }
   saveTrades();
   render();
 }
@@ -420,8 +797,7 @@ function bindInputs() {
   $("refreshButton").addEventListener("click", () => refreshDashboardData());
   $("homeRefreshButton")?.addEventListener("click", () => refreshDashboardData());
   $("mobileRefreshButton")?.addEventListener("click", () => refreshDashboardData());
-  $("desktopRefreshButton")?.addEventListener("click", () => refreshDashboardData());
-  $("desktopStatusRefreshButton")?.addEventListener("click", () => refreshDashboardData());
+  bindQuickModuleActions();
   $("rangeSelect").addEventListener("change", () => render());
   $("mobileRangeSelect")?.addEventListener("change", () => render());
   $("desktopRangeSelect")?.addEventListener("change", () => render());
@@ -434,6 +810,23 @@ function bindInputs() {
     }
   }, 150));
   bindTradeForm();
+  bindMobileQuickTradeForm();
+}
+
+function bindQuickModuleActions() {
+  document.querySelectorAll(".desktop-home .desktop-action-button[href^='#']").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      const targetHash = button.getAttribute("href");
+      const target = targetHash ? document.querySelector(targetHash) : null;
+      if (!target) return;
+      event.preventDefault();
+      if (typeof window.showDashboardPage === "function") {
+        window.showDashboardPage(targetHash);
+        return;
+      }
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
 }
 
 function debounce(callback, wait) {
@@ -444,14 +837,197 @@ function debounce(callback, wait) {
   };
 }
 
+function requestStreamlitUpdate() {
+  if (!window.__00919_STREAMLIT_EMBED) return false;
+
+  try {
+    const parentUrl = new URL(window.parent.location.href);
+    parentUrl.searchParams.set("run_update", "1");
+    parentUrl.searchParams.set("update_ts", String(Date.now()));
+    window.parent.location.href = parentUrl.toString();
+    return true;
+  } catch (error) {
+    console.error(error);
+    alert("請使用頁面左上角綠底的更新資料按鈕，讓 Streamlit 執行完整資料更新。");
+    return true;
+  }
+}
+
+function encodeBase64Url(text) {
+  const bytes = new TextEncoder().encode(text);
+  let binary = "";
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function createClientRequestId() {
+  if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+  return `req-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+
+function todayIsoDate() {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  return now.toISOString().slice(0, 10);
+}
+
+function bindMobileQuickTradeForm() {
+  const form = $("mobileQuickTradeForm");
+  if (!form) return;
+
+  const dateInput = $("mobileQuickTradeDate");
+  if (dateInput && !dateInput.value) dateInput.value = todayIsoDate();
+
+  const radios = Array.from(form.querySelectorAll('.mobile-trade-radio input[name="mobileQuickTradeAction"]'));
+  const syncRadioState = () => {
+    radios.forEach((input) => input.closest(".mobile-trade-radio")?.classList.toggle("active", input.checked));
+  };
+  radios.forEach((input) => input.addEventListener("change", syncRadioState));
+  syncRadioState();
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const action = form.querySelector('input[name="mobileQuickTradeAction"]:checked')?.value || "buy";
+    const tradeDate = normalizeTradeDate($("mobileQuickTradeDate")?.value);
+    const shares = Number($("mobileQuickTradeShares")?.value || 0);
+    const price = Number($("mobileQuickTradePrice")?.value || 0);
+    const noteType = $("mobileQuickTradeNoteType")?.value || "其他";
+    const note = ($("mobileQuickTradeNote")?.value || "").trim();
+    const status = $("mobileQuickTradeStatus");
+    const submit = $("mobileQuickTradeSubmit");
+
+    if (!tradeDate || !shares || !price || shares <= 0 || price <= 0) {
+      if (status) status.textContent = "請確認日期、股數與成交價都已正確填寫。";
+      return;
+    }
+
+    const trade = {
+      id: `mobile-trade-${Date.now()}`,
+      client_request_id: createClientRequestId(),
+      trade_date: tradeDate,
+      action,
+      shares,
+      price,
+      fee: 0,
+      tax: 0,
+      note_type: noteType,
+      note,
+      source: "mobile_home_quick_form",
+      created_at: new Date().toISOString(),
+    };
+
+    if (submit) {
+      submit.disabled = true;
+      submit.classList.add("is-loading");
+      submit.textContent = "寫入中...";
+    }
+    if (status) status.textContent = "正在寫入 Google Sheets，完成後會自動重新整理。";
+
+    if (!requestStreamlitTradeAppend(trade)) {
+      if (submit) {
+        submit.disabled = false;
+        submit.classList.remove("is-loading");
+        submit.textContent = "新增交易並寫入 Google Sheets";
+      }
+      if (status) status.textContent = "目前環境無法直接寫入，請改用電腦版新增交易頁。";
+    }
+  });
+}
+
+function requestStreamlitTradeSync(trades = state.trades, reason = "trade-edit") {
+  if (!window.__00919_STREAMLIT_EMBED) return false;
+
+  try {
+    let baseHref = "";
+    try {
+      baseHref = window.parent.location.href;
+    } catch (_) {
+      baseHref = document.referrer || window.location.href;
+    }
+    const parentUrl = new URL(baseHref || window.location.href);
+    const form = document.createElement("form");
+    form.method = "GET";
+    form.target = "_top";
+    form.action = `${parentUrl.origin}${parentUrl.pathname}`;
+
+    Object.entries({
+      sync_trades: encodeBase64Url(JSON.stringify(trades || [])),
+      sync_reason: reason,
+      sync_ts: String(Date.now()),
+    }).forEach(([name, value]) => {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+    return true;
+  } catch (error) {
+    console.error(error);
+    alert("交易紀錄已先儲存在這台裝置；瀏覽器擋下雲端同步，請先匯出資料備份。");
+    return false;
+  }
+}
+
+function requestStreamlitTradeAppend(trade) {
+  if (!window.__00919_STREAMLIT_EMBED) return false;
+
+  try {
+    let baseHref = "";
+    try {
+      baseHref = window.parent.location.href;
+    } catch (_) {
+      baseHref = document.referrer || window.location.href;
+    }
+    const parentUrl = new URL(baseHref || window.location.href);
+    const form = document.createElement("form");
+    form.method = "GET";
+    form.target = "_top";
+    form.action = `${parentUrl.origin}${parentUrl.pathname}`;
+
+    Object.entries({
+      append_trade: encodeBase64Url(JSON.stringify(trade || {})),
+      append_ts: String(Date.now()),
+    }).forEach(([name, value]) => {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+    return true;
+  } catch (error) {
+    console.error(error);
+    alert("交易寫入請求送出失敗，請改用電腦版新增交易頁。");
+    return false;
+  }
+}
+
 async function refreshDashboardData() {
   const buttons = [
     $("refreshButton"),
     $("homeRefreshButton"),
     $("mobileRefreshButton"),
-    $("desktopRefreshButton"),
-    $("desktopStatusRefreshButton"),
   ].filter(Boolean);
+  if (requestStreamlitUpdate()) {
+    buttons.forEach((button) => {
+      button.disabled = true;
+      button.classList.add("is-loading");
+      button.textContent = "更新中";
+    });
+    setText("freshFetchedStatus", "更新中");
+    setText("freshFetchedAt", "正在交給 Streamlit 執行完整資料更新");
+    return;
+  }
   buttons.forEach((button) => {
     button.disabled = true;
     button.classList.add("is-loading");
@@ -513,10 +1089,210 @@ async function refreshDashboardData() {
     });
   }
 }
+
+function hasMaintenanceValue(value) {
+  if (value === null || value === undefined) return false;
+  if (typeof value === "number") return Number.isFinite(value);
+  const text = String(value).trim();
+  return text !== "" && text !== "--" && text.toLowerCase() !== "nan" && text.toLowerCase() !== "none" && text.toLowerCase() !== "n/a";
+}
+
+function getHistoryRows() {
+  const raw = state.dailyHistory || {};
+  const rows = Array.isArray(raw) ? raw : Object.values(raw);
+  return rows
+    .filter((row) => row && hasMaintenanceValue(row.date))
+    .sort((a, b) => String(b.date).localeCompare(String(a.date)));
+}
+
+function maintenanceNavValue(row) {
+  if (!row) return null;
+  if (hasMaintenanceValue(row.official_nav)) return Number(row.official_nav);
+  if (hasMaintenanceValue(row.nav)) return Number(row.nav);
+  return null;
+}
+
+function maintenancePriceValue(row) {
+  if (!row) return null;
+  if (hasMaintenanceValue(row.market_close)) return Number(row.market_close);
+  if (hasMaintenanceValue(row.market_price)) return Number(row.market_price);
+  return null;
+}
+
+function maintenanceFmt(value, digits = 2) {
+  if (!hasMaintenanceValue(value)) return '<span class="dm-missing">缺</span>';
+  const num = Number(value);
+  if (Number.isFinite(num)) return num.toLocaleString("zh-TW", { maximumFractionDigits: digits, minimumFractionDigits: digits });
+  return String(value);
+}
+
+const SOURCE_TOOLTIP_INFO = {
+  "群益": "群益官網：00919 官方資料確認來源；NAV、持股、配息公告與投資組合以官方公布為最後依據。",
+  "MoneyDJ": "MoneyDJ：較快補上配息事件、月度規模、受益人或持股資料；若早於官方，先標示 pending / 待官方確認。",
+  "TWSE ETF e添富": "TWSE e添富：54C、收益平準金、資本利得與 ETF 配息公告組成資料的主要來源。",
+  "TWSE": "TWSE：證交所公開資料；用於 ETF 公告、54C 組成、配息與部分交易資料驗證。",
+  "Yahoo": "Yahoo：每日市價與成交量備援；用於收盤價、成交量與圖表資料補齊。",
+  "Google Sheets": "Google Sheets：交易紀錄唯一正式資料庫；前端 JSON 只作快取與顯示。",
+  "navs.xlsx": "navs.xlsx：手動匯入的歷史 NAV 底稿；用於補齊 MoneyDJ 近 30 日以外的長期 NAV。",
+};
+
+function sourceTooltipClassName(label) {
+  if (/群益/.test(label)) return "capital";
+  if (/MoneyDJ/.test(label)) return "moneydj";
+  if (/TWSE/.test(label)) return "twse";
+  if (/Yahoo/.test(label)) return "yahoo";
+  return "generic";
+}
+
+function sourceTooltipHtml(value) {
+  const raw = String(value ?? "");
+  if (!raw) return "";
+  const escaped = escapeHtml(raw);
+  const pattern = /TWSE ETF e添富|Google Sheets|MoneyDJ|navs\.xlsx|TWSE|群益|Yahoo/g;
+  return escaped.replace(pattern, (match) => {
+    const title = SOURCE_TOOLTIP_INFO[match] || SOURCE_TOOLTIP_INFO[match.replace(" ETF e添富", "")] || "資料來源說明";
+    return `<span class="source-hint source-hint--${sourceTooltipClassName(match)}" title="${escapeHtml(title)}">${match}</span>`;
+  });
+}
+
+function maintenanceFmtText(value) {
+  return hasMaintenanceValue(value) ? sourceTooltipHtml(value) : '<span class="dm-missing">缺</span>';
+}
+
+function maintenanceAumValue(row) {
+  if (!row || row.monthly_aum_status === "pending" || row.aum_pending || row.aum_is_current_snapshot) return null;
+  const direct = Number(row.aum_100m_twd);
+  if (Number.isFinite(direct) && direct > 0) return direct;
+  const million = Number(row.aum_million_twd);
+  if (!Number.isFinite(million) || million <= 0) return null;
+  return million < 20000 ? million : million / 100;
+}
+
+
+function sourceInventoryRule(item) {
+  const baseText = [item?.label, item?.primary, Array.isArray(item?.fields) ? item.fields.join("、") : item?.fields].filter(Boolean).join(" ");
+  const text = String(baseText || "");
+  const existing = item?.rule;
+  if (hasMaintenanceValue(existing)) return String(existing);
+  if (/配息|54C|收益平準金|資本利得/.test(text)) return "MoneyDJ 先抓最新配息事件；TWSE 補 54C / 收益平準金 / 資本利得；群益官網作官方確認，來源需標註 pending / complete。";
+  if (/AUM|受益人|月度|規模/.test(text)) return "MoneyDJ 月表為主；受益人可先更新，AUM 若 N/A 顯示待補；最新快照不得覆蓋月度 AUM。";
+  if (/持股|前十大|成分|汰換/.test(text)) return "其他來源可先顯示最新持股或汰換訊息；正式判讀仍以群益官網公告為主，並保留來源註記。";
+  if (/淨值|NAV|折溢價|市價|收盤|每日/.test(text)) return "每日市價 / NAV / 折溢價寫入 daily_history；主來源優先，備援只補缺口，舊有效資料不被空值覆蓋。";
+  if (/交易|Google Sheets|Sheets/.test(text)) return "Google Sheets 為唯一交易資料庫；本機 JSON 只作快取與前端顯示，不反向覆蓋正式交易庫。";
+  return "主來源優先，備援只補缺口；保留來源、狀態與更新時間，避免空值覆蓋有效舊資料。";
+}
+
+function renderDataMaintenanceSources() {
+  const body = $("dmSourceTableBody");
+  if (!body) return;
+  const inv = state.data?.source_inventory || {};
+  const rows = Object.values(inv);
+  body.innerHTML = rows.length ? rows.map((item) => `
+    <tr>
+      <td>${maintenanceFmtText(item.label)}</td>
+      <td>${maintenanceFmtText(item.primary)}</td>
+      <td>${Array.isArray(item.fallback) ? sourceTooltipHtml(item.fallback.join(" / ")) : maintenanceFmtText(item.fallback)}</td>
+      <td>${maintenanceFmtText(item.trust)}</td>
+      <td>${maintenanceFmtText(item.stability)}</td>
+      <td>${Array.isArray(item.fields) ? sourceTooltipHtml(item.fields.join("、")) : maintenanceFmtText(item.fields)}</td>
+      <td>${maintenanceFmtText(sourceInventoryRule(item))}</td>
+    </tr>
+  `).join("") : '<tr><td colspan="7">尚未建立資料來源規劃。</td></tr>';
+
+  const snapshot = getLatestAumSnapshot();
+  const aum = getAum100mValue(snapshot);
+  setText("dmLatestSnapshotAum", Number.isFinite(aum) ? `${fmt.money(aum)} 億` : "--");
+  setText("dmLatestSnapshotDate", snapshot.data_date || "--");
+  setText("dmLatestSnapshotSource", snapshot.source || "--");
+}
+
+function renderDataMaintenanceMonthly() {
+  const body = $("dmMonthlyTableBody");
+  if (!body) return;
+  const rows = (state.data?.monthly_history || state.data?.monthly_size || [])
+    .filter((row) => row && row.month)
+    .sort((a, b) => String(b.month).localeCompare(String(a.month)))
+    .slice(0, 18);
+  body.innerHTML = rows.length ? rows.map((row) => {
+    const aum = maintenanceAumValue(row);
+    const status = row.monthly_aum_status || (Number.isFinite(aum) ? "complete" : (hasMaintenanceValue(row.beneficiary_count) ? "pending" : "missing"));
+    const statusText = status === "complete" ? "完整" : status === "pending" ? "AUM 待補" : "缺";
+    const reasonText = status === "complete"
+      ? "—"
+      : hasMaintenanceValue(row.aum_pending_reason)
+      ? String(row.aum_pending_reason)
+      : status === "pending"
+      ? "受益人已更新，月度 AUM 等待來源補齊"
+      : "月度 AUM / 受益人資料缺漏";
+    return `<tr>
+      <td>${maintenanceFmtText(row.month)}</td>
+      <td>${maintenanceFmt(row.beneficiary_count, 0)}</td>
+      <td>${maintenanceFmt(row.beneficiary_change_pct, 2)}</td>
+      <td>${Number.isFinite(aum) ? `${maintenanceFmt(aum, 2)} 億` : '<span class="dm-missing dm-missing-text">待補</span>'}</td>
+      <td>${maintenanceFmtText(row.monthly_aum_source)}</td>
+      <td>${maintenanceFmtText(row.beneficiary_source || row.source)}</td>
+      <td>${statusText}</td>
+      <td class="dm-reason-cell">${reasonText}</td>
+    </tr>`;
+  }).join("") : '<tr><td colspan="8">尚未建立 monthly_history.json</td></tr>';
+}
+
+function renderDataMaintenance() {
+  renderDataMaintenanceSources();
+  renderDataMaintenanceMonthly();
+  const tableBody = $("dmDailyTableBody");
+  if (!tableBody) return;
+  const rows = getHistoryRows();
+  const navRows = rows.filter((row) => maintenanceNavValue(row) !== null);
+  const priceRows = rows.filter((row) => maintenancePriceValue(row) !== null);
+  const premiumRows = rows.filter((row) => hasMaintenanceValue(row.premium_discount_pct));
+  const latestNavDate = navRows.length ? navRows[0].date : "--";
+  setText("dmNavCount", fmt.money(navRows.length));
+  setText("dmPriceCount", fmt.money(priceRows.length));
+  setText("dmPremiumCount", fmt.money(premiumRows.length));
+  setText("dmLatestNavDate", latestNavDate || "--");
+
+  const missingNav = rows.filter((row) => maintenancePriceValue(row) !== null && maintenanceNavValue(row) === null).map((row) => row.date);
+  const missingPrice = rows.filter((row) => maintenanceNavValue(row) !== null && maintenancePriceValue(row) === null).map((row) => row.date);
+  const gapTotal = missingNav.length + missingPrice.length;
+  const gapBadge = $("dmGapBadge");
+  if (gapBadge) {
+    gapBadge.textContent = gapTotal ? `${gapTotal} 筆需補` : "無缺漏";
+    gapBadge.className = `dm-gap-badge ${gapTotal ? "warn" : "ok"}`;
+  }
+  setText("dmGapSummary", `缺 NAV：${missingNav.length ? missingNav.slice(0, 12).join("、") : "無"} ｜ 缺收盤價：${missingPrice.length ? missingPrice.slice(0, 12).join("、") : "無"}`);
+
+  const preview = rows.slice(0, 30);
+  if (!preview.length) {
+    tableBody.innerHTML = '<tr><td colspan="15">尚未建立 daily_history.json</td></tr>';
+    return;
+  }
+  tableBody.innerHTML = preview.map((row) => {
+    const estimated = row.is_estimated_nav === true || row.is_estimated_nav === "true" || row.is_estimated_nav === 1;
+    return `<tr>
+      <td>${maintenanceFmtText(row.date)}</td>
+      <td>${maintenanceFmt(row.market_price, 2)}</td>
+      <td>${maintenanceFmt(row.market_close, 2)}</td>
+      <td>${maintenanceFmt(row.adjusted_close, 2)}</td>
+      <td>${maintenanceFmt(row.volume_shares, 0)}</td>
+      <td>${maintenanceFmt(row.volume_lots, 0)}</td>
+      <td>${maintenanceFmtText(row.price_source)}</td>
+      <td>${maintenanceFmt(row.official_nav, 2)}</td>
+      <td>${maintenanceFmt(row.nav, 2)}</td>
+      <td>${maintenanceFmtText(row.nav_source)}</td>
+      <td>${hasMaintenanceValue(row.is_estimated_nav) ? (estimated ? "是" : "否") : '<span class="dm-missing">缺</span>'}</td>
+      <td>${maintenanceFmt(row.premium_discount_amount, 2)}</td>
+      <td>${maintenanceFmt(row.premium_discount_pct, 4)}</td>
+      <td>${maintenanceFmtText(row.premium_source)}</td>
+      <td>${maintenanceFmtText(row.updated_at)}</td>
+    </tr>`;
+  }).join("");
+}
+
 function render() {
   if (!state.data) return;
 
-  const latest = state.data.latest_daily || {};
+  const latest = getLatestCompleteDailyRow();
   const latestMarket = getLatestMarketRow();
   const latestForPrice = latestMarket.date ? { ...latest, ...latestMarket } : latest;
   const dividend = state.data.latest_dividend || {};
@@ -560,6 +1336,7 @@ function render() {
   const freshnessModel = getFreshnessModel(latest, dividend, latestForPrice);
   renderDataFreshness(latest, dividend, freshnessModel);
   renderHomeFocus(position, latestForPrice, dividend, totalReturn, totalCost);
+  renderSignalDiagnostics();
   const renderModel = {
     latest,
     latestForPrice,
@@ -581,6 +1358,8 @@ function render() {
   };
   renderDesktopHome(renderModel);
   renderMobileHome(renderModel);
+  renderRecentAnomalySummary(freshnessModel, signals);
+  renderDataMaintenance();
 
   renderTradeTable(position, latestForPrice);
   renderQuarterlyDividends(state.data.dividends || [], state.trades || []);
@@ -703,6 +1482,13 @@ function renderDataFreshness(latest, dividend, model = getFreshnessModel(latest,
   setText("freshFetchedAt", model.fetchedAt ? `${model.fetchedAtDisplay} / ${model.fetched.note}` : "--");
   setFreshness("freshIntegrity", model.integrity.status);
   setText("freshIntegrityNote", model.integrity.status.note);
+  const integrityDetail = model.integrity.status.detail || formatIntegrityFullDetail(model.integrity.warnings);
+  const mobileIntegrity = $("mobileIntegrityDetail");
+  if (mobileIntegrity) {
+    mobileIntegrity.textContent = integrityDetail;
+    mobileIntegrity.dataset.status = model.integrity.status.className || "green";
+    mobileIntegrity.hidden = false;
+  }
 }
 
 function statusRank(status) {
@@ -728,6 +1514,14 @@ function statusLine(status) {
   return `● ${status.label}　${status.note}`;
 }
 
+function formatStatusShort(status, count = 0) {
+  const level = status?.className || status?.level || "unknown";
+  if (level === "green") return "正常";
+  if (level === "yellow") return count > 0 ? `需留意 ${count} 項` : "需留意";
+  if (level === "red") return count > 0 ? `異常 ${count} 項` : "異常";
+  return "待確認";
+}
+
 function setMobileMetric(id, valueId, statusId, value, status) {
   const tile = document.querySelector(`[data-mobile-metric="${id}"]`) || $(valueId)?.closest(".core-metric-tile");
   if (tile) tile.dataset.status = status.className || "unknown";
@@ -739,7 +1533,7 @@ function setDesktopMetric(id, valueId, statusId, value, status) {
   const tile = document.querySelector(`[data-desktop-metric="${id}"]`) || $(valueId)?.closest(".core-metric-tile");
   if (tile) tile.dataset.status = status.className || "unknown";
   setText(valueId, value);
-  setText(statusId, statusLine(status));
+  setText(statusId, "");
 }
 
 function buildMobileMetricStatusMap(freshnessModel, position) {
@@ -798,23 +1592,35 @@ function renderMobileCoreMetrics(model) {
   }
 }
 
+function formatDividendFocusNote(dividend, estimatedDividendCash) {
+  if (!dividend?.ex_date) return "--";
+  const lines = [`除息 ${dividend.ex_date} / 估 $${fmt.money(estimatedDividendCash)}`];
+  if (dividend.pay_date) lines.push(`發放 ${dividend.pay_date}`);
+  return lines.join("\n");
+}
+
 function renderMobileFocusCards({ position, dividend, totalReturn, totalCost, freshnessModel }) {
   const totalReturnRate = totalCost ? (totalReturn / totalCost) * 100 : 0;
   setText("mobileFocusTotalReturn", `$${fmt.money(totalReturn)}`);
-  setText("mobileFocusTotalReturnRate", fmt.pct(totalReturnRate));
+  setText("mobileFocusTotalReturnRate", `未實現報酬 ${fmt.pct(totalReturnRate)}`);
 
   const dividendPerShare = Number(dividend.dividend_per_share || 0);
   const dividendShares = dividend.ex_date ? calcSharesOnDate(state.trades || [], dividend.ex_date) : position.holdingShares;
   const estimatedDividendCash = dividendShares * dividendPerShare;
   setText("mobileFocusDividend", dividendPerShare ? `${fmt.money(dividendPerShare, 2)} 元` : "--");
-  setText("mobileFocusDividendNote", dividend.ex_date ? `除息 ${dividend.ex_date} / 估 $${fmt.money(estimatedDividendCash)}` : "--");
+  setText("mobileFocusDividendNote", formatDividendFocusNote(dividend, estimatedDividendCash));
 
-  const latestSize = freshnessModel.latestMonthly || {};
-  const aumMillion = Number(latestSize.aum_million_twd || Number(latestSize.aum_100m_twd) * 100);
+  const monthlySizeRows = (state.data?.monthly_history || state.data?.monthly_size || [])
+    .filter((row) => row.month && (row.aum_million_twd != null || row.aum_100m_twd != null || row.beneficiary_count != null))
+    .sort((a, b) => String(a.month).localeCompare(String(b.month)));
+  const latestSize = freshnessModel.latestMonthly || monthlySizeRows[monthlySizeRows.length - 1] || {};
+  const aumDisplay = pickAumDisplayRow(monthlySizeRows);
+  const latestAum = aumDisplay.row || {};
+  const aum100m = getAum100mValue(latestAum);
   setText("mobileFocusBeneficiaries", Number.isFinite(Number(latestSize.beneficiary_count)) ? `${fmt.money(Number(latestSize.beneficiary_count))} 人` : "--");
   setText("mobileFocusBeneficiariesNote", Number.isFinite(Number(latestSize.beneficiary_change_pct)) ? `月變化 ${fmt.pct(Number(latestSize.beneficiary_change_pct))}` : "--");
-  setText("mobileFocusAum", Number.isFinite(aumMillion) ? `${fmt.money(aumMillion / 100)} 億` : "--");
-  setText("mobileFocusAumNote", latestSize.month || "--");
+  setText("mobileFocusAum", Number.isFinite(aum100m) ? `${fmt.money(aum100m)} 億` : "--");
+  setText("mobileFocusAumNote", aumDisplay.isSnapshot ? `最新快照 ${latestAum.data_date || latestAum.source || "--"}` : (latestAum.month || latestSize.month || "--"));
 
   const holdings = freshnessModel.holdingsData || {};
   const top10 = holdings.top10 || [];
@@ -822,7 +1628,7 @@ function renderMobileFocusCards({ position, dividend, totalReturn, totalCost, fr
   setText("mobileFocusTop10", top10.length ? fmt.pct(top10Total) : "--");
   setText("mobileFocusTop10Note", holdings.data_date ? `資料日 ${holdings.data_date}` : "--");
   setText("mobileFocusTopHolding", top10[0] ? `${top10[0].name} ${top10[0].code || ""}` : "--");
-  setText("mobileFocusTopHoldingNote", top10[0] ? fmt.pct(Number(top10[0].weight_pct || 0)) : "--");
+  setText("mobileFocusTopHoldingNote", top10[0] ? `持股占比 ${fmt.pct(Number(top10[0].weight_pct || 0))}` : "--");
 }
 
 function renderMobileHome(model) {
@@ -845,12 +1651,14 @@ function renderDesktopHero({ signals, freshnessModel, shares, totalReturn, total
   const level = signals.level || "yellow";
   const orb = $("desktopSignalOrb");
   const sidebarDot = document.querySelector(".sidebar-signal__dot");
+  const warningCount = freshnessModel.integrity?.warnings?.length || 0;
+  const shortReason = level === "green" ? "所有數據正常" : formatStatusShort({ className: level }, warningCount || 1);
   if (orb) orb.className = `desktop-hero__orb ${level}`;
   if (sidebarDot) sidebarDot.dataset.status = level;
   setText("desktopSignalLabel", signalText(level));
-  setText("desktopSignalReason", level === "green" ? "所有數據正常" : signals.reason || "請檢查資料");
+  setText("desktopSignalReason", shortReason);
   setText("sidebarSignalLabel", signalText(level));
-  setText("sidebarSignalReason", level === "green" ? "所有數據正常" : signals.reason || "請檢查資料");
+  setText("sidebarSignalReason", shortReason);
   setText("desktopFetchedAt", `資料更新時間 ${formatFetchedAt(state.data.fetched_at)}`);
   const chip = $("desktopFetchedAt");
   if (chip) chip.className = `ui-status-chip hero-time-chip ui-status-chip--${freshnessModel.fetched.className}`;
@@ -899,14 +1707,19 @@ function renderDesktopFocusCards({ position, dividend, totalReturn, totalCost, f
   const dividendShares = dividend.ex_date ? calcSharesOnDate(state.trades || [], dividend.ex_date) : position.holdingShares;
   const estimatedDividendCash = dividendShares * dividendPerShare;
   setText("desktopFocusDividend", dividendPerShare ? `${fmt.money(dividendPerShare, 2)} 元` : "--");
-  setText("desktopFocusDividendNote", dividend.ex_date ? `除息 ${dividend.ex_date} / 估 $${fmt.money(estimatedDividendCash)}` : "--");
+  setText("desktopFocusDividendNote", formatDividendFocusNote(dividend, estimatedDividendCash));
 
-  const latestSize = freshnessModel.latestMonthly || {};
-  const aumMillion = Number(latestSize.aum_million_twd || Number(latestSize.aum_100m_twd) * 100);
+  const monthlySizeRows = (state.data?.monthly_history || state.data?.monthly_size || [])
+    .filter((row) => row.month && (row.aum_million_twd != null || row.aum_100m_twd != null || row.beneficiary_count != null))
+    .sort((a, b) => String(a.month).localeCompare(String(b.month)));
+  const latestSize = freshnessModel.latestMonthly || monthlySizeRows[monthlySizeRows.length - 1] || {};
+  const aumDisplay = pickAumDisplayRow(monthlySizeRows);
+  const latestAum = aumDisplay.row || {};
+  const aum100m = getAum100mValue(latestAum);
   setText("desktopFocusBeneficiaries", Number.isFinite(Number(latestSize.beneficiary_count)) ? `${fmt.money(Number(latestSize.beneficiary_count))} 人` : "--");
   setText("desktopFocusBeneficiariesNote", Number.isFinite(Number(latestSize.beneficiary_change_pct)) ? `月變化 ${fmt.pct(Number(latestSize.beneficiary_change_pct))}` : "--");
-  setText("desktopFocusAum", Number.isFinite(aumMillion) ? `${fmt.money(aumMillion / 100)} 億` : "--");
-  setText("desktopFocusAumNote", latestSize.month || "--");
+  setText("desktopFocusAum", Number.isFinite(aum100m) ? `${fmt.money(aum100m)} 億` : "--");
+  setText("desktopFocusAumNote", aumDisplay.isSnapshot ? `最新快照 ${latestAum.data_date || latestAum.source || "--"}` : (latestAum.month || latestSize.month || "--"));
 
   const holdings = freshnessModel.holdingsData || {};
   const top10 = holdings.top10 || [];
@@ -949,36 +1762,71 @@ function renderDesktopModuleCards(model) {
   const latestYear = String(model.latestForPrice?.date || model.latest?.date || new Date().getFullYear()).slice(0, 4);
   const yearlyDividend = calcYearlyDividendTotal(latestYear);
   const yearly54c = calcYearly54cTotal(latestYear);
+  const integrityWarnings = model.freshnessModel.integrity?.warnings || [];
+  const signalSummary = model.signals.level === "green"
+    ? "所有數據正常"
+    : formatStatusShort({ className: model.signals.level }, Math.max(1, integrityWarnings.length));
+  const moduleCards = document.querySelectorAll(".desktop-module-card");
+  const moduleLabels = [
+    ["每月健康檢查", "12 項", "前往檢視"],
+    ["季度配息 / 54C", dividendPerShare ? `${fmt.money(dividendPerShare, 2)} 元` : "--", "前往檢視"],
+    ["持股檢視", top10[0] ? `${top10[0].name} ${top10[0].code || ""}` : "--", "前往檢視"],
+    ["年度稅務總覽", `$${fmt.money(yearlyDividend)}`, "前往檢視"],
+    ["燈號設定", signalText(model.signals.level), "前往設定"],
+  ];
+  moduleLabels.forEach(([title, note, button], index) => {
+    const card = moduleCards[index];
+    if (!card) return;
+    const heading = card.querySelector("h4");
+    const paragraph = card.querySelector("p");
+    const action = card.querySelector("a");
+    if (heading) heading.textContent = title;
+    if (paragraph) paragraph.textContent = note;
+    if (action) action.textContent = button;
+  });
 
   setText("desktopModuleMonthly", "正常 12 項");
-  setText("desktopModuleDividend", dividendPerShare ? `最新配息 ${fmt.money(dividendPerShare, 2)} 元` : "最新配息 --");
-  setText("desktopModuleDividendCash", `本季配息估算 $${fmt.money(estimatedDividendCash)}`);
-  setText("desktopModuleHolding", top10[0] ? `第一大持股 ${top10[0].name} ${top10[0].code || ""}` : "第一大持股 --");
+  setText("desktopModuleDividendCash", `本季估 $${fmt.money(estimatedDividendCash)}`);
   setText("desktopModuleHoldingWeight", top10[0] ? fmt.pct(Number(top10[0].weight_pct || 0)) : "--");
-  setText("desktopModuleYearly", `年度配息總額 $${fmt.money(yearlyDividend)}`);
-  setText("desktopModule54c", `年度 54C 估算 $${fmt.money(yearly54c)}`);
-  setText("desktopModuleSignal", `目前燈號 ${signalText(model.signals.level)}`);
-  setText("desktopModuleSignalReason", model.signals.level === "green" ? "所有數據正常" : model.signals.reason || "--");
+  setText("desktopModule54c", `54C 估算 $${fmt.money(yearly54c)}`);
+  setText("desktopModuleSignalReason", signalSummary);
 }
 
-function setDesktopStatusRow(prefix, status, detail) {
+function desktopCompactStatusLabel(status) {
+  return formatStatusShort(status);
+}
+
+function setDesktopStatusRow(prefix, status, detail, fullDetail = "") {
   const row = $(`${prefix}Status`)?.closest(".desktop-status-row");
-  if (row) row.dataset.status = status.className || "unknown";
-  setText(`${prefix}Status`, status.label);
-  setText(`${prefix}Date`, detail || status.note || "--");
+  if (row) {
+    row.dataset.status = status.className || "unknown";
+    if (fullDetail) row.title = fullDetail;
+  }
+  setText(`${prefix}Status`, desktopCompactStatusLabel(status));
+  const noteNode = $(`${prefix}Date`);
+  const note = detail || status.note || "--";
+  if (noteNode) {
+    noteNode.textContent = note;
+    if (fullDetail) noteNode.title = fullDetail;
+  }
 }
 
 function renderDesktopDataStatusCompact(latest, dividend, model) {
   const marketDate = model.latestMarket?.date || latest.date;
-  const dailyNote = model.latestMarket?.date && latest.date && model.latestMarket.date > latest.date
-    ? `市價 ${model.latestMarket.date}；淨值 ${latest.date}`
-    : `${marketDate || "--"} / ${model.daily.note}`;
-  setDesktopStatusRow("desktopFreshDaily", model.daily, dailyNote);
-  setDesktopStatusRow("desktopFreshMonthly", model.monthly, model.latestMonthly.month ? `${model.latestMonthly.month} / ${model.monthly.note}` : "--");
-  setDesktopStatusRow("desktopFreshDividend", model.dividend, dividend.ex_date ? `${dividend.ex_date} / ${model.dividend.note}` : "--");
-  setDesktopStatusRow("desktopFreshHoldings", model.holdings, model.holdingsData.data_date ? `${model.holdingsData.data_date} / ${model.holdings.note}` : "--");
-  setDesktopStatusRow("desktopFreshFetched", model.fetched, model.fetchedAt ? `${model.fetchedAtDisplay} / ${model.fetched.note}` : "--");
-  setDesktopStatusRow("desktopFreshIntegrity", model.integrity.status, model.integrity.status.note);
+  const warningCount = model.integrity?.warnings?.length || 0;
+  setDesktopStatusRow("desktopFreshDaily", model.daily, marketDate || "--");
+  setDesktopStatusRow("desktopFreshMonthly", model.monthly, model.latestMonthly.month || "--");
+  setDesktopStatusRow("desktopFreshDividend", model.dividend, dividend.ex_date ? model.dividend.note : "--");
+  setDesktopStatusRow("desktopFreshHoldings", model.holdings, model.holdingsData.data_date || "--");
+  setDesktopStatusRow("desktopFreshFetched", model.fetched, model.fetchedAtDisplay || "--");
+  const integrityDetail = model.integrity.status.detail || formatIntegrityFullDetail(model.integrity.warnings);
+  setDesktopStatusRow("desktopFreshIntegrity", model.integrity.status, warningCount ? formatIntegritySummary(model.integrity.warnings, 2) : "關鍵欄位完整", integrityDetail);
+  const detailPanel = $("desktopIntegrityDetail");
+  if (detailPanel) {
+    detailPanel.textContent = integrityDetail;
+    detailPanel.dataset.status = model.integrity.status.className || "green";
+    detailPanel.hidden = false;
+  }
 }
 
 function renderHomeFocus(position, latest, dividend, totalReturn, totalCost) {
@@ -998,7 +1846,7 @@ function renderHomeFocus(position, latest, dividend, totalReturn, totalCost) {
   const healthPremium = estimated54c >= premiumThreshold ? estimated54c * premiumRate : 0;
 
   setText("homeLatestDividend", dividendPerShare ? `${fmt.money(dividendPerShare, 2)} 元` : "--");
-  setText("homeLatestDividendDate", dividend.ex_date ? `除息 ${dividend.ex_date} / 估 $${fmt.money(estimatedDividendCash)}` : "--");
+  setText("homeLatestDividendDate", formatDividendFocusNote(dividend, estimatedDividendCash));
   setText("homeLatest54c", `$${fmt.money(estimated54c)}`);
   setText("homeLatest54cNote", Number(dividend.dividend_income_pct) ? `股利所得 ${fmt.pct(Number(dividend.dividend_income_pct))}` : "本次股利所得 0%");
   setText("homePremiumWatch", healthPremium > 0 ? `$${fmt.money(healthPremium)}` : "未達");
@@ -1008,9 +1856,11 @@ function renderHomeFocus(position, latest, dividend, totalReturn, totalCost) {
     .filter((row) => row.month && (row.aum_million_twd != null || row.aum_100m_twd != null || row.beneficiary_count != null))
     .sort((a, b) => String(a.month).localeCompare(String(b.month)));
   const latestSize = sizeRows[sizeRows.length - 1] || {};
-  const aumMillion = Number(latestSize.aum_million_twd || Number(latestSize.aum_100m_twd) * 100);
-  setText("homeAum", Number.isFinite(aumMillion) ? `${fmt.money(aumMillion / 100)} 億` : "--");
-  setText("homeAumMonth", latestSize.month || "--");
+  const aumDisplay = pickAumDisplayRow(sizeRows);
+  const latestAum = aumDisplay.row || {};
+  const aum100m = getAum100mValue(latestAum);
+  setText("homeAum", Number.isFinite(aum100m) ? `${fmt.money(aum100m)} 億` : "--");
+  setText("homeAumMonth", aumDisplay.isSnapshot ? `最新快照 ${latestAum.data_date || latestAum.source || "--"}` : (latestAum.month || latestSize.month || "--"));
   setText("homeBeneficiaries", Number.isFinite(Number(latestSize.beneficiary_count)) ? `${fmt.money(Number(latestSize.beneficiary_count))} 人` : "--");
   setText(
     "homeBeneficiaryChange",
@@ -1026,7 +1876,121 @@ function renderHomeFocus(position, latest, dividend, totalReturn, totalCost) {
   setText("homeTopHoldingWeight", top10[0] ? fmt.pct(Number(top10[0].weight_pct || 0)) : "--");
 }
 
+
+function addUniqueAnomaly(items, item) {
+  const key = item.key || item.title;
+  if (!key || items.some((existing) => existing.key === key || existing.title === item.title)) return;
+  items.push({ level: item.level || "yellow", key, title: item.title, detail: item.detail || "", source: item.source || "", href: item.href || "" });
+}
+
+function buildRecentAnomalyItems(model, signals = {}) {
+  const items = [];
+  const latestDividend = state.data?.latest_dividend || {};
+  const dividendPerShare = Number(latestDividend.dividend_per_share || 0);
+  const compositionPending = latestDividend.ex_date && dividendPerShare > 0 && (
+    latestDividend.composition_pending === true ||
+    latestDividend.composition_status === "pending" ||
+    latestDividend.event_status === "pending" ||
+    !isFiniteValue(latestDividend.estimated_54c_per_share)
+  );
+  if (compositionPending) {
+    addUniqueAnomaly(items, {
+      key: "dividend-composition-pending",
+      level: "yellow",
+      title: "54C 組成待補",
+      detail: `${latestDividend.ex_date} 每股 ${fmt.money(dividendPerShare, 2)} 元已可先顯示柱狀圖；54C / 收益平準金 / 資本利得等待 TWSE 或官方補齊。`,
+      source: latestDividend.event_source || latestDividend.source || "MoneyDJ / TWSE / 群益",
+      href: "#quarterly",
+    });
+  }
+
+  const latestMonthly = model?.latestMonthly || {};
+  const aumPending = latestMonthly.month && (
+    latestMonthly.monthly_aum_status === "pending" ||
+    latestMonthly.aum_pending === true ||
+    (!isFiniteValue(latestMonthly.aum_100m_twd ?? latestMonthly.aum_million_twd) && isFiniteValue(latestMonthly.beneficiary_count))
+  );
+  if (aumPending) {
+    addUniqueAnomaly(items, {
+      key: "monthly-aum-pending",
+      level: "yellow",
+      title: "AUM 月資料待補",
+      detail: `${latestMonthly.month} 受益人數已更新，但月度 AUM 尚未補齊；首頁可先使用最新快照，不覆蓋月資料。`,
+      source: latestMonthly.monthly_aum_source || latestMonthly.beneficiary_source || "MoneyDJ / 群益快照",
+      href: "#data-maintenance",
+    });
+  }
+
+  [calcHoldingSignalForSummary(), calcBeneficiarySignalForSummary(), calcTaxSignalForSummary()].forEach((signal) => {
+    if (signalSeverity(signal.level) > 0) {
+      const title = signal.reason.split("：")[0] || "燈號提醒";
+      addUniqueAnomaly(items, {
+        key: `signal-${title}`,
+        level: signal.level,
+        title,
+        detail: signal.reason,
+        source: "燈號設定 / dashboard_data",
+        href: title.includes("持股") ? "#holdings" : title.includes("受益人") ? "#monthly" : "#yearly",
+      });
+    }
+  });
+
+  (model?.integrity?.warnings || []).forEach((warning) => {
+    const normalized = normalizeIntegrityWarning(warning);
+    addUniqueAnomaly(items, {
+      key: `integrity-${normalized.label}`,
+      level: normalized.level,
+      title: `${normalized.label}需檢查`,
+      detail: normalized.impact,
+      source: normalized.source,
+      href: "#data-maintenance",
+    });
+  });
+
+  if (signals.level && signals.level !== "green" && signals.reason) {
+    addUniqueAnomaly(items, {
+      key: "main-signal",
+      level: signals.level,
+      title: "主燈號提醒",
+      detail: signals.reason,
+      source: "燈號設定",
+      href: "#signal-settings",
+    });
+  }
+
+  return items
+    .sort((a, b) => signalSeverity(b.level) - signalSeverity(a.level))
+    .slice(0, 5);
+}
+
+function renderRecentAnomalySummary(model, signals = {}) {
+  const items = buildRecentAnomalyItems(model, signals);
+  const worst = items[0]?.level || "green";
+  const targets = [
+    { box: $("desktopAnomalySummary"), list: $("desktopAnomalyList"), count: $("desktopAnomalyCount") },
+    { box: $("mobileAnomalySummary"), list: $("mobileAnomalyList"), count: $("mobileAnomalyCount") },
+  ];
+  targets.forEach(({ box, list, count }) => {
+    if (!box || !list) return;
+    box.dataset.status = worst;
+    if (count) count.textContent = items.length ? `${items.length} 項` : "正常";
+    if (!items.length) {
+      list.innerHTML = `<div class="recent-anomaly-empty">目前沒有需要特別處理的異常；資料來源與關鍵欄位正常。</div>`;
+      return;
+    }
+    list.innerHTML = items.map((item) => `
+      <a class="recent-anomaly-item" data-status="${item.level}" href="${item.href || "#data-maintenance"}">
+        <b>${escapeHtml(item.title)}</b>
+        <span>${escapeHtml(item.detail)}</span>
+        <small>來源：${sourceTooltipHtml(item.source || "系統判斷")}</small>
+      </a>
+    `).join("");
+  });
+}
+
 function bindTradeForm() {
+  const tradeForm = $("tradeForm");
+
   document.querySelectorAll(".side-toggle button").forEach((button) => {
     button.addEventListener("click", () => {
       state.tradeAction = button.dataset.action;
@@ -1035,43 +1999,79 @@ function bindTradeForm() {
     });
   });
 
-  $("tradeForm").addEventListener("submit", (event) => {
-    event.preventDefault();
-    const trade = {
-      id: state.editingTradeId || `trade-${Date.now()}`,
-      trade_date: normalizeTradeDate($("tradeDateInput").value),
-      action: state.tradeAction,
-      shares: Number($("tradeSharesInput").value || 0),
-      price: Number($("tradePriceInput").value || 0),
-      fee: 0,
-      tax: 0,
-      note_type: $("tradeNoteTypeInput").value,
-      note: $("tradeNoteInput").value.trim(),
-    };
-    if (!trade.trade_date || !trade.shares || !trade.price) return;
-    if (state.editingTradeId) {
-      state.trades = state.trades.map((item) => (item.id === state.editingTradeId ? trade : item));
-      state.editingTradeId = "";
-      setText("tradeSubmitButton", "新增交易");
-    } else {
-      state.trades = [...state.trades, trade];
-    }
-    state.trades = state.trades.sort((a, b) => String(a.trade_date).localeCompare(String(b.trade_date)));
-    saveTrades();
-    $("tradeForm").reset();
-    state.tradeAction = "buy";
-    document.querySelectorAll(".side-toggle button").forEach((item) => item.classList.remove("active"));
-    document.querySelector('.side-toggle button[data-action="buy"]').classList.add("active");
-    render();
-  });
+  if (tradeForm) {
+    tradeForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const trade = {
+        id: state.editingTradeId || `trade-${Date.now()}`,
+        client_request_id: createClientRequestId(),
+        trade_date: normalizeTradeDate($("tradeDateInput")?.value),
+        action: state.tradeAction,
+        shares: Number($("tradeSharesInput")?.value || 0),
+        price: Number($("tradePriceInput")?.value || 0),
+        fee: 0,
+        tax: 0,
+        note_type: $("tradeNoteTypeInput")?.value || "其他",
+        note: ($("tradeNoteInput")?.value || "").trim(),
+      };
+      if (!trade.trade_date || !trade.shares || !trade.price) return;
+      const isEditing = Boolean(state.editingTradeId);
+      if (window.__00919_STREAMLIT_EMBED && !isEditing) {
+        console.info("[00919] HTML trade form disabled in embedded mode; use the independent Streamlit trade entry page.");
+        return;
+      }
+      if (isEditing) {
+        state.trades = state.trades.map((item) => (item.id === state.editingTradeId ? trade : item));
+        state.editingTradeId = "";
+        setText("tradeSubmitButton", "新增交易");
+      } else {
+        if (requestStreamlitTradeAppend(trade)) {
+          const submitButton = $("tradeSubmitButton");
+          if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.classList.remove("is-loading");
+            submitButton.textContent = "新增交易";
+          }
+          return;
+        }
+        state.trades = [...state.trades, trade];
+      }
+      state.trades = state.trades.sort((a, b) => String(a.trade_date).localeCompare(String(b.trade_date)));
+      saveTrades({ syncRemote: false, reason: isEditing ? "trade-edit" : "trade-add" });
+      tradeForm.reset();
+      state.tradeAction = "buy";
+      document.querySelectorAll(".side-toggle button").forEach((item) => item.classList.remove("active"));
+      document.querySelector('.side-toggle button[data-action="buy"]')?.classList.add("active");
+      render();
+    });
+  }
 
-  $("exportTradesButton").addEventListener("click", exportTradesCsv);
-  $("importTradesInput").addEventListener("change", importTrades);
-  $("downloadTemplateButton").addEventListener("click", downloadTradeTemplate);
+  $("exportTradesButton")?.addEventListener("click", exportTradesCsv);
+  $("importTradesInput")?.addEventListener("change", importTrades);
+  $("syncTradesButton")?.addEventListener("click", () => {
+    const button = $("syncTradesButton");
+    if (button) {
+      button.disabled = true;
+      button.classList.add("is-loading");
+      button.textContent = "同步中...";
+    }
+    if (!requestStreamlitTradeSync(state.trades, "manual-trade-sync")) {
+      if (button) {
+        button.disabled = false;
+        button.classList.remove("is-loading");
+        button.textContent = "同步到雲端";
+      }
+      alert("目前環境無法直接同步到雲端，請先匯出資料備份。");
+    }
+  });
+  $("downloadTemplateButton")?.addEventListener("click", downloadTradeTemplate);
 }
 
-function saveTrades() {
+function saveTrades(options = {}) {
   localStorage.setItem("00919_trades", JSON.stringify(state.trades));
+  if (options.syncRemote) {
+    requestStreamlitTradeSync(state.trades, options.reason || "trade-save");
+  }
 }
 
 function renderTradeTable(position, latest) {
@@ -1094,16 +2094,14 @@ function renderTradeTable(position, latest) {
           <td>${escapeHtml(trade.note_type || "")}</td>
           <td>${escapeHtml(trade.note || "")}</td>
           <td>
-            <div class="row-actions">
-              <button class="edit-trade" type="button" data-id="${trade.id || ""}">編輯</button>
-              <button class="delete-trade" type="button" data-id="${trade.id || ""}">刪除</button>
-            </div>
+            ${window.__00919_STREAMLIT_EMBED ? `<span class="row-readonly">正式資料</span>` : `<div class="row-actions"><button class="edit-trade" type="button" data-id="${trade.id || ""}">編輯</button><button class="delete-trade" type="button" data-id="${trade.id || ""}">刪除</button></div>`}
           </td>
         </tr>
       `;
     })
     .join("");
 
+  if (!window.__00919_STREAMLIT_EMBED) {
   body.querySelectorAll(".edit-trade").forEach((button) => {
     button.addEventListener("click", () => {
       const target = state.trades.find((trade) => trade.id === button.dataset.id);
@@ -1126,10 +2124,11 @@ function renderTradeTable(position, latest) {
     button.addEventListener("click", () => {
       const id = button.dataset.id;
       state.trades = state.trades.filter((trade) => trade.id !== id);
-      saveTrades();
+      saveTrades({ syncRemote: true, reason: "trade-delete" });
       render();
     });
   });
+  }
 
   const marketPrice = Number(latest.market_price || 0);
   const marketValue = position.holdingShares * marketPrice;
@@ -1308,7 +2307,7 @@ function importTrades(event) {
       state.trades = mergeTrades(state.trades, imported).sort((a, b) =>
         String(a.trade_date).localeCompare(String(b.trade_date))
       );
-      saveTrades();
+      saveTrades({ syncRemote: true, reason: "trade-import" });
       render();
     } catch (error) {
       alert(`匯入失敗：${error.message}`);
@@ -1340,6 +2339,13 @@ function tradeKey(trade) {
     trade.note_type || "",
     trade.note || "",
   ].join("|");
+}
+
+function tradeListKey(trades = []) {
+  return [...trades]
+    .map(tradeKey)
+    .sort()
+    .join("||");
 }
 
 function parseTradesCsv(text) {
@@ -1724,6 +2730,7 @@ function drawMobileChart(allRows, range = "month") {
 
 hydrateInlineIcons();
 hydrateDesktopIcons();
+normalizeNoteRightCards();
 bindInputs();
 loadData().catch((error) => {
   console.error(error);
