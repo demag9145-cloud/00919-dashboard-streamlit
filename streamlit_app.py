@@ -21,14 +21,18 @@ GOOGLE_SHEETS_IMPORT_ERROR = ""
 try:
     from services.google_sheets_trades import (
         append_trade_to_google_sheets,
+        delete_trade_from_google_sheets,
         load_google_sheets_trades,
         test_append_trade_directly,
+        update_trade_in_google_sheets,
     )
 except Exception as exc:  # Keep the formal app usable even if optional cloud deps are absent locally.
     GOOGLE_SHEETS_IMPORT_ERROR = f"{type(exc).__name__}: {exc}"
     append_trade_to_google_sheets = None
+    delete_trade_from_google_sheets = None
     load_google_sheets_trades = None
     test_append_trade_directly = None
+    update_trade_in_google_sheets = None
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -259,9 +263,18 @@ def parse_date(value: str | None) -> date | None:
 
 
 def normalize_trade(row: dict) -> dict:
+    action_raw = str(row.get("action") or row.get("買 / 賣") or row.get("買賣") or "buy").strip().lower()
+    action = "sell" if action_raw in {"sell", "s", "賣", "賣出"} else "buy"
+    try:
+        sheet_row_number = int(float(row.get("sheet_row_number") or row.get("_sheet_row_number") or 0))
+    except Exception:
+        sheet_row_number = 0
     return {
+        "id": str(row.get("id") or ""),
+        "sheet_row_number": sheet_row_number,
+        "_sheet_row_number": sheet_row_number,
         "trade_date": str(row.get("trade_date") or row.get("交易日期") or "").replace("/", "-"),
-        "action": str(row.get("action") or row.get("買 / 賣") or row.get("買賣") or "buy").strip(),
+        "action": action,
         "shares": int(float(row.get("shares") or row.get("交易股數") or 0)),
         "price": float(row.get("price") or row.get("成交價位") or row.get("買入 / 賣出價位") or 0),
         "fee": float(row.get("fee") or row.get("手續費") or 0),
@@ -2955,6 +2968,134 @@ def render_trade_entry_page() -> None:
             else:
                 st.session_state["last_update_message"] = "新增交易已寫入 Google Sheets"
                 st.rerun()
+
+    editable_trades = [normalize_trade(row) for row in trades]
+    editable_trades = [row for row in editable_trades if int(row.get("sheet_row_number") or 0) >= 2]
+    editable_trades = sorted(editable_trades, key=lambda item: (item.get("trade_date", ""), int(item.get("sheet_row_number") or 0)), reverse=True)
+
+    st.markdown(
+        "<div class='entry-panel'><h3>編輯 / 刪除既有交易</h3>"
+        "<p>選取下方最近交易後，可直接修改日期、買賣、股數、成交價、分類與備註；更新或刪除後會寫回 Google Sheets Trades。</p></div>",
+        unsafe_allow_html=True,
+    )
+
+    if not trades_source.get("ok") or trades_source.get("source") != "google_sheets":
+        st.warning("目前交易資料不是直接由 Google Sheets 讀取，暫不開放編輯 / 刪除。請確認 Google Sheets 連線正常後再操作。")
+    elif update_trade_in_google_sheets is None or delete_trade_from_google_sheets is None:
+        st.warning("Google Sheets 編輯 / 刪除模組尚未啟用，請確認目前部署的服務檔已更新。")
+    elif not editable_trades:
+        st.info("目前沒有可編輯的 Google Sheets 交易列。")
+    else:
+        def _trade_option_label(row: dict) -> str:
+            action_label = "賣出" if row.get("action") == "sell" else "買入"
+            return (
+                f"{row.get('trade_date', '')}｜{action_label}｜"
+                f"{money(row.get('shares') or 0)} 股｜{float(row.get('price') or 0):.2f}｜"
+                f"{row.get('note_type') or '其他'}｜{row.get('note') or ''}"
+            )
+
+        selected_index = st.selectbox(
+            "選擇要編輯或刪除的交易",
+            options=list(range(len(editable_trades))),
+            format_func=lambda i: _trade_option_label(editable_trades[i]),
+            index=0,
+            key="trade_edit_selected_index",
+        )
+        selected_trade = editable_trades[int(selected_index)]
+        selected_row_number = int(selected_trade.get("sheet_row_number") or 0)
+        edit_date_default = parse_date(selected_trade.get("trade_date")) or date.today()
+        edit_action_default = 1 if selected_trade.get("action") == "sell" else 0
+        note_type_options = ["股息再投入", "薪資投入", "年終投入", "定期投入", "閒置資金投入", "再平衡調整", "部位調整", "其他", "測試", "手動修正"]
+        current_note_type = str(selected_trade.get("note_type") or "其他")
+        if current_note_type not in note_type_options:
+            note_type_options.append(current_note_type)
+
+        with st.form(f"edit_existing_google_sheets_trade_form_{selected_row_number}", clear_on_submit=False):
+            edit_row1 = st.columns([1.0, 1.25, 1.1, 1.1])
+            edit_action_label = edit_row1[0].radio(
+                "買 / 賣",
+                ["買入", "賣出"],
+                index=edit_action_default,
+                horizontal=True,
+                key=f"edit_action_{selected_row_number}",
+            )
+            edit_trade_date = edit_row1[1].date_input(
+                "交易日期",
+                value=edit_date_default,
+                key=f"edit_trade_date_{selected_row_number}",
+            )
+            edit_shares = edit_row1[2].number_input(
+                "交易股數（股）",
+                min_value=1,
+                step=1,
+                value=max(1, int(selected_trade.get("shares") or 1)),
+                key=f"edit_shares_{selected_row_number}",
+            )
+            edit_price = edit_row1[3].number_input(
+                "平均成本 / 成交價",
+                min_value=0.0,
+                step=0.01,
+                value=max(0.0, float(selected_trade.get("price") or 0)),
+                format="%.2f",
+                key=f"edit_price_{selected_row_number}",
+            )
+            edit_row2 = st.columns([1.25, 2.75])
+            edit_note_type = edit_row2[0].selectbox(
+                "資金來源 / 備註分類",
+                note_type_options,
+                index=note_type_options.index(current_note_type),
+                key=f"edit_note_type_{selected_row_number}",
+            )
+            edit_note = edit_row2[1].text_input(
+                "備註",
+                value=str(selected_trade.get("note") or ""),
+                key=f"edit_note_{selected_row_number}",
+            )
+            confirm_delete = st.checkbox(
+                "我確認要刪除這一筆交易",
+                key=f"confirm_delete_trade_{selected_row_number}",
+            )
+            action_cols = st.columns([1.2, 1.0, 3.2])
+            update_submitted = action_cols[0].form_submit_button("更新此筆交易", type="primary", use_container_width=True)
+            delete_submitted = action_cols[1].form_submit_button("刪除此筆", use_container_width=True)
+
+        if update_submitted:
+            if int(edit_shares) <= 0 or float(edit_price) <= 0:
+                st.error("請確認股數與成交價都已正確填寫。")
+            else:
+                updated_trade = {
+                    "trade_date": edit_trade_date.strftime("%Y-%m-%d"),
+                    "action": "BUY" if edit_action_label == "買入" else "SELL",
+                    "shares": int(edit_shares),
+                    "price": float(edit_price),
+                    "note_type": edit_note_type,
+                    "note": edit_note.strip(),
+                    "source": "standalone_streamlit_edit_form",
+                    "created_at": datetime.now().isoformat(timespec="seconds"),
+                }
+                try:
+                    update_trade_in_google_sheets(selected_row_number, updated_trade)
+                except Exception as exc:
+                    st.error("更新 Google Sheets 失敗")
+                    st.info(google_sheets_write_help())
+                    st.code(f"{type(exc).__name__}: {exc}")
+                else:
+                    st.session_state["last_update_message"] = "交易已更新到 Google Sheets"
+                    st.rerun()
+
+        if delete_submitted:
+            if not confirm_delete:
+                st.error("刪除前請先勾選確認。")
+            else:
+                try:
+                    delete_trade_from_google_sheets(selected_row_number)
+                except Exception as exc:
+                    st.error("刪除 Google Sheets 交易失敗")
+                    st.info(google_sheets_write_help())
+                    st.code(f"{type(exc).__name__}: {exc}")
+                else:
+                    st.session_state["last_update_message"] = "交易已從 Google Sheets 刪除"
+                    st.rerun()
 
     st.markdown("<div class='entry-panel'><h3>批次匯入 CSV</h3><p>可下載範本填寫後上傳；系統會略過已存在的相同交易。</p></div>", unsafe_allow_html=True)
     uploaded_trades = st.file_uploader("選擇交易 CSV 檔", type=["csv"], key="standalone_trade_csv_importer")

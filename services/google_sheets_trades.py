@@ -13,6 +13,39 @@ WORKSHEET_NAME = "Trades"
 DEFAULT_HEADERS = ["trade_date", "action", "shares", "price", "note_type", "note"]
 
 
+def _values_for_headers(trade: dict, headers: list[str]) -> list[Any]:
+    normalized = normalize_sheet_trade(trade, 0)
+    values_by_header = {
+        "trade_date": normalized["trade_date"],
+        "action": normalized["action"].upper(),
+        "shares": normalized["shares"],
+        "price": normalized["price"],
+        "note_type": normalized["note_type"],
+        "note": normalized["note"],
+        "fee": normalized.get("fee", 0),
+        "tax": normalized.get("tax", 0),
+        "client_request_id": normalized.get("client_request_id", ""),
+    }
+    return [values_by_header.get(str(header).strip(), "") for header in headers]
+
+
+def _get_trades_worksheet():
+    service_account = dict(st.secrets["gcp_service_account"])
+    sheet_id = st.secrets["GOOGLE_SHEET_ID"]
+
+    credentials = Credentials.from_service_account_info(service_account, scopes=SCOPES)
+    client = gspread.authorize(credentials)
+    return client.open_by_key(sheet_id).worksheet(WORKSHEET_NAME)
+
+
+def _ensure_headers(worksheet) -> list[str]:
+    headers = [str(item).strip() for item in worksheet.row_values(1)]
+    if not headers:
+        headers = DEFAULT_HEADERS
+        worksheet.append_row(headers, value_input_option="USER_ENTERED")
+    return headers
+
+
 @dataclass
 class TradesLoadResult:
     rows: list[dict]
@@ -66,9 +99,12 @@ def normalize_sheet_trade(row: dict, index: int) -> dict:
     price = _to_float(_pick(row, "price", "trade_price", "成交價位", "成交價格", "價位"))
     note_type = str(_pick(row, "note_type", "category", "資金來源", "備註分類", default="其他")).strip() or "其他"
     note = str(_pick(row, "note", "memo", "remark", "備註", default="")).strip()
+    sheet_row_number = _to_int(_pick(row, "sheet_row_number", "_sheet_row_number", default=index + 2))
 
     return {
-        "id": f"sheets-{trade_date}-{index}-{action}-{shares}-{price}",
+        "id": f"sheets-{trade_date}-{sheet_row_number}-{action}-{shares}-{price}",
+        "sheet_row_number": sheet_row_number,
+        "_sheet_row_number": sheet_row_number,
         "trade_date": trade_date,
         "action": action,
         "shares": shares,
@@ -82,16 +118,11 @@ def normalize_sheet_trade(row: dict, index: int) -> dict:
 
 
 def load_google_sheets_trades() -> TradesLoadResult:
-    service_account = dict(st.secrets["gcp_service_account"])
-    sheet_id = st.secrets["GOOGLE_SHEET_ID"]
-
-    credentials = Credentials.from_service_account_info(service_account, scopes=SCOPES)
-    client = gspread.authorize(credentials)
-    worksheet = client.open_by_key(sheet_id).worksheet(WORKSHEET_NAME)
+    worksheet = _get_trades_worksheet()
     records = worksheet.get_all_records()
 
     trades = [
-        normalize_sheet_trade(row, index)
+        normalize_sheet_trade({**row, "_sheet_row_number": index + 2}, index)
         for index, row in enumerate(records)
         if any(str(value).strip() for value in row.values())
     ]
@@ -103,36 +134,44 @@ def load_google_sheets_trades() -> TradesLoadResult:
 
 
 def append_trade_to_google_sheets(trade: dict) -> dict:
-    service_account = dict(st.secrets["gcp_service_account"])
-    sheet_id = st.secrets["GOOGLE_SHEET_ID"]
-
-    credentials = Credentials.from_service_account_info(service_account, scopes=SCOPES)
-    client = gspread.authorize(credentials)
-    worksheet = client.open_by_key(sheet_id).worksheet(WORKSHEET_NAME)
-
-    headers = [str(item).strip() for item in worksheet.row_values(1)]
-    if not headers:
-        headers = DEFAULT_HEADERS
-        worksheet.append_row(headers, value_input_option="USER_ENTERED")
+    worksheet = _get_trades_worksheet()
+    headers = _ensure_headers(worksheet)
 
     normalized = normalize_sheet_trade(trade, 0)
-    values_by_header = {
-        "trade_date": normalized["trade_date"],
-        "action": normalized["action"].upper(),
-        "shares": normalized["shares"],
-        "price": normalized["price"],
-        "note_type": normalized["note_type"],
-        "note": normalized["note"],
-        "fee": normalized.get("fee", 0),
-        "tax": normalized.get("tax", 0),
-        "client_request_id": normalized.get("client_request_id", ""),
-    }
-    row_values = [values_by_header.get(header, "") for header in headers]
+    row_values = _values_for_headers(trade, headers)
     worksheet.append_row(row_values, value_input_option="USER_ENTERED")
     return {
         "ok": True,
         "message": "新增交易已寫入 Google Sheets",
         "trade": normalized,
+    }
+
+
+def update_trade_in_google_sheets(row_number: int, trade: dict) -> dict:
+    if int(row_number) < 2:
+        raise ValueError("Google Sheets row_number 必須大於等於 2")
+    worksheet = _get_trades_worksheet()
+    headers = _ensure_headers(worksheet)
+    row_values = _values_for_headers(trade, headers)
+    # gspread accepts an A1 start cell and expands to the supplied row width.
+    worksheet.update(range_name=f"A{int(row_number)}", values=[row_values], value_input_option="USER_ENTERED")
+    normalized = normalize_sheet_trade({**trade, "_sheet_row_number": int(row_number)}, int(row_number) - 2)
+    return {
+        "ok": True,
+        "message": "交易已更新到 Google Sheets",
+        "trade": normalized,
+    }
+
+
+def delete_trade_from_google_sheets(row_number: int) -> dict:
+    if int(row_number) < 2:
+        raise ValueError("Google Sheets row_number 必須大於等於 2")
+    worksheet = _get_trades_worksheet()
+    worksheet.delete_rows(int(row_number))
+    return {
+        "ok": True,
+        "message": "交易已從 Google Sheets 刪除",
+        "row_number": int(row_number),
     }
 
 
