@@ -2554,12 +2554,14 @@ function drawChart(allRows, range = "month", targetId = "mainChart") {
 
   const isMobile = window.matchMedia("(max-width: 760px)").matches;
   const isDesktopHome = targetId === "desktopMainChart";
-  const width = isMobile ? 390 : 1120;
-  const height = isMobile ? 280 : isDesktopHome ? 392 : 420;
+  // UI75: desktop home trend chart uses a wider viewBox so the SVG plot fills
+  // the full-width bottom card instead of being letterboxed in the center.
+  const width = isMobile ? 390 : isDesktopHome ? 1600 : 1120;
+  const height = isMobile ? 280 : isDesktopHome ? 430 : 420;
   const pad = isMobile
     ? { top: 24, right: 34, bottom: 46, left: 38 }
     : isDesktopHome
-      ? { top: 22, right: 54, bottom: 46, left: 48 }
+      ? { top: 28, right: 72, bottom: 54, left: 58 }
       : { top: 28, right: 54, bottom: 72, left: 48 };
   const priceColor = isDesktopHome ? "#10b981" : "#1f5fbf";
   const navColor = isDesktopHome ? "#0ea5e9" : "#d65a3a";
