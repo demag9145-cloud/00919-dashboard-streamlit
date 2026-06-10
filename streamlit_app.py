@@ -2996,14 +2996,14 @@ def render_trade_entry_page() -> None:
         st.info("目前模式：新增交易。填好欄位後按「新增交易」會直接寫入 Google Sheets。")
     elif mode.startswith("edit"):
         if selected_trade_for_message:
-            st.warning(f"目前模式：編輯交易。已選取第 {selected_row_number} 列，修改上方欄位後按「編輯完成」。其他按鈕已互鎖停用。")
+            st.warning(f"目前模式：編輯交易。已選取第 {selected_row_number} 列，修改上方欄位後按「編輯完成」。其他按鈕已互鎖停用；若誤按可按「取消動作」回到新增模式。")
         else:
-            st.warning("目前模式：編輯交易。請先從下方最近交易預覽點選一筆交易；其他按鈕已互鎖停用。")
+            st.warning("目前模式：編輯交易。請先從下方最近交易預覽點選一筆交易；其他按鈕已互鎖停用。若誤按可按「取消動作」回到新增模式。")
     elif mode.startswith("delete"):
         if selected_trade_for_message:
-            st.error(f"目前模式：刪除交易。已選取第 {selected_row_number} 列，確認無誤後按「確認刪除」。其他按鈕已互鎖停用。")
+            st.error(f"目前模式：刪除交易。已選取第 {selected_row_number} 列，確認無誤後按「確認刪除」。其他按鈕已互鎖停用；若誤按可按「取消動作」回到新增模式。")
         else:
-            st.error("目前模式：刪除交易。請先從下方最近交易預覽點選一筆交易；其他按鈕已互鎖停用。")
+            st.error("目前模式：刪除交易。請先從下方最近交易預覽點選一筆交易；其他按鈕已互鎖停用。若誤按可按「取消動作」回到新增模式。")
 
     form_disabled = mode.startswith("delete")
     entry_row1 = st.columns([1.0, 1.25, 1.1, 1.1])
@@ -3021,12 +3021,13 @@ def render_trade_entry_page() -> None:
     )
     note = entry_row2[1].text_input("備註", placeholder="可留空或補充說明，例如：定期投入、加碼原因", key="trade_form_note", disabled=form_disabled)
 
-    action_cols = st.columns([1.0, 1.0, 1.0, 3.0])
+    action_cols = st.columns([1.0, 1.0, 1.0, 1.0, 2.0])
     add_clicked = action_cols[0].button("新增交易", type="primary", use_container_width=True, disabled=mode != "add")
     edit_button_label = "編輯完成" if mode.startswith("edit") else "編輯交易"
     edit_clicked = action_cols[1].button(edit_button_label, use_container_width=True, disabled=mode.startswith("delete"))
+    cancel_clicked = action_cols[2].button("取消動作", use_container_width=True, disabled=mode == "add")
     delete_button_label = "確認刪除" if mode.startswith("delete") else "刪除交易"
-    delete_clicked = action_cols[2].button(delete_button_label, use_container_width=True, disabled=mode.startswith("edit"))
+    delete_clicked = action_cols[3].button(delete_button_label, use_container_width=True, disabled=mode.startswith("edit"))
 
     def _current_trade_payload(source: str) -> dict:
         return {
@@ -3039,6 +3040,13 @@ def render_trade_entry_page() -> None:
             "source": source,
             "created_at": datetime.now().isoformat(timespec="seconds"),
         }
+
+    if cancel_clicked:
+        st.session_state["trade_reset_form_defaults"] = True
+        st.session_state["trade_workflow_mode"] = "add"
+        st.session_state["trade_selected_row_number"] = None
+        st.session_state["last_update_message"] = "已取消目前交易動作"
+        st.rerun()
 
     if add_clicked:
         if not trade_date_value or int(shares) <= 0 or float(price) <= 0:
