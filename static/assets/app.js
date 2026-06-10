@@ -2555,7 +2555,7 @@ function drawChart(allRows, range = "month", targetId = "mainChart") {
   const isMobile = window.matchMedia("(max-width: 760px)").matches;
   const isDesktopHome = targetId === "desktopMainChart";
   const width = isMobile ? 390 : 1120;
-  const height = isMobile ? 280 : isDesktopHome ? 352 : 420;
+  const height = isMobile ? 280 : isDesktopHome ? 392 : 420;
   const pad = isMobile
     ? { top: 24, right: 34, bottom: 46, left: 38 }
     : isDesktopHome

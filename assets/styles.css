@@ -7923,3 +7923,85 @@ body[data-active-page="manual"] .nav a[href="#manual"] .icon-box {
     max-width: 100% !important;
   }
 }
+
+/* UI74: desktop home overview layout polish.
+   Top: core metrics + home focus. Middle: quick modules + data update. Bottom: full-width trend chart.
+   Mobile homepage remains controlled by existing max-width:760px rules. */
+@media (min-width: 761px) {
+  body[data-active-page="home"] .desktop-lower-grid,
+  body.streamlit-embedded[data-active-page="home"] .desktop-lower-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+    align-items: stretch !important;
+  }
+
+  body[data-active-page="home"] .desktop-lower-grid > .desktop-side-stack,
+  body.streamlit-embedded[data-active-page="home"] .desktop-lower-grid > .desktop-side-stack {
+    order: 1 !important;
+    width: 100% !important;
+    height: auto !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    grid-template-rows: 1fr !important;
+    gap: 14px !important;
+    align-items: stretch !important;
+  }
+
+  body[data-active-page="home"] .desktop-lower-grid > .desktop-chart-panel,
+  body.streamlit-embedded[data-active-page="home"] .desktop-lower-grid > .desktop-chart-panel {
+    order: 2 !important;
+    width: 100% !important;
+    min-height: 492px !important;
+    height: auto !important;
+  }
+
+  body[data-active-page="home"] .desktop-module-panel,
+  body[data-active-page="home"] .desktop-data-status-compact,
+  body.streamlit-embedded[data-active-page="home"] .desktop-module-panel,
+  body.streamlit-embedded[data-active-page="home"] .desktop-data-status-compact {
+    min-height: 326px !important;
+    height: 100% !important;
+    display: grid !important;
+    grid-template-rows: auto 1fr auto !important;
+    align-content: stretch !important;
+  }
+
+  body[data-active-page="home"] .desktop-module-grid,
+  body.streamlit-embedded[data-active-page="home"] .desktop-module-grid {
+    height: 100% !important;
+    min-height: 210px !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+  }
+
+  body[data-active-page="home"] .desktop-module-card,
+  body.streamlit-embedded[data-active-page="home"] .desktop-module-card {
+    min-height: 216px !important;
+    height: 100% !important;
+  }
+
+  body[data-active-page="home"] .desktop-data-status-compact .desktop-status-list,
+  body.streamlit-embedded[data-active-page="home"] .desktop-data-status-compact .desktop-status-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  body[data-active-page="home"] .desktop-chart-panel .desktop-chart,
+  body.streamlit-embedded[data-active-page="home"] .desktop-chart-panel .desktop-chart {
+    min-height: 392px !important;
+  }
+
+  body[data-active-page="home"] .desktop-chart-panel .desktop-chart svg,
+  body.streamlit-embedded[data-active-page="home"] .desktop-chart-panel .desktop-chart svg {
+    height: 392px !important;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1300px) {
+  body[data-active-page="home"] .desktop-lower-grid > .desktop-side-stack,
+  body.streamlit-embedded[data-active-page="home"] .desktop-lower-grid > .desktop-side-stack {
+    grid-template-columns: 1fr !important;
+  }
+}
