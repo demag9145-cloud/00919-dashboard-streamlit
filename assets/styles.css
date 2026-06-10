@@ -7742,3 +7742,124 @@ body[data-active-page="manual"] .nav a[href="#manual"] .icon-box {
     line-height: 1.3 !important;
   }
 }
+
+
+/* UI71: 手機版交易欄位與觸控圖表優化。桌機版不受影響。 */
+@media (max-width: 760px), (max-height: 520px) and (orientation: landscape), (hover: none) and (pointer: coarse) {
+  .mobile-trade-entry-section {
+    padding: 16px 14px 16px !important;
+  }
+
+  .mobile-trade-action-row {
+    gap: 10px !important;
+  }
+
+  .mobile-trade-radio {
+    min-height: 46px !important;
+    border-width: 1.5px !important;
+    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.5);
+  }
+
+  .mobile-trade-radio.is-buy {
+    background: linear-gradient(135deg, rgba(248, 113, 113, 0.18), rgba(255, 255, 255, 0.94)) !important;
+    border-color: rgba(239, 68, 68, 0.38) !important;
+    color: #991b1b !important;
+  }
+
+  .mobile-trade-radio.is-sell {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(255, 255, 255, 0.94)) !important;
+    border-color: rgba(16, 185, 129, 0.40) !important;
+    color: #065f46 !important;
+  }
+
+  .mobile-trade-radio.is-buy.active {
+    background: linear-gradient(135deg, #ef4444, #fb7185) !important;
+    border-color: rgba(220, 38, 38, 0.78) !important;
+    color: #ffffff !important;
+    box-shadow: 0 10px 20px rgba(239, 68, 68, 0.22) !important;
+  }
+
+  .mobile-trade-radio.is-sell.active {
+    background: linear-gradient(135deg, #059669, #10b981) !important;
+    border-color: rgba(5, 150, 105, 0.78) !important;
+    color: #ffffff !important;
+    box-shadow: 0 10px 20px rgba(16, 185, 129, 0.22) !important;
+  }
+
+  .mobile-trade-radio input {
+    width: 18px !important;
+    height: 18px !important;
+    accent-color: currentColor !important;
+  }
+
+  .mobile-trade-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    gap: 12px 12px !important;
+    align-items: start !important;
+  }
+
+  .mobile-trade-date-field,
+  .mobile-trade-source-field {
+    grid-column: 1 / -1 !important;
+  }
+
+  .mobile-trade-shares-field,
+  .mobile-trade-price-field {
+    grid-column: span 1 !important;
+  }
+
+  .mobile-quick-trade-form label span {
+    display: block !important;
+    min-height: 16px !important;
+    font-size: .82rem !important;
+    line-height: 1.15 !important;
+    color: #334155 !important;
+  }
+
+  .mobile-quick-trade-form input,
+  .mobile-quick-trade-form select {
+    min-height: 48px !important;
+    font-size: 1rem !important;
+    font-weight: 850 !important;
+    padding: 0 14px !important;
+    border-radius: 14px !important;
+  }
+
+  #mobileQuickTradeDate {
+    font-size: .98rem !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  #mobileQuickTradeShares,
+  #mobileQuickTradePrice {
+    text-align: left !important;
+  }
+
+  .mobile-chart .mobile-chart-point {
+    stroke-width: 1.2px !important;
+  }
+
+  .mobile-chart .hover-guide.active {
+    opacity: .72 !important;
+  }
+
+  .mobile-chart .hover-zone {
+    pointer-events: all !important;
+    cursor: pointer;
+  }
+
+  .mobile-chart-tooltip {
+    min-width: 196px !important;
+    max-width: 220px !important;
+    padding: 10px 12px !important;
+    border-radius: 14px !important;
+    font-size: 12px !important;
+    z-index: 15 !important;
+    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.22) !important;
+  }
+
+  .mobile-chart-tooltip div {
+    font-size: 12px !important;
+    gap: 12px !important;
+  }
+}

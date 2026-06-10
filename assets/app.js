@@ -2712,6 +2712,25 @@ function drawMobileChart(allRows, range = "month") {
     return `<rect x="${xx.toFixed(2)}" y="${(barBase - barH).toFixed(2)}" width="${barW.toFixed(2)}" height="${barH.toFixed(2)}" fill="#cbd5e1" opacity="0.82" />`;
   });
 
+  const points = rows
+    .map((row, index) => {
+      const xx = x(row, index);
+      return `
+        <circle class="chart-point mobile-chart-point" cx="${xx.toFixed(2)}" cy="${yPrice(Number(row.market_price)).toFixed(2)}" r="2.9" fill="#10b981" />
+        <circle class="chart-point mobile-chart-point" cx="${xx.toFixed(2)}" cy="${yPrice(Number(row.nav)).toFixed(2)}" r="2.9" fill="#0ea5e9" />
+        <circle class="chart-point mobile-chart-point" cx="${xx.toFixed(2)}" cy="${yDiscount(Number(row.premium_discount_pct || 0)).toFixed(2)}" r="2.7" fill="#8b5cf6" />
+      `;
+    })
+    .join("");
+
+  const zones = rows.map((row, index) => {
+    const zoneW = plotW / Math.max(rows.length - 1, 1);
+    const xx = Math.max(pad.left, x(row, index) - zoneW / 2);
+    const widthValue = index === 0 || index === rows.length - 1 ? zoneW / 2 : zoneW;
+    const payload = encodeURIComponent(JSON.stringify(row));
+    return `<rect class="hover-zone mobile-hover-zone" data-row="${payload}" data-x="${x(row, index).toFixed(2)}" x="${xx.toFixed(2)}" y="${pad.top}" width="${Math.max(widthValue, 12).toFixed(2)}" height="${plotH}" />`;
+  });
+
   const labels = rows
     .filter((_, index) => index === 0 || index === rows.length - 1 || index % 8 === 0)
     .map((row) => {
@@ -2724,13 +2743,19 @@ function drawMobileChart(allRows, range = "month") {
       ${grid.join("")}
       ${rightAxis.join("")}
       ${bars.join("")}
+      <line id="hoverGuide" class="hover-guide" x1="${pad.left}" x2="${pad.left}" y1="${pad.top}" y2="${barBase}" />
       <path d="${marketPath}" fill="none" stroke="#10b981" stroke-width="2.5" />
       <path d="${navPath}" fill="none" stroke="#0ea5e9" stroke-width="2.5" />
       <path d="${discountPath}" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-dasharray="5 5" />
+      ${points}
       <line x1="${pad.left}" x2="${width - pad.right}" y1="${barBase}" y2="${barBase}" stroke="#cbd5e1" />
       ${labels.join("")}
+      ${zones.join("")}
     </svg>
+    <div id="chartTooltip" class="chart-tooltip mobile-chart-tooltip"></div>
   `;
+
+  bindChartTooltip(chart);
 }
 
 hydrateInlineIcons();
@@ -2749,37 +2774,76 @@ loadData().catch((error) => {
 function bindChartTooltip(chart) {
   const tooltip = chart.querySelector("#chartTooltip");
   const guide = chart.querySelector("#hoverGuide");
-  chart.querySelectorAll(".hover-zone").forEach((zone) => {
-    zone.addEventListener("mouseenter", () => {
-      const row = JSON.parse(decodeURIComponent(zone.dataset.row));
-      const label = row.period_start
-        ? `${row.period_label}（${row.period_start} 至 ${row.period_end}）`
-        : row.date;
-      const volumeLabel = row.period_type === "日" ? "成交量" : `${row.period_type}成交量`;
-      tooltip.innerHTML = `
-        <strong>${label}</strong>
-        <div><span>市價</span><b>${fmt.money(Number(row.market_price), 2)}</b></div>
-        <div><span>淨值</span><b>${fmt.money(Number(row.nav), 2)}</b></div>
-        <div><span>期末折溢價</span><b>${fmt.pct(Number(row.premium_discount_pct))}</b></div>
-        ${Number.isFinite(Number(row.premium_discount_pct_avg)) ? `<div><span>平均折溢價</span><b>${fmt.pct(Number(row.premium_discount_pct_avg))}</b></div>` : ""}
-        <div><span>${volumeLabel}</span><b>${fmt.lots(Number(row.volume_lots))}</b></div>
-      `;
-      tooltip.classList.add("show");
+  let hideTimer = null;
+  if (!tooltip) return;
+
+  const showZone = (zone, clientX = null, clientY = null) => {
+    if (!zone) return;
+    window.clearTimeout(hideTimer);
+    const row = JSON.parse(decodeURIComponent(zone.dataset.row));
+    const label = row.period_start
+      ? `${row.period_label}（${row.period_start} 至 ${row.period_end}）`
+      : row.date;
+    const volumeLabel = row.period_type === "日" ? "成交量" : `${row.period_type}成交量`;
+    tooltip.innerHTML = `
+      <strong>${label}</strong>
+      <div><span>市價</span><b>${fmt.money(Number(row.market_price), 2)}</b></div>
+      <div><span>淨值</span><b>${fmt.money(Number(row.nav), 2)}</b></div>
+      <div><span>期末折溢價</span><b>${fmt.pct(Number(row.premium_discount_pct))}</b></div>
+      ${Number.isFinite(Number(row.premium_discount_pct_avg)) ? `<div><span>平均折溢價</span><b>${fmt.pct(Number(row.premium_discount_pct_avg))}</b></div>` : ""}
+      <div><span>${volumeLabel}</span><b>${fmt.lots(Number(row.volume_lots))}</b></div>
+    `;
+    tooltip.classList.add("show");
+    if (guide) {
       guide.classList.add("active");
       guide.setAttribute("x1", zone.dataset.x);
       guide.setAttribute("x2", zone.dataset.x);
-    });
-    zone.addEventListener("mousemove", (event) => {
-      const box = chart.getBoundingClientRect();
-      const left = Math.min(event.clientX - box.left + 16, box.width - 210);
-      const top = Math.max(event.clientY - box.top - 18, 10);
-      tooltip.style.left = `${left}px`;
-      tooltip.style.top = `${top}px`;
-    });
+    }
+    moveTooltip(clientX, clientY, zone);
+  };
+
+  const moveTooltip = (clientX, clientY, zone = null) => {
+    const box = chart.getBoundingClientRect();
+    let left;
+    let top;
+    if (clientX != null && clientY != null) {
+      left = Math.min(Math.max(clientX - box.left + 12, 8), Math.max(box.width - 218, 8));
+      top = Math.max(clientY - box.top - 20, 8);
+    } else if (zone) {
+      const zoneBox = zone.getBoundingClientRect();
+      left = Math.min(Math.max(zoneBox.left - box.left + 12, 8), Math.max(box.width - 218, 8));
+      top = 10;
+    } else {
+      left = 10;
+      top = 10;
+    }
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
+  };
+
+  const scheduleHide = () => {
+    hideTimer = window.setTimeout(() => {
+      tooltip.classList.remove("show");
+      if (guide) guide.classList.remove("active");
+    }, 3200);
+  };
+
+  chart.querySelectorAll(".hover-zone").forEach((zone) => {
+    zone.addEventListener("mouseenter", (event) => showZone(zone, event.clientX, event.clientY));
+    zone.addEventListener("mousemove", (event) => moveTooltip(event.clientX, event.clientY, zone));
     zone.addEventListener("mouseleave", () => {
       tooltip.classList.remove("show");
-      guide.classList.remove("active");
+      if (guide) guide.classList.remove("active");
     });
+    zone.addEventListener("click", (event) => {
+      showZone(zone, event.clientX, event.clientY);
+      scheduleHide();
+    });
+    zone.addEventListener("touchstart", (event) => {
+      const touch = event.touches?.[0] || event.changedTouches?.[0];
+      showZone(zone, touch?.clientX, touch?.clientY);
+      scheduleHide();
+    }, { passive: true });
   });
 }
 

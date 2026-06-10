@@ -224,29 +224,29 @@
             </div>
             <form id="mobileQuickTradeForm" class="mobile-quick-trade-form">
               <div class="mobile-trade-action-row" role="radiogroup" aria-label="買入或賣出">
-                <label class="mobile-trade-radio active">
+                <label class="mobile-trade-radio is-buy active">
                   <input type="radio" name="mobileQuickTradeAction" value="buy" checked>
                   <span>買入</span>
                 </label>
-                <label class="mobile-trade-radio">
+                <label class="mobile-trade-radio is-sell">
                   <input type="radio" name="mobileQuickTradeAction" value="sell">
                   <span>賣出</span>
                 </label>
               </div>
               <div class="mobile-trade-grid">
-                <label>
+                <label class="mobile-trade-field mobile-trade-date-field">
                   <span>交易日期</span>
                   <input id="mobileQuickTradeDate" type="date" required>
                 </label>
-                <label>
+                <label class="mobile-trade-field mobile-trade-shares-field">
                   <span>交易股數（股）</span>
                   <input id="mobileQuickTradeShares" type="number" min="1" step="1" value="1" required inputmode="numeric">
                 </label>
-                <label>
+                <label class="mobile-trade-field mobile-trade-price-field">
                   <span>平均成本 / 成交價</span>
                   <input id="mobileQuickTradePrice" type="number" min="0.01" step="0.01" value="0.00" required inputmode="decimal">
                 </label>
-                <label>
+                <label class="mobile-trade-field mobile-trade-source-field">
                   <span>資金來源 / 備註分類</span>
                   <select id="mobileQuickTradeNoteType">
                     <option value="股息再投入">股息再投入</option>
