@@ -810,6 +810,7 @@ function bindInputs() {
     }
   }, 150));
   bindTradeForm();
+  bindMobileQuickTradeForm();
 }
 
 function bindQuickModuleActions() {
@@ -866,6 +867,81 @@ function createClientRequestId() {
   return `req-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+
+function todayIsoDate() {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  return now.toISOString().slice(0, 10);
+}
+
+function bindMobileQuickTradeForm() {
+  const form = $("mobileQuickTradeForm");
+  if (!form) return;
+
+  const dateInput = $("mobileQuickTradeDate");
+  if (dateInput && !dateInput.value) dateInput.value = todayIsoDate();
+  const priceInput = $("mobileQuickTradePrice");
+  const latestMarketPrice = Number(state.data?.latest?.market_price || state.data?.daily?.slice?.(-1)?.[0]?.market_price || 0);
+  if (priceInput && Number(priceInput.value || 0) <= 0 && Number.isFinite(latestMarketPrice) && latestMarketPrice > 0) {
+    priceInput.value = latestMarketPrice.toFixed(2);
+  }
+
+  const radios = Array.from(form.querySelectorAll('.mobile-trade-radio input[name="mobileQuickTradeAction"]'));
+  const syncRadioState = () => {
+    radios.forEach((input) => input.closest(".mobile-trade-radio")?.classList.toggle("active", input.checked));
+  };
+  radios.forEach((input) => input.addEventListener("change", syncRadioState));
+  syncRadioState();
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const action = form.querySelector('input[name="mobileQuickTradeAction"]:checked')?.value || "buy";
+    const tradeDate = normalizeTradeDate($("mobileQuickTradeDate")?.value);
+    const shares = Number($("mobileQuickTradeShares")?.value || 0);
+    const price = Number($("mobileQuickTradePrice")?.value || 0);
+    const noteType = $("mobileQuickTradeNoteType")?.value || "其他";
+    const note = ($("mobileQuickTradeNote")?.value || "").trim();
+    const status = $("mobileQuickTradeStatus");
+    const submit = $("mobileQuickTradeSubmit");
+
+    if (!tradeDate || !shares || !price || shares <= 0 || price <= 0) {
+      if (status) status.textContent = "請確認日期、股數與成交價都已正確填寫。";
+      return;
+    }
+
+    const trade = {
+      id: `mobile-trade-${Date.now()}`,
+      client_request_id: createClientRequestId(),
+      trade_date: tradeDate,
+      action,
+      shares,
+      price,
+      fee: 0,
+      tax: 0,
+      note_type: noteType,
+      note,
+      source: "mobile_home_quick_form",
+      created_at: new Date().toISOString(),
+    };
+
+    if (submit) {
+      submit.disabled = true;
+      submit.classList.add("is-loading");
+      submit.textContent = "寫入中...";
+    }
+    if (status) status.textContent = "正在寫入 Google Sheets，完成後會自動重新整理。";
+
+    if (!requestStreamlitTradeAppend(trade)) {
+      if (submit) {
+        submit.disabled = false;
+        submit.classList.remove("is-loading");
+        submit.textContent = "新增交易並寫入 Google Sheets";
+      }
+      if (status) status.textContent = "目前環境無法直接寫入，請改用電腦版新增交易頁。";
+    }
+  });
+}
+
 function requestStreamlitTradeSync(trades = state.trades, reason = "trade-edit") {
   if (!window.__00919_STREAMLIT_EMBED) return false;
 
@@ -905,8 +981,40 @@ function requestStreamlitTradeSync(trades = state.trades, reason = "trade-edit")
 }
 
 function requestStreamlitTradeAppend(trade) {
-  console.info("[00919] HTML trade append disabled; Streamlit native form is the formal write path.", Object.keys(trade || {}));
-  return false;
+  if (!window.__00919_STREAMLIT_EMBED) return false;
+
+  try {
+    let baseHref = "";
+    try {
+      baseHref = window.parent.location.href;
+    } catch (_) {
+      baseHref = document.referrer || window.location.href;
+    }
+    const parentUrl = new URL(baseHref || window.location.href);
+    const form = document.createElement("form");
+    form.method = "GET";
+    form.target = "_top";
+    form.action = `${parentUrl.origin}${parentUrl.pathname}`;
+
+    Object.entries({
+      append_trade: encodeBase64Url(JSON.stringify(trade || {})),
+      append_ts: String(Date.now()),
+    }).forEach(([name, value]) => {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+    return true;
+  } catch (error) {
+    console.error(error);
+    alert("交易寫入請求送出失敗，請改用電腦版新增交易頁。");
+    return false;
+  }
 }
 
 async function refreshDashboardData() {

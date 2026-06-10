@@ -211,6 +211,63 @@
             </div>
             <div id="mobileMainChart" class="mobile-chart"></div>
           </section>
+
+          <section class="mobile-trade-entry-section" aria-label="手機新增交易">
+            <div class="mobile-section-head mobile-trade-entry-head">
+              <div class="mobile-section-title">
+                <span data-icon="briefcase" data-icon-color="green"></span>
+                <div>
+                  <h3>手機新增交易</h3>
+                  <p>欄位直接顯示；填完送出後寫入 Google Sheets Trades。</p>
+                </div>
+              </div>
+            </div>
+            <form id="mobileQuickTradeForm" class="mobile-quick-trade-form">
+              <div class="mobile-trade-action-row" role="radiogroup" aria-label="買入或賣出">
+                <label class="mobile-trade-radio active">
+                  <input type="radio" name="mobileQuickTradeAction" value="buy" checked>
+                  <span>買入</span>
+                </label>
+                <label class="mobile-trade-radio">
+                  <input type="radio" name="mobileQuickTradeAction" value="sell">
+                  <span>賣出</span>
+                </label>
+              </div>
+              <div class="mobile-trade-grid">
+                <label>
+                  <span>交易日期</span>
+                  <input id="mobileQuickTradeDate" type="date" required>
+                </label>
+                <label>
+                  <span>交易股數（股）</span>
+                  <input id="mobileQuickTradeShares" type="number" min="1" step="1" value="1" required inputmode="numeric">
+                </label>
+                <label>
+                  <span>平均成本 / 成交價</span>
+                  <input id="mobileQuickTradePrice" type="number" min="0.01" step="0.01" value="0.00" required inputmode="decimal">
+                </label>
+                <label>
+                  <span>資金來源 / 備註分類</span>
+                  <select id="mobileQuickTradeNoteType">
+                    <option value="股息再投入">股息再投入</option>
+                    <option value="薪資投入">薪資投入</option>
+                    <option value="年終投入">年終投入</option>
+                    <option value="定期投入">定期投入</option>
+                    <option value="閒置資金投入">閒置資金投入</option>
+                    <option value="再平衡調整">再平衡調整</option>
+                    <option value="部位調整">部位調整</option>
+                    <option value="其他">其他</option>
+                  </select>
+                </label>
+              </div>
+              <label class="mobile-trade-note-field">
+                <span>備註</span>
+                <input id="mobileQuickTradeNote" type="text" placeholder="可留空，例如：定期投入、加碼原因">
+              </label>
+              <button id="mobileQuickTradeSubmit" class="mobile-trade-submit" type="submit">新增交易並寫入 Google Sheets</button>
+              <p id="mobileQuickTradeStatus" class="mobile-trade-status">送出後會重新整理；看首頁目前股數是否增加即可確認。</p>
+            </form>
+          </section>
         </section>
 
         <section class="desktop-home" aria-label="00919 電腦版首頁">
