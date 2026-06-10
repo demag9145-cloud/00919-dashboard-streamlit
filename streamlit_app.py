@@ -2643,6 +2643,23 @@ def render_trade_entry_page() -> None:
     """
     data = load_dashboard()
     trades, trades_source = load_trades_with_source()
+
+    # UI73d: Google Sheets 偶發讀取失敗時，不要讓最近交易預覽退回
+    # data/trades.json 的少量 fallback 資料。只要本頁本次 session 曾成功讀過
+    # Google Sheets，就先保留該份快取供編輯/刪除選取使用；實際新增、更新、
+    # 刪除仍會呼叫 Google Sheets API。
+    if trades_source.get("ok") and trades_source.get("source") == "google_sheets":
+        st.session_state["trade_last_good_google_rows"] = trades
+        st.session_state["trade_last_good_google_message"] = trades_source.get("message", "")
+    elif st.session_state.get("trade_last_good_google_rows"):
+        original_message = trades_source.get("message", "")
+        trades = st.session_state.get("trade_last_good_google_rows", [])
+        trades_source = {
+            "source": "google_sheets_cache",
+            "ok": True,
+            "message": "Google Sheets 暫時讀取失敗，暫用本頁上次成功讀取快取；寫入/更新/刪除仍會直接送 Google Sheets" + (f"（原訊息：{original_message}）" if original_message else ""),
+        }
+
     status_message = st.session_state.pop("last_update_message", None)
     latest = data.get("latest_daily", {})
     dividends = data.get("dividends", [])
@@ -2991,6 +3008,7 @@ def render_trade_entry_page() -> None:
     mode = st.session_state.get("trade_workflow_mode", "add")
     selected_row_number = st.session_state.get("trade_selected_row_number")
     selected_trade_for_message = next((row for row in editable_trades if int(row.get("sheet_row_number") or 0) == int(selected_row_number or 0)), None)
+    is_google_trade_source = trades_source.get("source") in {"google_sheets", "google_sheets_cache"}
 
     if mode == "add":
         st.info("目前模式：新增交易。填好欄位後按「新增交易」會直接寫入 Google Sheets。")
@@ -3025,9 +3043,9 @@ def render_trade_entry_page() -> None:
     add_clicked = action_cols[0].button("新增交易", type="primary", use_container_width=True, disabled=mode != "add")
     edit_button_label = "編輯完成" if mode.startswith("edit") else "編輯交易"
     edit_clicked = action_cols[1].button(edit_button_label, use_container_width=True, disabled=mode.startswith("delete"))
-    cancel_clicked = action_cols[2].button("取消動作", use_container_width=True, disabled=mode == "add")
     delete_button_label = "確認刪除" if mode.startswith("delete") else "刪除交易"
-    delete_clicked = action_cols[3].button(delete_button_label, use_container_width=True, disabled=mode.startswith("edit"))
+    delete_clicked = action_cols[2].button(delete_button_label, use_container_width=True, disabled=mode.startswith("edit"))
+    cancel_clicked = action_cols[3].button("取消動作", use_container_width=True, disabled=mode == "add")
 
     def _current_trade_payload(source: str) -> dict:
         return {
@@ -3070,7 +3088,7 @@ def render_trade_entry_page() -> None:
 
     if edit_clicked:
         if mode == "add":
-            if not trades_source.get("ok") or trades_source.get("source") != "google_sheets":
+            if not is_google_trade_source:
                 st.warning("目前交易資料不是直接由 Google Sheets 讀取，暫不開放編輯。請確認 Google Sheets 連線正常後再操作。")
             elif update_trade_in_google_sheets is None:
                 st.warning("Google Sheets 編輯模組尚未啟用，請確認目前部署的服務檔已更新。")
@@ -3101,7 +3119,7 @@ def render_trade_entry_page() -> None:
 
     if delete_clicked:
         if mode == "add":
-            if not trades_source.get("ok") or trades_source.get("source") != "google_sheets":
+            if not is_google_trade_source:
                 st.warning("目前交易資料不是直接由 Google Sheets 讀取，暫不開放刪除。請確認 Google Sheets 連線正常後再操作。")
             elif delete_trade_from_google_sheets is None:
                 st.warning("Google Sheets 刪除模組尚未啟用，請確認目前部署的服務檔已更新。")
