@@ -2960,6 +2960,11 @@ def render_trade_entry_page() -> None:
     }.items():
         st.session_state.setdefault(key, value)
 
+    # UI73b: Streamlit 不允許在同一次 rerun 中，於 widget 建立後再直接改它的 key。
+    # 新增 / 編輯 / 刪除完成後只先設定 reset flag，下一次 rerun 在 widget 建立前再清空表單。
+    if st.session_state.pop("trade_reset_form_defaults", False):
+        _set_trade_form_defaults()
+
     pending_row_number = st.session_state.pop("trade_pending_load_row_number", None)
     if pending_row_number:
         picked = next((row for row in editable_trades if int(row.get("sheet_row_number") or 0) == int(pending_row_number)), None)
@@ -3049,7 +3054,7 @@ def render_trade_entry_page() -> None:
                 st.info(google_sheets_write_help())
                 st.code(f"{type(exc).__name__}: {exc}")
             else:
-                _set_trade_form_defaults()
+                st.session_state["trade_reset_form_defaults"] = True
                 st.session_state["trade_workflow_mode"] = "add"
                 st.session_state["trade_selected_row_number"] = None
                 st.session_state["last_update_message"] = "新增交易已寫入 Google Sheets"
@@ -3080,7 +3085,7 @@ def render_trade_entry_page() -> None:
                     st.info(google_sheets_write_help())
                     st.code(f"{type(exc).__name__}: {exc}")
                 else:
-                    _set_trade_form_defaults()
+                    st.session_state["trade_reset_form_defaults"] = True
                     st.session_state["trade_workflow_mode"] = "add"
                     st.session_state["trade_selected_row_number"] = None
                     st.session_state["last_update_message"] = "交易已更新到 Google Sheets"
@@ -3109,7 +3114,7 @@ def render_trade_entry_page() -> None:
                     st.info(google_sheets_write_help())
                     st.code(f"{type(exc).__name__}: {exc}")
                 else:
-                    _set_trade_form_defaults()
+                    st.session_state["trade_reset_form_defaults"] = True
                     st.session_state["trade_workflow_mode"] = "add"
                     st.session_state["trade_selected_row_number"] = None
                     st.session_state["last_update_message"] = "交易已從 Google Sheets 刪除"
