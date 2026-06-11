@@ -16,6 +16,10 @@ ROOT = Path(__file__).resolve().parent
 DATA_DIR = ROOT / "data"
 DAILY_HISTORY_PATH = DATA_DIR / "daily_history.json"
 FETCH_TIMEOUT_SECONDS = float(os.environ.get("FETCH_TIMEOUT_SECONDS", "8"))
+# UI75d: TWSE e添富配息組成頁屬於低頻資料，且在 Streamlit Cloud 偶發會卡 50+ 秒。
+# 一般「更新資料」預設跳過這段，沿用既有完整組成與 MoneyDJ/群益事件資料。
+# 需要強制重抓 TWSE 54C 組成時，可在雲端環境變數設 FETCH_TWSE_DIVIDEND_COMPOSITION=1。
+FETCH_TWSE_DIVIDEND_COMPOSITION = os.environ.get("FETCH_TWSE_DIVIDEND_COMPOSITION", "0") == "1"
 
 MONEYDJ_NAV_URL = "https://www.moneydj.com/etf/x/basic/basic0003.xdjhtm?etfid=00919.tw"
 MONEYDJ_MONTHLY_SIZE_URL = "https://www.moneydj.com/ETF/X/Basic/Basic0019.xdjhtm?etfid=00919.TW"
@@ -1764,7 +1768,16 @@ def main():
     existing_dividend_rows = load_existing_dividend_rows()
     moneydj_dividend_rows = safe_fetch("MoneyDJ dividend events", parse_moneydj_dividend_rows, [])
     capitalfund_dividend_rows = safe_fetch("CapitalFund dividend events", parse_capitalfund_dividend_rows, [])
-    twse_dividend_rows = safe_fetch("TWSE dividend composition", parse_twse_dividend_rows, [])
+    if FETCH_TWSE_DIVIDEND_COMPOSITION:
+        twse_dividend_rows = safe_fetch("TWSE dividend composition", parse_twse_dividend_rows, [])
+    else:
+        twse_dividend_rows = []
+        print(
+            "[SKIP] TWSE dividend composition skipped in fast update mode; "
+            "using existing complete rows plus MoneyDJ/CapitalFund events. "
+            "Set FETCH_TWSE_DIVIDEND_COMPOSITION=1 for manual full refresh.",
+            flush=True,
+        )
     dividend_rows = merge_dividend_sources(
         existing_dividend_rows,
         moneydj_dividend_rows,
