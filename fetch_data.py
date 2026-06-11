@@ -1738,20 +1738,22 @@ def calc_signals(latest_daily, latest_dividend):
 
 def safe_fetch(label, func, default):
     started = time.perf_counter()
+    print(f"[START] {label}", flush=True)
     try:
         result = func()
         elapsed = time.perf_counter() - started
         size_hint = len(result) if hasattr(result, "__len__") else "?"
-        print(f"[OK] {label} fetched in {elapsed:.1f}s, rows/items={size_hint}")
+        print(f"[OK] {label} fetched in {elapsed:.1f}s, rows/items={size_hint}", flush=True)
         return result
     except Exception as exc:
         elapsed = time.perf_counter() - started
-        print(f"[WARN] {label} fetch failed after {elapsed:.1f}s: {exc}")
+        print(f"[WARN] {label} fetch failed after {elapsed:.1f}s: {type(exc).__name__}: {exc}", flush=True)
         return default
 
 def main():
     DATA_DIR.mkdir(exist_ok=True)
     fetched_at = datetime.now(ZoneInfo("Asia/Taipei")).replace(tzinfo=None).isoformat(timespec="seconds")
+    print(f"[START] 00919 full update at {fetched_at} Asia/Taipei", flush=True)
 
     yahoo_rows = safe_fetch("Yahoo history", fetch_yahoo_history_rows, [])
     capital_nav_rows = safe_fetch("CapitalFund trend", fetch_capitalfund_trend_rows, [])
@@ -1840,19 +1842,19 @@ def main():
     (DATA_DIR / "dashboard_data.json").write_text(
         json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
     )
-    print(f"Wrote {DATA_DIR / 'dashboard_data.json'}")
-    print(f"Daily rows: {len(daily_rows)}")
-    print(f"Daily history rows: {len(daily_rows)}")
-    print(f"Yahoo history rows: {len(yahoo_rows)}")
-    print(f"CapitalFund NAV rows: {len(capital_nav_rows)}")
-    print(f"MoneyDJ NAV rows: {len(moneydj_nav_rows)}")
-    print(f"Dividend rows: {len(dividend_rows)}")
-    print(f"Dividend source rows: existing={len(existing_dividend_rows)}, MoneyDJ={len(moneydj_dividend_rows)}, CapitalFund={len(capitalfund_dividend_rows)}, TWSE={len(twse_dividend_rows)}")
-    print(f"Monthly size rows: {len(monthly_size_rows)}")
-    print(f"Monthly history rows: {len(monthly_history_rows)}")
-    print(f"Holding rows: {len(holdings_data.get('holdings', []))}")
-    print(f"Holding source: {holdings_data.get('source')}")
-    print(f"Holding history rows: {len(holdings_history_rows)}")
+    print(f"Wrote {DATA_DIR / 'dashboard_data.json'}", flush=True)
+    print(f"Daily rows: {len(daily_rows)}", flush=True)
+    print(f"Daily history rows: {len(daily_rows)}", flush=True)
+    print(f"Yahoo history rows: {len(yahoo_rows)}", flush=True)
+    print(f"CapitalFund NAV rows: {len(capital_nav_rows)}", flush=True)
+    print(f"MoneyDJ NAV rows: {len(moneydj_nav_rows)}", flush=True)
+    print(f"Dividend rows: {len(dividend_rows)}", flush=True)
+    print(f"Dividend source rows: existing={len(existing_dividend_rows)}, MoneyDJ={len(moneydj_dividend_rows)}, CapitalFund={len(capitalfund_dividend_rows)}, TWSE={len(twse_dividend_rows)}", flush=True)
+    print(f"Monthly size rows: {len(monthly_size_rows)}", flush=True)
+    print(f"Monthly history rows: {len(monthly_history_rows)}", flush=True)
+    print(f"Holding rows: {len(holdings_data.get('holdings', []))}", flush=True)
+    print(f"Holding source: {holdings_data.get('source')}", flush=True)
+    print(f"Holding history rows: {len(holdings_history_rows)}", flush=True)
 
 
 if __name__ == "__main__":

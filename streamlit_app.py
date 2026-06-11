@@ -9,6 +9,8 @@ import re
 import shutil
 import subprocess
 import sys
+import threading
+import time
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
@@ -433,26 +435,61 @@ def calc_total_signal(data: dict, position: dict, total_return: float) -> tuple[
 
 
 def run_update() -> tuple[bool, str]:
+    """Run fetch_data.py with live Streamlit Cloud log output.
+
+    UI75b still used capture_output=True, so Streamlit Cloud logs could only show
+    app-level reruns and deprecation warnings while the child process was stuck.
+    UI75c runs fetch_data.py unbuffered and mirrors every line to the parent log.
+    If a source blocks, the last visible [START] line in Manage app -> Logs points
+    directly to the source that is hanging.
+    """
+    command = [sys.executable, "-u", "fetch_data.py"]
+    output_lines: list[str] = []
+    started = time.perf_counter()
+
     try:
-        result = subprocess.run(
-            [sys.executable, "fetch_data.py"],
+        proc = subprocess.Popen(
+            command,
             cwd=BASE_DIR,
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             text=True,
-            timeout=260,
+            bufsize=1,
         )
-    except subprocess.TimeoutExpired as exc:
-        partial_stdout = (exc.stdout or "") if isinstance(exc.stdout, str) else ""
-        partial_stderr = (exc.stderr or "") if isinstance(exc.stderr, str) else ""
-        partial_output = "\n".join([partial_stdout.strip(), partial_stderr.strip()]).strip()
-        message = "資料抓取逾時：fetch_data.py 超過 260 秒仍未完成。通常是外部資料源連線過慢或暫時阻擋。"
-        if partial_output:
-            message += "\n\n已完成到這裡：\n" + partial_output[-1800:]
-        return False, message
     except Exception as exc:
-        return False, str(exc)
-    output = "\n".join([result.stdout.strip(), result.stderr.strip()]).strip()
-    return result.returncode == 0, output or "更新完成"
+        return False, f"無法啟動 fetch_data.py：{type(exc).__name__}: {exc}"
+
+    def _reader() -> None:
+        assert proc.stdout is not None
+        for line in proc.stdout:
+            line = line.rstrip("\n")
+            output_lines.append(line)
+            print(f"[fetch_data] {line}", flush=True)
+
+    reader = threading.Thread(target=_reader, daemon=True)
+    reader.start()
+
+    timeout_seconds = 260
+    while proc.poll() is None:
+        if time.perf_counter() - started > timeout_seconds:
+            proc.kill()
+            reader.join(timeout=2)
+            tail = "\n".join(output_lines[-80:]).strip()
+            message = (
+                f"資料抓取逾時：fetch_data.py 超過 {timeout_seconds} 秒仍未完成。\n"
+                "請看 Streamlit Cloud / Manage app / Logs 裡最後一行 [fetch_data] [START]，"
+                "那一個來源就是目前卡住的來源。"
+            )
+            if tail:
+                message += "\n\n最後抓取紀錄：\n" + tail
+            return False, message
+        time.sleep(0.2)
+
+    reader.join(timeout=2)
+    output = "\n".join(output_lines).strip()
+    if proc.returncode == 0:
+        return True, output or "更新完成"
+    return False, output or f"fetch_data.py 執行失敗，return code={proc.returncode}"
 
 
 def sync_static_files() -> None:
