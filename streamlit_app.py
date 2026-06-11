@@ -439,8 +439,16 @@ def run_update() -> tuple[bool, str]:
             cwd=BASE_DIR,
             capture_output=True,
             text=True,
-            timeout=180,
+            timeout=260,
         )
+    except subprocess.TimeoutExpired as exc:
+        partial_stdout = (exc.stdout or "") if isinstance(exc.stdout, str) else ""
+        partial_stderr = (exc.stderr or "") if isinstance(exc.stderr, str) else ""
+        partial_output = "\n".join([partial_stdout.strip(), partial_stderr.strip()]).strip()
+        message = "資料抓取逾時：fetch_data.py 超過 260 秒仍未完成。通常是外部資料源連線過慢或暫時阻擋。"
+        if partial_output:
+            message += "\n\n已完成到這裡：\n" + partial_output[-1800:]
+        return False, message
     except Exception as exc:
         return False, str(exc)
     output = "\n".join([result.stdout.strip(), result.stderr.strip()]).strip()

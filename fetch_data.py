@@ -1,5 +1,6 @@
 import json
 import hashlib
+import os
 import re
 import ssl
 import time
@@ -14,6 +15,7 @@ from zoneinfo import ZoneInfo
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = ROOT / "data"
 DAILY_HISTORY_PATH = DATA_DIR / "daily_history.json"
+FETCH_TIMEOUT_SECONDS = float(os.environ.get("FETCH_TIMEOUT_SECONDS", "8"))
 
 MONEYDJ_NAV_URL = "https://www.moneydj.com/etf/x/basic/basic0003.xdjhtm?etfid=00919.tw"
 MONEYDJ_MONTHLY_SIZE_URL = "https://www.moneydj.com/ETF/X/Basic/Basic0019.xdjhtm?etfid=00919.TW"
@@ -39,7 +41,7 @@ def opener():
     )
 
 
-def fetch_text(url):
+def fetch_text(url, timeout=None):
     req = urllib.request.Request(
         url,
         headers={
@@ -47,7 +49,8 @@ def fetch_text(url):
             "Accept": "text/html,application/xhtml+xml,application/json",
         },
     )
-    with opener().open(req, timeout=25) as resp:
+    request_timeout = FETCH_TIMEOUT_SECONDS if timeout is None else timeout
+    with opener().open(req, timeout=request_timeout) as resp:
         return resp.read().decode("utf-8", "ignore")
 
 
@@ -1734,10 +1737,16 @@ def calc_signals(latest_daily, latest_dividend):
 
 
 def safe_fetch(label, func, default):
+    started = time.perf_counter()
     try:
-        return func()
+        result = func()
+        elapsed = time.perf_counter() - started
+        size_hint = len(result) if hasattr(result, "__len__") else "?"
+        print(f"[OK] {label} fetched in {elapsed:.1f}s, rows/items={size_hint}")
+        return result
     except Exception as exc:
-        print(f"[WARN] {label} fetch failed: {exc}")
+        elapsed = time.perf_counter() - started
+        print(f"[WARN] {label} fetch failed after {elapsed:.1f}s: {exc}")
         return default
 
 def main():
