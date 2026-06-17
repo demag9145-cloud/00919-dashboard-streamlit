@@ -1533,40 +1533,57 @@ def parse_pct_from_chunk(chunk, labels):
     return None
 
 
-def parse_twse_dividend_rows(start_year=None):
-    """Parse TWSE ETF e-Fortune dividend rows and modal composition details.
+def html_to_spaced_text(value):
+    """Convert HTML to plain text without gluing adjacent table cells."""
+    value = re.sub(r"<script[^>]*>.*?</script>|<style[^>]*>.*?</style>", " ", value, flags=re.S | re.I)
+    value = re.sub(r"<[^>]+>", " ", value)
+    value = unescape(value)
+    return re.sub(r"\s+", " ", value).strip()
 
-    Important: the TWSE page places the announcement year *after* each row's
-    modal text.  Older code anchored on ``115 00919`` and therefore skipped the
-    first/newest row.  Anchor directly on the ETF code/name so the latest event
-    is included.
+
+def parse_twse_dividend_rows(start_year=None):
+    """Parse 00919 rows and modal composition from TWSE ETF e添富.
+
+    UI75f fixes adjacent HTML cells being glued together by ``clean_text`` and
+    limits each match to the next ETF row instead of the next 00919 occurrence.
     """
-    html = fetch_text(current_twse_dividend_url(start_year=start_year))
-    text = clean_text(html)
+    twse_timeout = float(os.environ.get("TWSE_DIVIDEND_TIMEOUT_SECONDS", "25"))
+    html = fetch_text(current_twse_dividend_url(start_year=start_year), timeout=twse_timeout)
+    text = html_to_spaced_text(html)
+
     row_pattern = re.compile(
-        r"00919\s+群益台灣精選高息\s+(.*?)"
-        r"(?=\s+00919\s+群益台灣精選高息\s+|\s+×\s+|\Z)",
+        r"(?:^|\s)(?:\d{3}\s+)?00919\s+群益台灣精選高息\s+"
+        r"(?P<ex>\d{3}年\d{1,2}月\d{1,2}日)\s+"
+        r"(?P<record>\d{3}年\d{1,2}月\d{1,2}日)\s+"
+        r"(?P<pay>\d{3}年\d{1,2}月\d{1,2}日)\s+"
+        r"(?P<amount>[0-9]+(?:\.[0-9]+)?)\s+詳細資料\s*"
+        r"(?P<details>.*?)"
+        r"(?=(?:\s+\d{3}\s+[0-9]{4,6}[A-Z]?\s+)|(?:\s+×\s+)|\Z)",
         flags=re.S,
     )
+
     rows = []
     for match in row_pattern.finditer(text):
-        chunk = clean_text(match.group(1))
-        date_matches = re.findall(r"(\d{3})年(\d{1,2})月(\d{1,2})日", chunk)
-        if len(date_matches) < 3:
-            continue
-        ex_date = roc_ymd_to_iso(*date_matches[0])
-        record_date = roc_ymd_to_iso(*date_matches[1])
-        pay_date = roc_ymd_to_iso(*date_matches[2])
-        amount_match = re.search(r"\d{3}年\d{1,2}月\d{1,2}日\s+([0-9]+(?:\.\d+)?)\s+詳細資料", chunk)
-        dividend_per_share = parse_number(amount_match.group(1)) if amount_match else None
-        dividend_income_pct = parse_pct_from_chunk(chunk, [r"股利所得占比"])
-        interest_income_pct = parse_pct_from_chunk(chunk, [r"利息所得占比"])
-        equalization_pct = parse_pct_from_chunk(chunk, [r"收益平準金占比"])
-        capital_gain_pct = parse_pct_from_chunk(chunk, [r"已實現資本利得占比"])
-        other_income_pct = parse_pct_from_chunk(chunk, [r"其他所得占比"])
-        has_components = any(v is not None for v in [dividend_income_pct, interest_income_pct, equalization_pct, capital_gain_pct, other_income_pct])
-        if dividend_per_share is None and not has_components:
-            continue
+        details = match.group("details")
+        ex_date = normalize_date_text(match.group("ex"))
+        record_date = normalize_date_text(match.group("record"))
+        pay_date = normalize_date_text(match.group("pay"))
+        dividend_per_share = parse_number(match.group("amount"))
+        dividend_income_pct = parse_pct_from_chunk(details, [r"股利所得占比"])
+        interest_income_pct = parse_pct_from_chunk(details, [r"利息所得占比"])
+        equalization_pct = parse_pct_from_chunk(details, [r"收益平準金占比"])
+        capital_gain_pct = parse_pct_from_chunk(details, [r"已實現資本利得占比"])
+        other_income_pct = parse_pct_from_chunk(details, [r"其他所得占比"])
+        has_components = any(
+            value is not None
+            for value in [
+                dividend_income_pct,
+                interest_income_pct,
+                equalization_pct,
+                capital_gain_pct,
+                other_income_pct,
+            ]
+        )
         row = {
             "ex_date": ex_date,
             "record_date": record_date,
@@ -1583,9 +1600,25 @@ def parse_twse_dividend_rows(start_year=None):
             "composition_status": "complete" if has_components else "pending",
             "is_estimated": True,
         }
-        rows.append(normalize_dividend_row(row, source_hint="TWSE ETF e添富"))
-    return sorted_dedup_dividend_rows(rows)
+        normalized = normalize_dividend_row(row, source_hint="TWSE ETF e添富")
+        rows.append(normalized)
+        print(
+            "[INFO] TWSE 00919 parsed "
+            f"ex_date={normalized.get('ex_date')}, dividend={normalized.get('dividend_per_share')}, "
+            f"dividend_income={normalized.get('dividend_income_pct')}%, "
+            f"capital_gain={normalized.get('capital_gain_pct')}%, "
+            f"status={normalized.get('composition_status')}",
+            flush=True,
+        )
 
+    if not rows:
+        code_seen = "00919" in text and "群益台灣精選高息" in text
+        print(
+            "[WARN] TWSE 00919 parser returned 0 rows; "
+            f"page_contains_00919={code_seen}, text_length={len(text)}.",
+            flush=True,
+        )
+    return sorted_dedup_dividend_rows(rows)
 
 def sorted_dedup_dividend_rows(rows):
     by_key = {}
