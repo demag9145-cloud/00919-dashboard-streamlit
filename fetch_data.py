@@ -6,6 +6,10 @@ import ssl
 import time
 import urllib.parse
 import urllib.request
+try:
+    import requests
+except Exception:  # pragma: no cover - requests is optional in local fallback tests
+    requests = None
 from datetime import datetime
 from html import unescape
 from pathlib import Path
@@ -20,6 +24,22 @@ FETCH_TIMEOUT_SECONDS = float(os.environ.get("FETCH_TIMEOUT_SECONDS", "8"))
 # 已完成的歷史組成不重抓；只有「最新配息仍 pending」時才查當年度頁面。
 # 需要強制重抓全部歷史組成時，可設 FETCH_TWSE_DIVIDEND_COMPOSITION=1。
 FETCH_TWSE_DIVIDEND_COMPOSITION = os.environ.get("FETCH_TWSE_DIVIDEND_COMPOSITION", "0") == "1"
+
+# UI75g: TWSE e添富 54C 組成是 00919 配息稅務核心資料。
+# 獨立測試確認 TWSE 帶參數頁 / 無參數頁皆可取得完整五項組成。
+# 正式流程改用完整瀏覽器標頭、重試與無參數備援，避免偶發 307 / timeout 讓最新資料長期 pending。
+TWSE_BROWSER_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/124.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept-Language": "zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7",
+    "Cache-Control": "no-cache",
+    "Pragma": "no-cache",
+    "Referer": "https://www.twse.com.tw/zh/ETFortune/dividendList",
+}
 
 MONEYDJ_NAV_URL = "https://www.moneydj.com/etf/x/basic/basic0003.xdjhtm?etfid=00919.tw"
 MONEYDJ_MONTHLY_SIZE_URL = "https://www.moneydj.com/ETF/X/Basic/Basic0019.xdjhtm?etfid=00919.TW"
@@ -56,6 +76,72 @@ def fetch_text(url, timeout=None):
     request_timeout = FETCH_TIMEOUT_SECONDS if timeout is None else timeout
     with opener().open(req, timeout=request_timeout) as resp:
         return resp.read().decode("utf-8", "ignore")
+
+
+def fetch_twse_text_with_retry(url, timeout=None, attempts=None, label="TWSE dividend composition"):
+    """Fetch TWSE e添富 HTML with browser-like headers, retries and redirect logging.
+
+    The independent probe confirmed the endpoint can return HTTP 200 and the
+    complete five-part composition.  In the production app TWSE may still return
+    transient 307 / timeout / 5xx responses, so this helper retries and records
+    the final URL before the parser runs.
+    """
+    request_timeout = timeout or float(os.environ.get("TWSE_DIVIDEND_TIMEOUT_SECONDS", "25"))
+    max_attempts = attempts or int(os.environ.get("TWSE_DIVIDEND_FETCH_ATTEMPTS", "3"))
+    last_error = None
+
+    for attempt in range(1, max_attempts + 1):
+        started = time.perf_counter()
+        try:
+            if requests is not None:
+                session = requests.Session()
+                resp = session.get(
+                    url,
+                    headers=TWSE_BROWSER_HEADERS,
+                    timeout=request_timeout,
+                    allow_redirects=True,
+                )
+                elapsed = time.perf_counter() - started
+                history_codes = [item.status_code for item in resp.history]
+                if resp.history:
+                    print(
+                        f"[INFO] {label} redirect history attempt {attempt}: "
+                        f"{history_codes} -> {resp.url}",
+                        flush=True,
+                    )
+                if resp.status_code in {307, 408, 425, 429, 500, 502, 503, 504}:
+                    raise RuntimeError(f"HTTP {resp.status_code}: {resp.url}")
+                resp.raise_for_status()
+                print(
+                    f"[INFO] {label} HTTP {resp.status_code} attempt {attempt} "
+                    f"in {elapsed:.1f}s, final_url={resp.url}, bytes={len(resp.content)}",
+                    flush=True,
+                )
+                return resp.text
+
+            req = urllib.request.Request(url, headers=TWSE_BROWSER_HEADERS)
+            with opener().open(req, timeout=request_timeout) as resp:
+                raw = resp.read()
+                elapsed = time.perf_counter() - started
+                final_url = getattr(resp, "url", url)
+                print(
+                    f"[INFO] {label} urllib HTTP {getattr(resp, 'status', '?')} attempt {attempt} "
+                    f"in {elapsed:.1f}s, final_url={final_url}, bytes={len(raw)}",
+                    flush=True,
+                )
+                return raw.decode("utf-8", "ignore")
+        except Exception as exc:
+            elapsed = time.perf_counter() - started
+            last_error = exc
+            print(
+                f"[WARN] {label} attempt {attempt}/{max_attempts} failed after {elapsed:.1f}s: "
+                f"{type(exc).__name__}: {exc}",
+                flush=True,
+            )
+            if attempt < max_attempts:
+                time.sleep(min(4, 2 ** (attempt - 1)))
+
+    raise RuntimeError(f"{label} failed after {max_attempts} attempts: {last_error}")
 
 
 def clean_text(value):
@@ -147,6 +233,11 @@ def current_twse_dividend_url(start_year=None):
         "https://www.twse.com.tw/zh/ETFortune/dividendList"
         f"?stkNo=00919&startDate={start_year}&endDate={year}"
     )
+
+
+def twse_dividend_list_url_without_filters():
+    """Official unfiltered dividend-list page used as a fallback source."""
+    return "https://www.twse.com.tw/zh/ETFortune/dividendList"
 
 
 def to_iso_date(value):
@@ -1541,14 +1632,8 @@ def html_to_spaced_text(value):
     return re.sub(r"\s+", " ", value).strip()
 
 
-def parse_twse_dividend_rows(start_year=None):
-    """Parse 00919 rows and modal composition from TWSE ETF e添富.
-
-    UI75f fixes adjacent HTML cells being glued together by ``clean_text`` and
-    limits each match to the next ETF row instead of the next 00919 occurrence.
-    """
-    twse_timeout = float(os.environ.get("TWSE_DIVIDEND_TIMEOUT_SECONDS", "25"))
-    html = fetch_text(current_twse_dividend_url(start_year=start_year), timeout=twse_timeout)
+def parse_twse_dividend_rows_from_html(html, source_label="TWSE ETF e添富"):
+    """Parse 00919 rows and modal composition from TWSE ETF e添富 HTML."""
     text = html_to_spaced_text(html)
 
     row_pattern = re.compile(
@@ -1574,16 +1659,16 @@ def parse_twse_dividend_rows(start_year=None):
         equalization_pct = parse_pct_from_chunk(details, [r"收益平準金占比"])
         capital_gain_pct = parse_pct_from_chunk(details, [r"已實現資本利得占比"])
         other_income_pct = parse_pct_from_chunk(details, [r"其他所得占比"])
-        has_components = any(
-            value is not None
-            for value in [
-                dividend_income_pct,
-                interest_income_pct,
-                equalization_pct,
-                capital_gain_pct,
-                other_income_pct,
-            ]
-        )
+        component_values = [
+            dividend_income_pct,
+            interest_income_pct,
+            equalization_pct,
+            capital_gain_pct,
+            other_income_pct,
+        ]
+        has_complete_components = all(value is not None for value in component_values)
+        component_sum = sum(float(value or 0) for value in component_values) if has_complete_components else None
+        component_sum_ok = component_sum is not None and abs(component_sum - 100.0) <= 0.5
         row = {
             "ex_date": ex_date,
             "record_date": record_date,
@@ -1594,19 +1679,24 @@ def parse_twse_dividend_rows(start_year=None):
             "equalization_pct": equalization_pct,
             "capital_gain_pct": capital_gain_pct,
             "other_income_pct": other_income_pct,
-            "event_source": "TWSE ETF e添富",
-            "composition_source": "TWSE ETF e添富" if has_components else None,
-            "source": "TWSE ETF e添富",
-            "composition_status": "complete" if has_components else "pending",
+            "event_source": source_label,
+            "composition_source": source_label if has_complete_components else None,
+            "source": source_label,
+            "composition_status": "complete" if has_complete_components and component_sum_ok else "pending",
+            "composition_sum_pct": round(component_sum, 4) if component_sum is not None else None,
             "is_estimated": True,
         }
-        normalized = normalize_dividend_row(row, source_hint="TWSE ETF e添富")
+        normalized = normalize_dividend_row(row, source_hint=source_label)
         rows.append(normalized)
         print(
             "[INFO] TWSE 00919 parsed "
             f"ex_date={normalized.get('ex_date')}, dividend={normalized.get('dividend_per_share')}, "
             f"dividend_income={normalized.get('dividend_income_pct')}%, "
+            f"interest={normalized.get('interest_income_pct')}%, "
+            f"equalization={normalized.get('equalization_pct')}%, "
             f"capital_gain={normalized.get('capital_gain_pct')}%, "
+            f"other={normalized.get('other_income_pct')}%, "
+            f"sum={row.get('composition_sum_pct')}%, "
             f"status={normalized.get('composition_status')}",
             flush=True,
         )
@@ -1619,6 +1709,67 @@ def parse_twse_dividend_rows(start_year=None):
             flush=True,
         )
     return sorted_dedup_dividend_rows(rows)
+
+
+def filter_twse_rows_for_latest(rows, latest_ex_date=None):
+    if not latest_ex_date:
+        return rows
+    matched = [row for row in rows if row.get("ex_date") == latest_ex_date]
+    if matched:
+        print(
+            f"[INFO] TWSE matched latest dividend ex_date={latest_ex_date}, rows={len(matched)}.",
+            flush=True,
+        )
+        return matched
+    print(
+        f"[WARN] TWSE did not contain latest ex_date={latest_ex_date}; "
+        f"keeping parsed rows as diagnostic candidates={len(rows)}.",
+        flush=True,
+    )
+    return rows
+
+
+def parse_twse_dividend_rows(start_year=None, latest_ex_date=None):
+    """Fetch and parse TWSE ETF e添富 00919 dividend-composition rows.
+
+    UI75g connects the independently verified TWSE strategy back to the main app:
+    1) parameterized current-year page, with browser-like headers and retries;
+    2) fallback to the official unfiltered list page when the parameterized page
+       temporarily redirects, times out, or parses no rows;
+    3) five-part composition must all be present and sum to roughly 100% before
+       the row is allowed to become complete.
+    """
+    twse_timeout = float(os.environ.get("TWSE_DIVIDEND_TIMEOUT_SECONDS", "25"))
+    urls = [
+        (current_twse_dividend_url(start_year=start_year), "TWSE dividend composition parameterized"),
+        (twse_dividend_list_url_without_filters(), "TWSE dividend composition unfiltered fallback"),
+    ]
+
+    last_rows = []
+    for url, label in urls:
+        try:
+            html = fetch_twse_text_with_retry(url, timeout=twse_timeout, label=label)
+            rows = parse_twse_dividend_rows_from_html(html)
+            rows = filter_twse_rows_for_latest(rows, latest_ex_date=latest_ex_date)
+            complete_rows = [row for row in rows if row.get("composition_status") == "complete"]
+            if complete_rows:
+                print(
+                    f"[OK] {label} parsed complete TWSE composition rows={len(complete_rows)}.",
+                    flush=True,
+                )
+                return sorted_dedup_dividend_rows(complete_rows)
+            if rows:
+                print(
+                    f"[WARN] {label} parsed rows but no complete five-part composition; rows={len(rows)}.",
+                    flush=True,
+                )
+                last_rows = rows
+            else:
+                print(f"[WARN] {label} parsed 0 rows; trying fallback if available.", flush=True)
+        except Exception as exc:
+            print(f"[WARN] {label} failed: {type(exc).__name__}: {exc}", flush=True)
+
+    return sorted_dedup_dividend_rows(last_rows)
 
 def sorted_dedup_dividend_rows(rows):
     by_key = {}
@@ -1830,7 +1981,7 @@ def main():
         print("[INFO] Forced full TWSE dividend composition refresh from 2022.", flush=True)
         twse_dividend_rows = safe_fetch(
             "TWSE dividend composition (full)",
-            lambda: parse_twse_dividend_rows(start_year=2022),
+            lambda: parse_twse_dividend_rows(start_year=2022, latest_ex_date=latest_preliminary_dividend.get("ex_date")),
             [],
         )
     elif latest_composition_pending:
@@ -1842,7 +1993,7 @@ def main():
         )
         twse_dividend_rows = safe_fetch(
             "TWSE dividend composition (latest pending)",
-            lambda: parse_twse_dividend_rows(start_year=current_year),
+            lambda: parse_twse_dividend_rows(start_year=current_year, latest_ex_date=latest_preliminary_dividend.get("ex_date")),
             [],
         )
     else:
