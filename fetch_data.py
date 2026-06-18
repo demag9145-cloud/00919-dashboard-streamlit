@@ -28,18 +28,26 @@ FETCH_TWSE_DIVIDEND_COMPOSITION = os.environ.get("FETCH_TWSE_DIVIDEND_COMPOSITIO
 # UI75g: TWSE e添富 54C 組成是 00919 配息稅務核心資料。
 # 獨立測試確認 TWSE 帶參數頁 / 無參數頁皆可取得完整五項組成。
 # 正式流程改用完整瀏覽器標頭、重試與無參數備援，避免偶發 307 / timeout 讓最新資料長期 pending。
+TWSE_U75F_HEADERS = {
+    # Exact minimal headers that passed the independent probe repeatedly.
+    "User-Agent": "Mozilla/5.0",
+    "Accept": "text/html,application/xhtml+xml,application/json",
+}
+
 TWSE_BROWSER_HEADERS = {
+    # Exact browser-like headers used by the successful second-stage probe.
+    # Deliberately omit Referer: UI75g added it, but the verified probe did not.
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
         "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/124.0.0.0 Safari/537.36"
+        "Chrome/149.0.0.0 Safari/537.36"
     ),
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-    "Accept-Language": "zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7",
+    "Accept-Language": "zh-TW,zh;q=0.9,en;q=0.7",
     "Cache-Control": "no-cache",
     "Pragma": "no-cache",
-    "Referer": "https://www.twse.com.tw/zh/ETFortune/dividendList",
 }
+
 
 MONEYDJ_NAV_URL = "https://www.moneydj.com/etf/x/basic/basic0003.xdjhtm?etfid=00919.tw"
 MONEYDJ_MONTHLY_SIZE_URL = "https://www.moneydj.com/ETF/X/Basic/Basic0019.xdjhtm?etfid=00919.TW"
@@ -79,69 +87,111 @@ def fetch_text(url, timeout=None):
 
 
 def fetch_twse_text_with_retry(url, timeout=None, attempts=None, label="TWSE dividend composition"):
-    """Fetch TWSE e添富 HTML with browser-like headers, retries and redirect logging.
+    """Fetch TWSE composition HTML using the exact independently tested methods.
 
-    The independent probe confirmed the endpoint can return HTTP 200 and the
-    complete five-part composition.  In the production app TWSE may still return
-    transient 307 / timeout / 5xx responses, so this helper retries and records
-    the final URL before the parser runs.
+    UI75h corrections:
+    - UI75g only changed URL on fallback; it did not switch transport when
+      ``requests`` was installed.  This version really tries both requests and
+      urllib in the same production process.
+    - Use the exact successful probe headers and remove the unverified Referer.
+    - Log 307 response details (Location / Server / short body preview) so a
+      future TWSE edge response is diagnosable.
     """
     request_timeout = timeout or float(os.environ.get("TWSE_DIVIDEND_TIMEOUT_SECONDS", "25"))
     max_attempts = attempts or int(os.environ.get("TWSE_DIVIDEND_FETCH_ATTEMPTS", "3"))
     last_error = None
 
-    for attempt in range(1, max_attempts + 1):
-        started = time.perf_counter()
-        try:
-            if requests is not None:
-                session = requests.Session()
-                resp = session.get(
-                    url,
-                    headers=TWSE_BROWSER_HEADERS,
-                    timeout=request_timeout,
-                    allow_redirects=True,
-                )
-                elapsed = time.perf_counter() - started
-                history_codes = [item.status_code for item in resp.history]
-                if resp.history:
+    def validate_html(body, method_name):
+        if "00919" not in body or "已實現資本利得占比" not in body:
+            raise RuntimeError(
+                f"{method_name} returned HTML without required 00919 composition markers; "
+                f"chars={len(body)}"
+            )
+        return body
+
+    for cycle in range(1, max_attempts + 1):
+        methods = []
+        if requests is not None:
+            methods.extend([
+                ("requests-minimal", "requests", TWSE_U75F_HEADERS),
+                ("requests-browser", "requests", TWSE_BROWSER_HEADERS),
+            ])
+        methods.append(("urllib-minimal", "urllib", TWSE_U75F_HEADERS))
+
+        for method_name, transport, headers in methods:
+            started = time.perf_counter()
+            try:
+                if transport == "requests":
+                    with requests.Session() as session:
+                        resp = session.get(
+                            url,
+                            headers=headers,
+                            timeout=(8, request_timeout),
+                            allow_redirects=True,
+                        )
+                    elapsed = time.perf_counter() - started
+                    history = [
+                        {
+                            "status": item.status_code,
+                            "url": item.url,
+                            "location": item.headers.get("Location"),
+                        }
+                        for item in resp.history
+                    ]
+                    if history:
+                        print(
+                            f"[INFO] {label} {method_name} redirect history cycle {cycle}: "
+                            f"{history} -> {resp.url}",
+                            flush=True,
+                        )
+                    if resp.status_code != 200:
+                        preview = re.sub(r"\\s+", " ", (resp.text or "")[:180]).strip()
+                        raise RuntimeError(
+                            f"HTTP {resp.status_code}; final_url={resp.url}; "
+                            f"location={resp.headers.get('Location')}; "
+                            f"server={resp.headers.get('Server')}; body={preview!r}"
+                        )
+                    body = validate_html(resp.text, method_name)
                     print(
-                        f"[INFO] {label} redirect history attempt {attempt}: "
-                        f"{history_codes} -> {resp.url}",
+                        f"[OK] {label} {method_name} HTTP 200 cycle {cycle} "
+                        f"in {elapsed:.1f}s, final_url={resp.url}, chars={len(body)}",
                         flush=True,
                     )
-                if resp.status_code in {307, 408, 425, 429, 500, 502, 503, 504}:
-                    raise RuntimeError(f"HTTP {resp.status_code}: {resp.url}")
-                resp.raise_for_status()
-                print(
-                    f"[INFO] {label} HTTP {resp.status_code} attempt {attempt} "
-                    f"in {elapsed:.1f}s, final_url={resp.url}, bytes={len(resp.content)}",
-                    flush=True,
-                )
-                return resp.text
+                    return body
 
-            req = urllib.request.Request(url, headers=TWSE_BROWSER_HEADERS)
-            with opener().open(req, timeout=request_timeout) as resp:
-                raw = resp.read()
+                req = urllib.request.Request(url, headers=headers)
+                with opener().open(req, timeout=request_timeout) as resp:
+                    raw = resp.read()
+                    elapsed = time.perf_counter() - started
+                    final_url = getattr(resp, "url", url)
+                    status = getattr(resp, "status", None)
+                    if status not in (None, 200):
+                        raise RuntimeError(
+                            f"HTTP {status}; final_url={final_url}; "
+                            f"location={resp.headers.get('Location')}; server={resp.headers.get('Server')}"
+                        )
+                    body = validate_html(raw.decode("utf-8", "ignore"), method_name)
+                    print(
+                        f"[OK] {label} {method_name} HTTP {status or 200} cycle {cycle} "
+                        f"in {elapsed:.1f}s, final_url={final_url}, chars={len(body)}",
+                        flush=True,
+                    )
+                    return body
+            except Exception as exc:
                 elapsed = time.perf_counter() - started
-                final_url = getattr(resp, "url", url)
+                last_error = exc
                 print(
-                    f"[INFO] {label} urllib HTTP {getattr(resp, 'status', '?')} attempt {attempt} "
-                    f"in {elapsed:.1f}s, final_url={final_url}, bytes={len(raw)}",
+                    f"[WARN] {label} {method_name} cycle {cycle}/{max_attempts} "
+                    f"failed after {elapsed:.1f}s: {type(exc).__name__}: {exc}",
                     flush=True,
                 )
-                return raw.decode("utf-8", "ignore")
-        except Exception as exc:
-            elapsed = time.perf_counter() - started
-            last_error = exc
-            print(
-                f"[WARN] {label} attempt {attempt}/{max_attempts} failed after {elapsed:.1f}s: "
-                f"{type(exc).__name__}: {exc}",
-                flush=True,
-            )
-            if attempt < max_attempts:
-                time.sleep(min(4, 2 ** (attempt - 1)))
 
-    raise RuntimeError(f"{label} failed after {max_attempts} attempts: {last_error}")
+        if cycle < max_attempts:
+            time.sleep(min(4, 2 ** (cycle - 1)))
+
+    raise RuntimeError(
+        f"{label} failed after {max_attempts} cycles across requests/urllib: {last_error}"
+    )
 
 
 def clean_text(value):
