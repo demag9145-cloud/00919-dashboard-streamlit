@@ -48,6 +48,12 @@ TWSE_BROWSER_HEADERS = {
     "Pragma": "no-cache",
 }
 
+# UI75i: Every source writes a compact health result during one update run.
+# The dashboard does not depend on this field yet, but it makes empty parsers,
+# transport fallbacks and stale-source diagnosis visible without crashing the
+# whole update.
+SOURCE_FETCH_STATUS = {}
+
 
 MONEYDJ_NAV_URL = "https://www.moneydj.com/etf/x/basic/basic0003.xdjhtm?etfid=00919.tw"
 MONEYDJ_MONTHLY_SIZE_URL = "https://www.moneydj.com/ETF/X/Basic/Basic0019.xdjhtm?etfid=00919.TW"
@@ -73,17 +79,103 @@ def opener():
     )
 
 
-def fetch_text(url, timeout=None):
-    req = urllib.request.Request(
-        url,
-        headers={
-            "User-Agent": "Mozilla/5.0",
-            "Accept": "text/html,application/xhtml+xml,application/json",
-        },
+def fetch_text(
+    url,
+    timeout=None,
+    *,
+    label=None,
+    headers=None,
+    attempts=None,
+    required_markers=None,
+):
+    """Fetch text with retry and a real urllib -> requests transport fallback.
+
+    Most project sources historically used one urllib request.  A temporary
+    redirect, proxy edge response or empty HTTP-200 page could therefore make a
+    parser return zero rows with no useful diagnosis.  UI75i keeps urllib as the
+    first method (least behavioural change), then tries requests in the same
+    process, retries transient failures, and optionally validates page markers.
+    """
+    request_timeout = FETCH_TIMEOUT_SECONDS if timeout is None else float(timeout)
+    max_attempts = attempts or int(os.environ.get("FETCH_SOURCE_ATTEMPTS", "2"))
+    request_headers = dict(headers or TWSE_U75F_HEADERS)
+    markers = tuple(required_markers or ())
+    source_label = label or urllib.parse.urlparse(url).netloc or "HTTP source"
+    last_error = None
+
+    def validate_body(body, method_name):
+        if not isinstance(body, str) or not body.strip():
+            raise RuntimeError(f"{method_name} returned an empty response body")
+        missing = [marker for marker in markers if marker not in body]
+        if missing:
+            raise RuntimeError(
+                f"{method_name} response missing required markers={missing}; chars={len(body)}"
+            )
+        return body
+
+    for cycle in range(1, max_attempts + 1):
+        methods = [("urllib", "urllib")]
+        if requests is not None:
+            methods.append(("requests", "requests"))
+
+        for method_name, transport in methods:
+            started = time.perf_counter()
+            try:
+                if transport == "urllib":
+                    req = urllib.request.Request(url, headers=request_headers)
+                    with opener().open(req, timeout=request_timeout) as resp:
+                        raw = resp.read()
+                        status = getattr(resp, "status", None) or 200
+                        final_url = getattr(resp, "url", url)
+                        if status != 200:
+                            raise RuntimeError(
+                                f"HTTP {status}; final_url={final_url}; "
+                                f"location={resp.headers.get('Location')}"
+                            )
+                        body = validate_body(raw.decode("utf-8", "ignore"), method_name)
+                else:
+                    with requests.Session() as session:
+                        response = session.get(
+                            url,
+                            headers=request_headers,
+                            timeout=(min(8.0, request_timeout), request_timeout),
+                            allow_redirects=True,
+                        )
+                    status = response.status_code
+                    final_url = response.url
+                    if status != 200:
+                        preview = re.sub(r"\s+", " ", (response.text or "")[:180]).strip()
+                        raise RuntimeError(
+                            f"HTTP {status}; final_url={final_url}; "
+                            f"location={response.headers.get('Location')}; body={preview!r}"
+                        )
+                    body = validate_body(response.text, method_name)
+
+                elapsed = time.perf_counter() - started
+                if method_name != "urllib" or cycle > 1:
+                    print(
+                        f"[INFO] {source_label} recovered via {method_name} "
+                        f"cycle {cycle} in {elapsed:.1f}s; final_url={final_url}",
+                        flush=True,
+                    )
+                return body
+            except Exception as exc:
+                elapsed = time.perf_counter() - started
+                last_error = exc
+                # Keep the first-method warning concise; the outer safe_fetch
+                # still records a final source failure when every method fails.
+                print(
+                    f"[WARN] {source_label} {method_name} cycle {cycle}/{max_attempts} "
+                    f"failed after {elapsed:.1f}s: {type(exc).__name__}: {exc}",
+                    flush=True,
+                )
+
+        if cycle < max_attempts:
+            time.sleep(min(2.0, float(cycle)))
+
+    raise RuntimeError(
+        f"{source_label} failed after {max_attempts} cycles across urllib/requests: {last_error}"
     )
-    request_timeout = FETCH_TIMEOUT_SECONDS if timeout is None else timeout
-    with opener().open(req, timeout=request_timeout) as resp:
-        return resp.read().decode("utf-8", "ignore")
 
 
 def fetch_twse_text_with_retry(url, timeout=None, attempts=None, label="TWSE dividend composition"):
@@ -361,7 +453,7 @@ def fetch_etfortune_current_info():
     Completed monthly AUM rows remain protected by monthly_history.json and are
     never overwritten by empty values.
     """
-    html = fetch_text(ETFORTUNE_INFO_URL)
+    html = fetch_text(ETFORTUNE_INFO_URL, label="TWSE eFortune summary page", required_markers=("00919",))
     text = clean_text(html)
     aum_100m = None
     beneficiary_count = None
@@ -511,7 +603,7 @@ def fetch_capitalfund_trend_rows():
     intentionally conservative: it uses the visible recent rows as the primary
     official NAV source and lets daily_history.json preserve older valid rows.
     """
-    html = fetch_text(CAPITALFUND_TREND_URL)
+    html = fetch_text(CAPITALFUND_TREND_URL, label="CapitalFund trend page")
     text = clean_text(html)
     rows_by_date = {}
 
@@ -605,7 +697,7 @@ def parse_capitalfund_other_assets(text):
 
 
 def fetch_capitalfund_portfolio_data():
-    html = fetch_text(CAPITALFUND_PORTFOLIO_URL)
+    html = fetch_text(CAPITALFUND_PORTFOLIO_URL, label="CapitalFund portfolio page")
     text = clean_text(html)
     holdings = parse_capitalfund_holdings_from_text(text)
     latest_date = None
@@ -630,7 +722,7 @@ def fetch_capitalfund_portfolio_data():
 
 
 def fetch_capitalfund_buyback_data():
-    html = fetch_text(CAPITALFUND_BUYBACK_URL)
+    html = fetch_text(CAPITALFUND_BUYBACK_URL, label="CapitalFund buyback page")
     text = clean_text(html)
     data_date = None
     date_match = re.search(r"(20\d{2}-\d{1,2}-\d{1,2})\s*每基數申購總價金差額", text)
@@ -746,7 +838,7 @@ def choose_holdings_data(capital_portfolio, capital_buyback, moneydj_data):
     return result
 
 def fetch_moneydj_nav_rows():
-    html = fetch_text(MONEYDJ_NAV_URL)
+    html = fetch_text(MONEYDJ_NAV_URL, label="MoneyDJ NAV page", required_markers=("00919",))
     pattern = re.compile(
         r"<tr>\s*"
         r'<td class="col(?:07|10)">\s*(\d{4}/\d{2}/\d{2})\s*</td>\s*'
@@ -799,7 +891,7 @@ def extract_numeric_tokens(text):
 
 
 def fetch_moneydj_monthly_size_rows():
-    html = fetch_text(MONEYDJ_MONTHLY_SIZE_URL)
+    html = fetch_text(MONEYDJ_MONTHLY_SIZE_URL, label="MoneyDJ monthly size page", required_markers=("00919",))
     rows_by_month = {}
 
     # Basic0019 tends to change at month boundaries: a new month can appear in
@@ -951,7 +1043,7 @@ def extract_section_date(html, date_id):
 
 
 def fetch_moneydj_holdings_data():
-    html = fetch_text(MONEYDJ_HOLDINGS_URL)
+    html = fetch_text(MONEYDJ_HOLDINGS_URL, label="MoneyDJ holdings page", required_markers=("00919",))
     holdings_date = extract_section_date(html, "ctl00_ctl00_MainContent_MainContent_sdate3")
     industry_date = extract_section_date(html, "ctl00_ctl00_MainContent_MainContent_sdate2")
 
@@ -1009,10 +1101,13 @@ def fetch_yahoo_history_rows():
             "includeAdjustedClose": "true",
         }
     )
-    data = json.loads(fetch_text(f"{YAHOO_CHART_URL}?{query}"))
-    result = (data.get("chart", {}).get("result") or [None])[0]
+    data = json.loads(fetch_text(f"{YAHOO_CHART_URL}?{query}", label="Yahoo chart API"))
+    chart = data.get("chart", {}) if isinstance(data, dict) else {}
+    if chart.get("error"):
+        raise RuntimeError(f"Yahoo chart error: {chart.get('error')}")
+    result = (chart.get("result") or [None])[0]
     if not result:
-        return []
+        raise RuntimeError("Yahoo chart returned no result")
     timestamps = result.get("timestamp") or []
     quote = (result.get("indicators", {}).get("quote") or [{}])[0]
     adjusted = (result.get("indicators", {}).get("adjclose") or [{}])[0]
@@ -1039,6 +1134,8 @@ def fetch_yahoo_history_rows():
                 "source": "Yahoo",
             }
         )
+    if not rows:
+        raise RuntimeError("Yahoo chart parsed zero valid daily rows")
     return sorted(rows, key=lambda row: row["date"])
 
 
@@ -1149,9 +1246,15 @@ def update_daily_history(nav_rows, yahoo_rows, fetched_at):
     volume_rows = {}
     for month in months:
         try:
-            volume_rows.update(fetch_twse_month_volume(month))
-        except Exception:
-            pass
+            month_rows = fetch_twse_month_volume(month)
+            volume_rows.update(month_rows)
+            print(f"[OK] TWSE monthly volume {month} rows={len(month_rows)}", flush=True)
+        except Exception as exc:
+            print(
+                f"[WARN] TWSE monthly volume {month} unavailable: "
+                f"{type(exc).__name__}: {exc}; Yahoo/old volume retained.",
+                flush=True,
+            )
 
     for row in nav_rows or []:
         date_value = row.get("date")
@@ -1464,10 +1567,10 @@ def fetch_twse_month_volume(month):
     query = urllib.parse.urlencode(
         {"date": month, "stockNo": "00919", "response": "json"}
     )
-    data = json.loads(fetch_text(f"{TWSE_STOCK_DAY_URL}?{query}"))
+    data = json.loads(fetch_text(f"{TWSE_STOCK_DAY_URL}?{query}", label=f"TWSE STOCK_DAY {month}"))
     rows = {}
     if data.get("stat") != "OK":
-        return rows
+        raise RuntimeError(f"TWSE STOCK_DAY stat={data.get('stat')!r}; message={data.get('message')!r}")
     for item in data.get("data", []):
         iso_date = roc_date_to_iso(item[0])
         rows[iso_date] = {
@@ -1476,6 +1579,8 @@ def fetch_twse_month_volume(month):
             "volume_lots": round(int(item[1].replace(",", "")) / 1000),
             "twse_close": parse_number(item[6]),
         }
+    if not rows:
+        raise RuntimeError(f"TWSE STOCK_DAY returned no rows for month={month}")
     return rows
 
 
@@ -1578,7 +1683,7 @@ def parse_moneydj_dividend_rows():
     provide 54C / equalization / capital-gain composition, so rows are marked
     composition_status=pending and later completed by TWSE or official data.
     """
-    html = fetch_text(MONEYDJ_DIVIDEND_URL)
+    html = fetch_text(MONEYDJ_DIVIDEND_URL, label="MoneyDJ dividend page", required_markers=("00919",))
     rows = []
     for block in re.findall(r"<tr[^>]*>.*?</tr>", html, flags=re.S | re.I):
         cells = [clean_text(cell).replace("\xa0", " ") for cell in re.findall(r"<td[^>]*>(.*?)</td>", block, flags=re.S | re.I)]
@@ -1632,7 +1737,7 @@ def parse_capitalfund_dividend_rows():
     is still useful as the official event source when available.  Composition is
     not taken from this page.
     """
-    html = fetch_text(CAPITALFUND_INTEREST_URL)
+    html = fetch_text(CAPITALFUND_INTEREST_URL, label="CapitalFund dividend page")
     text = clean_text(html)
     pattern = re.compile(
         r"評價日\s*(20\d{2}/\d{1,2}/\d{1,2}).*?"
@@ -1984,34 +2089,111 @@ def calc_signals(latest_daily, latest_dividend):
 
 
 
-def safe_fetch(label, func, default):
+def valid_nonempty_rows(result):
+    return isinstance(result, list) and len(result) > 0
+
+
+def valid_yahoo_rows(result):
+    return valid_nonempty_rows(result) and any(
+        row.get("date") and has_valid_number(row.get("market_price"), allow_zero=False)
+        for row in result
+        if isinstance(row, dict)
+    )
+
+
+def valid_nav_rows(result):
+    return valid_nonempty_rows(result) and any(
+        row.get("date") and has_valid_number(row.get("nav"), allow_zero=False)
+        for row in result
+        if isinstance(row, dict)
+    )
+
+
+def valid_complete_dividend_rows(result):
+    return valid_nonempty_rows(result) and any(
+        isinstance(row, dict) and row.get("composition_status") == "complete"
+        for row in result
+    )
+
+
+def valid_capital_portfolio(result):
+    if not isinstance(result, dict) or not result:
+        return False
+    return bool(result.get("holdings")) or any(
+        has_valid_number(result.get(key), allow_zero=False)
+        for key in ("fund_net_asset_value_twd", "nav", "issued_units")
+    )
+
+
+def valid_etfortune_summary(result):
+    if not isinstance(result, dict) or not result:
+        return False
+    return bool(result.get("data_date")) or any(
+        has_valid_number(result.get(key), allow_zero=False)
+        for key in ("aum_100m_twd", "beneficiary_count")
+    )
+
+
+def valid_holdings_result(result):
+    return isinstance(result, dict) and bool(result.get("holdings"))
+
+
+def safe_fetch(label, func, default, validator=None, invalid_note=None):
     started = time.perf_counter()
     print(f"[START] {label}", flush=True)
     try:
         result = func()
         elapsed = time.perf_counter() - started
         size_hint = len(result) if hasattr(result, "__len__") else "?"
+        if validator is not None and not validator(result):
+            note = invalid_note or "response parsed but contained no usable data"
+            SOURCE_FETCH_STATUS[label] = {
+                "status": "warning",
+                "elapsed_sec": round(elapsed, 3),
+                "rows_items": size_hint,
+                "message": note,
+            }
+            print(
+                f"[WARN] {label} fetched in {elapsed:.1f}s but {note}; "
+                "existing/fallback data will be preserved.",
+                flush=True,
+            )
+            return default
+        SOURCE_FETCH_STATUS[label] = {
+            "status": "ok",
+            "elapsed_sec": round(elapsed, 3),
+            "rows_items": size_hint,
+            "message": None,
+        }
         print(f"[OK] {label} fetched in {elapsed:.1f}s, rows/items={size_hint}", flush=True)
         return result
     except Exception as exc:
         elapsed = time.perf_counter() - started
+        SOURCE_FETCH_STATUS[label] = {
+            "status": "error",
+            "elapsed_sec": round(elapsed, 3),
+            "rows_items": 0,
+            "message": f"{type(exc).__name__}: {exc}",
+        }
         print(f"[WARN] {label} fetch failed after {elapsed:.1f}s: {type(exc).__name__}: {exc}", flush=True)
         return default
 
+
 def main():
     DATA_DIR.mkdir(exist_ok=True)
+    SOURCE_FETCH_STATUS.clear()
     fetched_at = datetime.now(ZoneInfo("Asia/Taipei")).replace(tzinfo=None).isoformat(timespec="seconds")
     print(f"[START] 00919 full update at {fetched_at} Asia/Taipei", flush=True)
 
-    yahoo_rows = safe_fetch("Yahoo history", fetch_yahoo_history_rows, [])
-    capital_nav_rows = safe_fetch("CapitalFund trend", fetch_capitalfund_trend_rows, [])
-    moneydj_nav_rows = safe_fetch("MoneyDJ NAV", fetch_moneydj_nav_rows, [])
+    yahoo_rows = safe_fetch("Yahoo history", fetch_yahoo_history_rows, [], validator=valid_yahoo_rows, invalid_note="no valid price rows were parsed")
+    capital_nav_rows = safe_fetch("CapitalFund trend", fetch_capitalfund_trend_rows, [], validator=valid_nav_rows, invalid_note="official NAV table parsed zero usable rows")
+    moneydj_nav_rows = safe_fetch("MoneyDJ NAV", fetch_moneydj_nav_rows, [], validator=valid_nav_rows, invalid_note="MoneyDJ NAV table parsed zero usable rows")
     nav_rows = merge_nav_rows_by_priority(capital_nav_rows, moneydj_nav_rows)
     daily_rows = update_daily_history(nav_rows, yahoo_rows, fetched_at)
 
     existing_dividend_rows = load_existing_dividend_rows()
-    moneydj_dividend_rows = safe_fetch("MoneyDJ dividend events", parse_moneydj_dividend_rows, [])
-    capitalfund_dividend_rows = safe_fetch("CapitalFund dividend events", parse_capitalfund_dividend_rows, [])
+    moneydj_dividend_rows = safe_fetch("MoneyDJ dividend events", parse_moneydj_dividend_rows, [], validator=valid_nonempty_rows, invalid_note="no dividend event rows were parsed")
+    capitalfund_dividend_rows = safe_fetch("CapitalFund dividend events", parse_capitalfund_dividend_rows, [], validator=valid_nonempty_rows, invalid_note="official dividend event block was absent or dynamic")
 
     # Fast updates normally preserve existing completed composition rows.  But
     # when the newest dividend event is still pending, check only the current
@@ -2033,6 +2215,8 @@ def main():
             "TWSE dividend composition (full)",
             lambda: parse_twse_dividend_rows(start_year=2022, latest_ex_date=latest_preliminary_dividend.get("ex_date")),
             [],
+            validator=valid_complete_dividend_rows,
+            invalid_note="no complete five-part TWSE composition row was produced",
         )
     elif latest_composition_pending:
         current_year = datetime.now(ZoneInfo("Asia/Taipei")).year
@@ -2045,6 +2229,8 @@ def main():
             "TWSE dividend composition (latest pending)",
             lambda: parse_twse_dividend_rows(start_year=current_year, latest_ex_date=latest_preliminary_dividend.get("ex_date")),
             [],
+            validator=valid_complete_dividend_rows,
+            invalid_note="no complete five-part TWSE composition row was produced",
         )
     else:
         twse_dividend_rows = []
@@ -2068,11 +2254,11 @@ def main():
         },
     )
 
-    moneydj_monthly_rows = safe_fetch("MoneyDJ monthly size", fetch_moneydj_monthly_size_rows, [])
-    capital_portfolio = safe_fetch("CapitalFund portfolio", fetch_capitalfund_portfolio_data, {})
-    capital_buyback = safe_fetch("CapitalFund buyback", fetch_capitalfund_buyback_data, {})
-    etfortune_info = safe_fetch("TWSE eFortune summary", fetch_etfortune_current_info, {})
-    moneydj_holdings = safe_fetch("MoneyDJ holdings", fetch_moneydj_holdings_data, {})
+    moneydj_monthly_rows = safe_fetch("MoneyDJ monthly size", fetch_moneydj_monthly_size_rows, [], validator=valid_nonempty_rows, invalid_note="monthly size table parsed zero usable rows")
+    capital_portfolio = safe_fetch("CapitalFund portfolio", fetch_capitalfund_portfolio_data, {}, validator=valid_capital_portfolio, invalid_note="portfolio page had no holdings or core snapshot values")
+    capital_buyback = safe_fetch("CapitalFund buyback", fetch_capitalfund_buyback_data, {}, validator=valid_capital_portfolio, invalid_note="buyback page had no holdings or core snapshot values")
+    etfortune_info = safe_fetch("TWSE eFortune summary", fetch_etfortune_current_info, {}, validator=valid_etfortune_summary, invalid_note="summary page had no usable date/AUM/beneficiary fields")
+    moneydj_holdings = safe_fetch("MoneyDJ holdings", fetch_moneydj_holdings_data, {}, validator=valid_holdings_result, invalid_note="holdings table parsed zero holdings")
     holdings_data = choose_holdings_data(capital_portfolio, capital_buyback, moneydj_holdings)
     latest_snapshot = build_latest_snapshot(capital_buyback, capital_portfolio, etfortune_info)
 
@@ -2101,6 +2287,7 @@ def main():
         "latest_dividend": latest_dividend,
         "dividend_fetch_status": dividend_fetch_status,
         "signals": calc_signals(latest_daily, latest_dividend),
+        "source_fetch_status": dict(SOURCE_FETCH_STATUS),
         "data_source_priority": {
             "nav": ["群益投信官網淨值與績效走勢", "MoneyDJ 淨值", "navs.xlsx / daily_history 舊有效值"],
             "price": ["Yahoo / TWSE 日成交", "群益投信官網收盤價", "daily_history 舊有效值"],
@@ -2142,6 +2329,13 @@ def main():
     print(f"Holding rows: {len(holdings_data.get('holdings', []))}", flush=True)
     print(f"Holding source: {holdings_data.get('source')}", flush=True)
     print(f"Holding history rows: {len(holdings_history_rows)}", flush=True)
+    ok_count = sum(1 for item in SOURCE_FETCH_STATUS.values() if item.get("status") == "ok")
+    warning_count = sum(1 for item in SOURCE_FETCH_STATUS.values() if item.get("status") == "warning")
+    error_count = sum(1 for item in SOURCE_FETCH_STATUS.values() if item.get("status") == "error")
+    print(
+        f"[SUMMARY] Source health: ok={ok_count}, warning={warning_count}, error={error_count}",
+        flush=True,
+    )
 
 
 if __name__ == "__main__":
