@@ -8136,11 +8136,11 @@ body[data-active-page="manual"] .nav a[href="#manual"] .icon-box {
 }
 
 
-/* UI75k: Home Focus dividend estimate emphasis. Keeps UI75i data-connection guards and UI75j entitlement-date logic. */
+/* UI75l: Home Focus dividend estimate compact card. Keeps UI75i data-connection guards and UI75j entitlement-date logic. */
 #mobileFocusDividend,
 #desktopFocusDividend,
 #homeLatestDividend {
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
 .focus-dividend strong,
@@ -8157,39 +8157,34 @@ body[data-active-page="manual"] .nav a[href="#manual"] .icon-box {
 
 @media (max-width: 760px), (max-height: 520px) and (orientation: landscape), (hover: none) and (pointer: coarse) {
   .mobile-focus-grid .focus-dividend {
-    grid-column: 1 / -1 !important;
-    min-height: 124px !important;
-    padding: 14px 16px !important;
-  }
-
-  .mobile-focus-grid .focus-dividend .icon-box {
-    width: 44px !important;
-    height: 44px !important;
-    border-radius: 14px !important;
+    grid-column: auto !important;
+    min-height: 112px !important;
   }
 
   #mobileFocusDividend {
-    font-size: 30px !important;
-    line-height: 1.05 !important;
+    font-size: 18px !important;
+    line-height: 1.08 !important;
     font-weight: 950 !important;
+    white-space: nowrap !important;
   }
 
   #mobileFocusDividendNote {
-    font-size: 12.5px !important;
-    line-height: 1.35 !important;
+    font-size: 12px !important;
+    line-height: 1.28 !important;
     color: #78350f !important;
   }
 }
 
 @media (min-width: 761px) {
   body.streamlit-embedded[data-active-page="home"] .desktop-focus-card.focus-dividend {
-    padding-right: 112px !important;
+    padding-right: 102px !important;
   }
 
   body.streamlit-embedded[data-active-page="home"] .desktop-focus-card.focus-dividend strong {
-    font-size: 40px !important;
-    line-height: 1.02 !important;
+    font-size: 31px !important;
+    line-height: 1.05 !important;
     font-weight: 950 !important;
+    white-space: nowrap !important;
   }
 
   body.streamlit-embedded[data-active-page="home"] .desktop-focus-card.focus-dividend small {

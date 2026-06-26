@@ -1606,10 +1606,20 @@ function formatDividendFocusNote(dividend, estimatedDividendCash) {
   return lines.join("\n");
 }
 
+function formatDividendPerShareAmount(value) {
+  const amount = Number(value || 0);
+  if (!Number.isFinite(amount) || amount <= 0) return "--";
+  const digits = Number.isInteger(amount) ? 0 : 2;
+  return fmt.money(amount, digits);
+}
+
 function formatDividendEstimateValue(dividend, estimatedDividendCash) {
   const dividendPerShare = Number(dividend?.dividend_per_share || 0);
-  if (!dividendPerShare && !estimatedDividendCash) return "--";
-  return `$${fmt.money(estimatedDividendCash || 0)}`;
+  const cash = Number(estimatedDividendCash || 0);
+  if (!dividendPerShare && !cash) return "--";
+  const perShareText = dividendPerShare ? `${formatDividendPerShareAmount(dividendPerShare)}元` : "--";
+  const cashText = Number.isFinite(cash) ? `${fmt.money(cash)}元` : "--";
+  return `${perShareText} / ${cashText}`;
 }
 
 function formatDividendPerShareNote(dividend) {
