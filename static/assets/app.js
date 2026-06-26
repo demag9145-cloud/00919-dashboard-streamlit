@@ -335,7 +335,7 @@ function calcTaxSignalForSummary() {
   if (!dividend.ex_date || !isFiniteValue(dividend.estimated_54c_per_share)) {
     return { level: "green", reason: "54C：目前沒有可用的最新 54C 資料，暫不列入主燈號。" };
   }
-  const shares = calcSharesOnDate(state.trades || [], dividend.ex_date);
+  const shares = calcDividendQualifiedShares(dividend, state.trades || [], 0);
   const estimated54c = shares * Number(dividend.estimated_54c_per_share || 0);
   const premium = estimated54c >= single54cThreshold ? estimated54c * supplementalPremiumRate : 0;
   if (estimated54c >= single54cThreshold) {
@@ -361,7 +361,7 @@ function calcCurrentSignalDiagnostics(latest = getLatestCompleteDailyRow()) {
   const latestMarket = getLatestMarketRow();
   const navLagBusinessDays = businessDaysBetweenDates(latest?.date, latestMarket?.date);
   const dividend = state.data?.latest_dividend || {};
-  const sharesOnDividend = dividend.ex_date ? calcSharesOnDate(state.trades || [], dividend.ex_date) : 0;
+  const sharesOnDividend = dividend.ex_date ? calcDividendQualifiedShares(dividend, state.trades || [], 0) : 0;
   const estimated54c = sharesOnDividend * Number(dividend.estimated_54c_per_share || 0);
   const beneficiaryRows = (state.data?.monthly_history || state.data?.monthly_size || [])
     .filter((row) => row.month && isFiniteValue(row.beneficiary_count))
@@ -880,6 +880,11 @@ function bindMobileQuickTradeForm() {
 
   const dateInput = $("mobileQuickTradeDate");
   if (dateInput && !dateInput.value) dateInput.value = todayIsoDate();
+  const priceInput = $("mobileQuickTradePrice");
+  const latestMarketPrice = Number(state.data?.latest?.market_price || state.data?.daily?.slice?.(-1)?.[0]?.market_price || 0);
+  if (priceInput && Number(priceInput.value || 0) <= 0 && Number.isFinite(latestMarketPrice) && latestMarketPrice > 0) {
+    priceInput.value = latestMarketPrice.toFixed(2);
+  }
 
   const radios = Array.from(form.querySelectorAll('.mobile-trade-radio input[name="mobileQuickTradeAction"]'));
   const syncRadioState = () => {
@@ -1304,7 +1309,8 @@ function render() {
   const totalCost = position.totalCost;
   const marketValue = shares * marketPrice;
   const unrealizedPnl = marketValue - totalCost;
-  const estimatedAnnualDividend = shares * Number(dividend.dividend_per_share || 0) * 4;
+  const estimatedAnnualDividendPerShare = calcEstimatedAnnualDividendPerShare(state.data.dividends || [], dividend);
+  const estimatedAnnualDividend = shares * estimatedAnnualDividendPerShare;
   const cumulativeDividend = position.cumulativeDividend;
   const totalReturn = unrealizedPnl + cumulativeDividend + position.realizedPnl;
   const estimated54c = shares * Number(dividend.estimated_54c_per_share || 0);
@@ -1594,7 +1600,11 @@ function renderMobileCoreMetrics(model) {
 
 function formatDividendFocusNote(dividend, estimatedDividendCash) {
   if (!dividend?.ex_date) return "--";
-  const lines = [`除息 ${dividend.ex_date} / 估 $${fmt.money(estimatedDividendCash)}`];
+  const entitlementDate = getDividendEntitlementDate(dividend);
+  const entitlementLabel = entitlementDate
+    ? ` / 最後申購 ${entitlementDate}`
+    : "";
+  const lines = [`除息 ${dividend.ex_date}${entitlementLabel} / 估 $${fmt.money(estimatedDividendCash)}`];
   if (dividend.pay_date) lines.push(`發放 ${dividend.pay_date}`);
   return lines.join("\n");
 }
@@ -1605,7 +1615,7 @@ function renderMobileFocusCards({ position, dividend, totalReturn, totalCost, fr
   setText("mobileFocusTotalReturnRate", `未實現報酬 ${fmt.pct(totalReturnRate)}`);
 
   const dividendPerShare = Number(dividend.dividend_per_share || 0);
-  const dividendShares = dividend.ex_date ? calcSharesOnDate(state.trades || [], dividend.ex_date) : position.holdingShares;
+  const dividendShares = dividend.ex_date ? calcDividendQualifiedShares(dividend, state.trades || [], position.holdingShares) : position.holdingShares;
   const estimatedDividendCash = dividendShares * dividendPerShare;
   setText("mobileFocusDividend", dividendPerShare ? `${fmt.money(dividendPerShare, 2)} 元` : "--");
   setText("mobileFocusDividendNote", formatDividendFocusNote(dividend, estimatedDividendCash));
@@ -1704,7 +1714,7 @@ function renderDesktopFocusCards({ position, dividend, totalReturn, totalCost, f
   setText("desktopFocusTotalReturnRate", fmt.pct(totalReturnRate));
 
   const dividendPerShare = Number(dividend.dividend_per_share || 0);
-  const dividendShares = dividend.ex_date ? calcSharesOnDate(state.trades || [], dividend.ex_date) : position.holdingShares;
+  const dividendShares = dividend.ex_date ? calcDividendQualifiedShares(dividend, state.trades || [], position.holdingShares) : position.holdingShares;
   const estimatedDividendCash = dividendShares * dividendPerShare;
   setText("desktopFocusDividend", dividendPerShare ? `${fmt.money(dividendPerShare, 2)} 元` : "--");
   setText("desktopFocusDividendNote", formatDividendFocusNote(dividend, estimatedDividendCash));
@@ -1732,7 +1742,7 @@ function renderDesktopFocusCards({ position, dividend, totalReturn, totalCost, f
 
 function calcEstimatedDividendCash(dividend, position) {
   const dividendPerShare = Number(dividend.dividend_per_share || 0);
-  const dividendShares = dividend.ex_date ? calcSharesOnDate(state.trades || [], dividend.ex_date) : position.holdingShares;
+  const dividendShares = dividend.ex_date ? calcDividendQualifiedShares(dividend, state.trades || [], position.holdingShares) : position.holdingShares;
   return dividendShares * dividendPerShare;
 }
 
@@ -1740,7 +1750,7 @@ function calcYearlyDividendTotal(year) {
   return (state.data.dividends || []).reduce((sum, dividend) => {
     const exDate = String(dividend.ex_date || "");
     if (!exDate.startsWith(String(year))) return sum;
-    const shares = calcSharesOnDate(state.trades || [], exDate);
+    const shares = calcDividendQualifiedShares(dividend, state.trades || [], 0);
     return sum + shares * Number(dividend.dividend_per_share || 0);
   }, 0);
 }
@@ -1749,7 +1759,7 @@ function calcYearly54cTotal(year) {
   return (state.data.dividends || []).reduce((sum, dividend) => {
     const exDate = String(dividend.ex_date || "");
     if (!exDate.startsWith(String(year))) return sum;
-    const shares = calcSharesOnDate(state.trades || [], exDate);
+    const shares = calcDividendQualifiedShares(dividend, state.trades || [], 0);
     return sum + shares * Number(dividend.estimated_54c_per_share || 0);
   }, 0);
 }
@@ -1837,7 +1847,7 @@ function renderHomeFocus(position, latest, dividend, totalReturn, totalCost) {
   $("homeTotalReturn")?.classList.toggle("positive", totalReturn >= 0);
 
   const dividendPerShare = Number(dividend.dividend_per_share || 0);
-  const dividendShares = dividend.ex_date ? calcSharesOnDate(state.trades || [], dividend.ex_date) : position.holdingShares;
+  const dividendShares = dividend.ex_date ? calcDividendQualifiedShares(dividend, state.trades || [], position.holdingShares) : position.holdingShares;
   const estimatedDividendCash = dividendShares * dividendPerShare;
   const estimated54c = dividendShares * Number(dividend.estimated_54c_per_share || 0);
   const settings = getAppSignalSettings();
@@ -2208,13 +2218,16 @@ function calcDividendRows(dividends, trades) {
     .sort((a, b) => String(b.ex_date).localeCompare(String(a.ex_date)))
     .map((dividend) => {
       const exDate = dividend.ex_date || "";
-      const shares = calcSharesOnDate(sortedTrades, exDate);
+      const entitlementDate = getDividendEntitlementDate(dividend);
+      const shares = calcDividendQualifiedShares(dividend, sortedTrades, 0);
       const perShare = Number(dividend.dividend_per_share || 0);
       const dividendIncomePct = Number(dividend.dividend_income_pct || 0);
       const estimated54cPerShare = Number(dividend.estimated_54c_per_share || 0);
       const estimated54c = shares * estimated54cPerShare;
       return {
         exDate,
+        entitlementDate,
+        entitlementDateSource: getDividendEntitlementSource(dividend),
         payDate: dividend.pay_date || "",
         perShare,
         dividendIncomePct,
@@ -2422,6 +2435,83 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+function normalizeDateCandidate(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  const match = text.match(/(20\d{2})[\/\-.年](\d{1,2})[\/\-.月](\d{1,2})/);
+  if (!match) return text;
+  const [, year, month, day] = match;
+  return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+}
+
+function getPreviousTradingDateBefore(date) {
+  const exDate = normalizeDateCandidate(date);
+  if (!exDate) return "";
+  const dailyRows = (state?.data?.daily || [])
+    .map((row) => normalizeDateCandidate(row.date))
+    .filter((rowDate) => rowDate && rowDate < exDate)
+    .sort((a, b) => a.localeCompare(b));
+  if (dailyRows.length) return dailyRows[dailyRows.length - 1];
+
+  const parsed = new Date(`${exDate}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return "";
+  parsed.setDate(parsed.getDate() - 1);
+  while (parsed.getDay() === 0 || parsed.getDay() === 6) {
+    parsed.setDate(parsed.getDate() - 1);
+  }
+  return parsed.toISOString().slice(0, 10);
+}
+
+function getDividendEntitlementDate(dividend) {
+  if (!dividend) return "";
+  const sourceText = `${dividend.event_source || ""} ${dividend.source || ""}`;
+  const moneyDjBaseDate = /MoneyDJ/i.test(sourceText) ? dividend.base_date : "";
+  const explicit = normalizeDateCandidate(
+    dividend.entitlement_date ||
+    dividend.last_buy_date ||
+    dividend.last_subscription_date ||
+    dividend.final_buy_date ||
+    moneyDjBaseDate ||
+    ""
+  );
+  if (explicit) return explicit;
+  const inferred = getPreviousTradingDateBefore(dividend.ex_date);
+  return inferred || normalizeDateCandidate(dividend.ex_date || "");
+}
+
+function getDividendEntitlementSource(dividend) {
+  if (!dividend) return "";
+  if (dividend.entitlement_date_source) return dividend.entitlement_date_source;
+  if (dividend.last_buy_date_source) return dividend.last_buy_date_source;
+  if (dividend.last_buy_date || dividend.entitlement_date || dividend.last_subscription_date) return dividend.event_source || dividend.source || "配息事件資料";
+  if (/MoneyDJ/i.test(`${dividend.event_source || ""} ${dividend.source || ""}`) && dividend.base_date) return "MoneyDJ 配息基準日";
+  return dividend.ex_date ? "除息日前一交易日推算" : "";
+}
+
+function calcDividendQualifiedShares(dividend, trades, fallbackShares = 0) {
+  const entitlementDate = getDividendEntitlementDate(dividend);
+  if (!entitlementDate) return fallbackShares;
+  return calcSharesOnDate(trades || [], entitlementDate);
+}
+
+function calcEstimatedAnnualDividendPerShare(dividends, latestDividend) {
+  const latestDate = normalizeDateCandidate(latestDividend?.ex_date || "");
+  const referenceYear = latestDate ? latestDate.slice(0, 4) : String(new Date().getFullYear());
+  const currentYearRows = [...(dividends || [])]
+    .filter((row) => normalizeDateCandidate(row?.ex_date || "").startsWith(referenceYear))
+    .filter((row) => Number(row?.dividend_per_share || 0) > 0)
+    .sort((a, b) => String(a.ex_date).localeCompare(String(b.ex_date)))
+    .slice(0, 4);
+
+  if (!currentYearRows.length) {
+    return Number(latestDividend?.dividend_per_share || 0) * 4;
+  }
+  const announcedTotal = currentYearRows.reduce((sum, row) => sum + Number(row.dividend_per_share || 0), 0);
+  const latestPerShare = Number(currentYearRows[currentYearRows.length - 1]?.dividend_per_share || latestDividend?.dividend_per_share || 0);
+  const remainingQuarters = Math.max(0, 4 - currentYearRows.length);
+  return announcedTotal + latestPerShare * remainingQuarters;
+}
+
 function calcPosition(trades, dividends) {
   const sortedTrades = [...trades].sort((a, b) => String(a.trade_date).localeCompare(String(b.trade_date)));
   const firstTradeDate = sortedTrades[0]?.trade_date || "";
@@ -2448,8 +2538,8 @@ function calcPosition(trades, dividends) {
   });
 
   const cumulativeDividend = dividends.reduce((sum, dividend) => {
-    const sharesOnExDate = calcSharesOnDate(sortedTrades, dividend.ex_date);
-    return sum + sharesOnExDate * Number(dividend.dividend_per_share || 0);
+    const sharesOnEntitlementDate = calcDividendQualifiedShares(dividend, sortedTrades, 0);
+    return sum + sharesOnEntitlementDate * Number(dividend.dividend_per_share || 0);
   }, 0);
 
   return {
@@ -2549,12 +2639,14 @@ function drawChart(allRows, range = "month", targetId = "mainChart") {
 
   const isMobile = window.matchMedia("(max-width: 760px)").matches;
   const isDesktopHome = targetId === "desktopMainChart";
-  const width = isMobile ? 390 : 1120;
-  const height = isMobile ? 280 : isDesktopHome ? 352 : 420;
+  // UI75: desktop home trend chart uses a wider viewBox so the SVG plot fills
+  // the full-width bottom card instead of being letterboxed in the center.
+  const width = isMobile ? 390 : isDesktopHome ? 1600 : 1120;
+  const height = isMobile ? 280 : isDesktopHome ? 430 : 420;
   const pad = isMobile
     ? { top: 24, right: 34, bottom: 46, left: 38 }
     : isDesktopHome
-      ? { top: 22, right: 54, bottom: 46, left: 48 }
+      ? { top: 28, right: 72, bottom: 54, left: 58 }
       : { top: 28, right: 54, bottom: 72, left: 48 };
   const priceColor = isDesktopHome ? "#10b981" : "#1f5fbf";
   const navColor = isDesktopHome ? "#0ea5e9" : "#d65a3a";
@@ -2707,6 +2799,25 @@ function drawMobileChart(allRows, range = "month") {
     return `<rect x="${xx.toFixed(2)}" y="${(barBase - barH).toFixed(2)}" width="${barW.toFixed(2)}" height="${barH.toFixed(2)}" fill="#cbd5e1" opacity="0.82" />`;
   });
 
+  const points = rows
+    .map((row, index) => {
+      const xx = x(row, index);
+      return `
+        <circle class="chart-point mobile-chart-point" cx="${xx.toFixed(2)}" cy="${yPrice(Number(row.market_price)).toFixed(2)}" r="2.9" fill="#10b981" />
+        <circle class="chart-point mobile-chart-point" cx="${xx.toFixed(2)}" cy="${yPrice(Number(row.nav)).toFixed(2)}" r="2.9" fill="#0ea5e9" />
+        <circle class="chart-point mobile-chart-point" cx="${xx.toFixed(2)}" cy="${yDiscount(Number(row.premium_discount_pct || 0)).toFixed(2)}" r="2.7" fill="#8b5cf6" />
+      `;
+    })
+    .join("");
+
+  const zones = rows.map((row, index) => {
+    const zoneW = plotW / Math.max(rows.length - 1, 1);
+    const xx = Math.max(pad.left, x(row, index) - zoneW / 2);
+    const widthValue = index === 0 || index === rows.length - 1 ? zoneW / 2 : zoneW;
+    const payload = encodeURIComponent(JSON.stringify(row));
+    return `<rect class="hover-zone mobile-hover-zone" data-row="${payload}" data-x="${x(row, index).toFixed(2)}" x="${xx.toFixed(2)}" y="${pad.top}" width="${Math.max(widthValue, 12).toFixed(2)}" height="${plotH}" />`;
+  });
+
   const labels = rows
     .filter((_, index) => index === 0 || index === rows.length - 1 || index % 8 === 0)
     .map((row) => {
@@ -2719,13 +2830,19 @@ function drawMobileChart(allRows, range = "month") {
       ${grid.join("")}
       ${rightAxis.join("")}
       ${bars.join("")}
+      <line id="hoverGuide" class="hover-guide" x1="${pad.left}" x2="${pad.left}" y1="${pad.top}" y2="${barBase}" />
       <path d="${marketPath}" fill="none" stroke="#10b981" stroke-width="2.5" />
       <path d="${navPath}" fill="none" stroke="#0ea5e9" stroke-width="2.5" />
       <path d="${discountPath}" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-dasharray="5 5" />
+      ${points}
       <line x1="${pad.left}" x2="${width - pad.right}" y1="${barBase}" y2="${barBase}" stroke="#cbd5e1" />
       ${labels.join("")}
+      ${zones.join("")}
     </svg>
+    <div id="chartTooltip" class="chart-tooltip mobile-chart-tooltip"></div>
   `;
+
+  bindChartTooltip(chart);
 }
 
 hydrateInlineIcons();
@@ -2744,37 +2861,76 @@ loadData().catch((error) => {
 function bindChartTooltip(chart) {
   const tooltip = chart.querySelector("#chartTooltip");
   const guide = chart.querySelector("#hoverGuide");
-  chart.querySelectorAll(".hover-zone").forEach((zone) => {
-    zone.addEventListener("mouseenter", () => {
-      const row = JSON.parse(decodeURIComponent(zone.dataset.row));
-      const label = row.period_start
-        ? `${row.period_label}（${row.period_start} 至 ${row.period_end}）`
-        : row.date;
-      const volumeLabel = row.period_type === "日" ? "成交量" : `${row.period_type}成交量`;
-      tooltip.innerHTML = `
-        <strong>${label}</strong>
-        <div><span>市價</span><b>${fmt.money(Number(row.market_price), 2)}</b></div>
-        <div><span>淨值</span><b>${fmt.money(Number(row.nav), 2)}</b></div>
-        <div><span>期末折溢價</span><b>${fmt.pct(Number(row.premium_discount_pct))}</b></div>
-        ${Number.isFinite(Number(row.premium_discount_pct_avg)) ? `<div><span>平均折溢價</span><b>${fmt.pct(Number(row.premium_discount_pct_avg))}</b></div>` : ""}
-        <div><span>${volumeLabel}</span><b>${fmt.lots(Number(row.volume_lots))}</b></div>
-      `;
-      tooltip.classList.add("show");
+  let hideTimer = null;
+  if (!tooltip) return;
+
+  const showZone = (zone, clientX = null, clientY = null) => {
+    if (!zone) return;
+    window.clearTimeout(hideTimer);
+    const row = JSON.parse(decodeURIComponent(zone.dataset.row));
+    const label = row.period_start
+      ? `${row.period_label}（${row.period_start} 至 ${row.period_end}）`
+      : row.date;
+    const volumeLabel = row.period_type === "日" ? "成交量" : `${row.period_type}成交量`;
+    tooltip.innerHTML = `
+      <strong>${label}</strong>
+      <div><span>市價</span><b>${fmt.money(Number(row.market_price), 2)}</b></div>
+      <div><span>淨值</span><b>${fmt.money(Number(row.nav), 2)}</b></div>
+      <div><span>期末折溢價</span><b>${fmt.pct(Number(row.premium_discount_pct))}</b></div>
+      ${Number.isFinite(Number(row.premium_discount_pct_avg)) ? `<div><span>平均折溢價</span><b>${fmt.pct(Number(row.premium_discount_pct_avg))}</b></div>` : ""}
+      <div><span>${volumeLabel}</span><b>${fmt.lots(Number(row.volume_lots))}</b></div>
+    `;
+    tooltip.classList.add("show");
+    if (guide) {
       guide.classList.add("active");
       guide.setAttribute("x1", zone.dataset.x);
       guide.setAttribute("x2", zone.dataset.x);
-    });
-    zone.addEventListener("mousemove", (event) => {
-      const box = chart.getBoundingClientRect();
-      const left = Math.min(event.clientX - box.left + 16, box.width - 210);
-      const top = Math.max(event.clientY - box.top - 18, 10);
-      tooltip.style.left = `${left}px`;
-      tooltip.style.top = `${top}px`;
-    });
+    }
+    moveTooltip(clientX, clientY, zone);
+  };
+
+  const moveTooltip = (clientX, clientY, zone = null) => {
+    const box = chart.getBoundingClientRect();
+    let left;
+    let top;
+    if (clientX != null && clientY != null) {
+      left = Math.min(Math.max(clientX - box.left + 12, 8), Math.max(box.width - 218, 8));
+      top = Math.max(clientY - box.top - 20, 8);
+    } else if (zone) {
+      const zoneBox = zone.getBoundingClientRect();
+      left = Math.min(Math.max(zoneBox.left - box.left + 12, 8), Math.max(box.width - 218, 8));
+      top = 10;
+    } else {
+      left = 10;
+      top = 10;
+    }
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
+  };
+
+  const scheduleHide = () => {
+    hideTimer = window.setTimeout(() => {
+      tooltip.classList.remove("show");
+      if (guide) guide.classList.remove("active");
+    }, 3200);
+  };
+
+  chart.querySelectorAll(".hover-zone").forEach((zone) => {
+    zone.addEventListener("mouseenter", (event) => showZone(zone, event.clientX, event.clientY));
+    zone.addEventListener("mousemove", (event) => moveTooltip(event.clientX, event.clientY, zone));
     zone.addEventListener("mouseleave", () => {
       tooltip.classList.remove("show");
-      guide.classList.remove("active");
+      if (guide) guide.classList.remove("active");
     });
+    zone.addEventListener("click", (event) => {
+      showZone(zone, event.clientX, event.clientY);
+      scheduleHide();
+    });
+    zone.addEventListener("touchstart", (event) => {
+      const touch = event.touches?.[0] || event.changedTouches?.[0];
+      showZone(zone, touch?.clientX, touch?.clientY);
+      scheduleHide();
+    }, { passive: true });
   });
 }
 
@@ -2852,14 +3008,17 @@ function calcDividendRows(dividends, trades) {
     .sort((a, b) => String(b.ex_date).localeCompare(String(a.ex_date)))
     .map((dividend) => {
       const exDate = dividend.ex_date || "";
-      const isTracked = Boolean(trackStartDate && exDate >= trackStartDate);
-      const shares = isTracked ? calcSharesOnDate(sortedTrades, exDate) : 0;
+      const entitlementDate = getDividendEntitlementDate(dividend);
+      const isTracked = Boolean(trackStartDate && entitlementDate && entitlementDate >= trackStartDate);
+      const shares = isTracked ? calcDividendQualifiedShares(dividend, sortedTrades, 0) : 0;
       const perShare = Number(dividend.dividend_per_share || 0);
       const dividendIncomePct = Number(dividend.dividend_income_pct || 0);
       const estimated54cPerShare = Number(dividend.estimated_54c_per_share || 0);
       const estimated54c = shares * estimated54cPerShare;
       return {
         exDate,
+        entitlementDate,
+        entitlementDateSource: getDividendEntitlementSource(dividend),
         payDate: dividend.pay_date || "",
         perShare,
         dividendIncomePct,
@@ -3115,12 +3274,15 @@ function calcDividendRows(dividends, trades) {
     .sort((a, b) => String(b.ex_date).localeCompare(String(a.ex_date)))
     .map((dividend) => {
       const exDate = dividend.ex_date || "";
-      const isTracked = Boolean(trackStartDate && exDate >= trackStartDate);
-      const shares = isTracked ? calcSharesOnDate(sortedTrades, exDate) : 0;
+      const entitlementDate = getDividendEntitlementDate(dividend);
+      const isTracked = Boolean(trackStartDate && entitlementDate && entitlementDate >= trackStartDate);
+      const shares = isTracked ? calcDividendQualifiedShares(dividend, sortedTrades, 0) : 0;
       const perShare = Number(dividend.dividend_per_share || 0);
       const estimated54c = shares * Number(dividend.estimated_54c_per_share || 0);
       return {
         exDate,
+        entitlementDate,
+        entitlementDateSource: getDividendEntitlementSource(dividend),
         payDate: dividend.pay_date || "",
         year: exDate.slice(0, 4) || "----",
         perShare,

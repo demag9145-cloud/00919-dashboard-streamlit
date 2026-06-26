@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>00919 監控儀表板</title>
-    <link rel="stylesheet" href="assets/styles.css?v=20260604-ui67" />
+    <link rel="stylesheet" href="assets/styles.css?v=20260626-ui75j" />
   </head>
   <body>
     <div class="app-shell">
@@ -218,35 +218,35 @@
                 <span data-icon="briefcase" data-icon-color="green"></span>
                 <div>
                   <h3>手機新增交易</h3>
-                  <p>直接寫入 Google Sheets Trades，送出後首頁股數會重新同步。</p>
+                  <p>欄位直接顯示；填完送出後寫入 Google Sheets Trades。</p>
                 </div>
               </div>
             </div>
             <form id="mobileQuickTradeForm" class="mobile-quick-trade-form">
               <div class="mobile-trade-action-row" role="radiogroup" aria-label="買入或賣出">
-                <label class="mobile-trade-radio active">
+                <label class="mobile-trade-radio is-buy active">
                   <input type="radio" name="mobileQuickTradeAction" value="buy" checked>
                   <span>買入</span>
                 </label>
-                <label class="mobile-trade-radio">
+                <label class="mobile-trade-radio is-sell">
                   <input type="radio" name="mobileQuickTradeAction" value="sell">
                   <span>賣出</span>
                 </label>
               </div>
               <div class="mobile-trade-grid">
-                <label>
+                <label class="mobile-trade-field mobile-trade-date-field">
                   <span>交易日期</span>
                   <input id="mobileQuickTradeDate" type="date" required>
                 </label>
-                <label>
+                <label class="mobile-trade-field mobile-trade-shares-field">
                   <span>交易股數（股）</span>
                   <input id="mobileQuickTradeShares" type="number" min="1" step="1" value="1" required inputmode="numeric">
                 </label>
-                <label>
+                <label class="mobile-trade-field mobile-trade-price-field">
                   <span>平均成本 / 成交價</span>
                   <input id="mobileQuickTradePrice" type="number" min="0.01" step="0.01" value="0.00" required inputmode="decimal">
                 </label>
-                <label>
+                <label class="mobile-trade-field mobile-trade-source-field">
                   <span>資金來源 / 備註分類</span>
                   <select id="mobileQuickTradeNoteType">
                     <option value="股息再投入">股息再投入</option>
@@ -265,7 +265,7 @@
                 <input id="mobileQuickTradeNote" type="text" placeholder="可留空，例如：定期投入、加碼原因">
               </label>
               <button id="mobileQuickTradeSubmit" class="mobile-trade-submit" type="submit">新增交易並寫入 Google Sheets</button>
-              <p id="mobileQuickTradeStatus" class="mobile-trade-status">送出後頁面會重新整理；看首頁目前股數是否增加即可確認。</p>
+              <p id="mobileQuickTradeStatus" class="mobile-trade-status">送出後會重新整理；看首頁目前股數是否增加即可確認。</p>
             </form>
           </section>
         </section>
@@ -1441,13 +1441,13 @@
       </main>
     </div>
 
-    <script src="assets/signal_settings.js?v=20260604-ui67"></script>
-    <script src="assets/app.js?v=20260604-ui67"></script>
-    <script src="assets/dividend_quarterly_overrides.js?v=20260604-ui67"></script>
-    <script src="assets/monthly_health.js?v=20260604-ui67"></script>
-    <script src="assets/holdings.js?v=20260604-ui67"></script>
-    <script src="assets/yearly_tax.js?v=20260604-ui67"></script>
-    <script src="assets/navigation.js?v=20260604-ui67"></script>
+    <script src="assets/signal_settings.js?v=20260626-ui75j"></script>
+    <script src="assets/app.js?v=20260626-ui75j"></script>
+    <script src="assets/dividend_quarterly_overrides.js?v=20260626-ui75j"></script>
+    <script src="assets/monthly_health.js?v=20260626-ui75j"></script>
+    <script src="assets/holdings.js?v=20260626-ui75j"></script>
+    <script src="assets/yearly_tax.js?v=20260626-ui75j"></script>
+    <script src="assets/navigation.js?v=20260626-ui75j"></script>
   </body>
 </html>
 

@@ -40,8 +40,9 @@ calcDividendRows = function calcDividendRows(dividends, trades) {
     .sort((a, b) => String(b.ex_date).localeCompare(String(a.ex_date)))
     .map((dividend) => {
       const exDate = dividend.ex_date || "";
-      const isTracked = Boolean(trackStartDate && exDate >= trackStartDate);
-      const shares = isTracked ? calcSharesOnDate(sortedTrades, exDate) : 0;
+      const entitlementDate = getDividendEntitlementDate(dividend);
+      const isTracked = Boolean(trackStartDate && entitlementDate && entitlementDate >= trackStartDate);
+      const shares = isTracked ? calcDividendQualifiedShares(dividend, sortedTrades, 0) : 0;
       const perShare = dividendNum(dividend.dividend_per_share, 0);
       const hasComposition = dividendHasCompositionRaw(dividend);
       const dividendIncomePct = hasComposition ? dividendNum(dividend.dividend_income_pct, 0) : 0;
@@ -61,6 +62,8 @@ calcDividendRows = function calcDividendRows(dividends, trades) {
       const healthPremium = estimated54c !== null && estimated54c >= premiumThreshold ? estimated54c * premiumRate : 0;
       return {
         exDate,
+        entitlementDate,
+        entitlementDateSource: getDividendEntitlementSource(dividend),
         payDate: dividend.pay_date || "",
         recordDate: dividend.record_date || "",
         baseDate: dividend.base_date || dividend.valuation_date || "",

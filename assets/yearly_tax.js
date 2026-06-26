@@ -26,8 +26,9 @@ function calcYearlyTaxRows(dividends, trades) {
     .sort((a, b) => String(a.ex_date).localeCompare(String(b.ex_date)))
     .forEach((dividend) => {
       const exDate = dividend.ex_date || "";
+      const entitlementDate = getDividendEntitlementDate(dividend);
       const year = exDate.slice(0, 4);
-      const shares = calcSharesOnDate(sortedTrades, exDate);
+      const shares = calcDividendQualifiedShares(dividend, sortedTrades, 0);
       if (!shares) return;
       const cash = shares * Number(dividend.dividend_per_share || 0);
       const estimated54c = shares * Number(dividend.estimated_54c_per_share || 0);

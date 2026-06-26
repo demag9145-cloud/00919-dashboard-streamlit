@@ -9,6 +9,8 @@ import re
 import shutil
 import subprocess
 import sys
+import threading
+import time
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
@@ -21,14 +23,18 @@ GOOGLE_SHEETS_IMPORT_ERROR = ""
 try:
     from services.google_sheets_trades import (
         append_trade_to_google_sheets,
+        delete_trade_from_google_sheets,
         load_google_sheets_trades,
         test_append_trade_directly,
+        update_trade_in_google_sheets,
     )
 except Exception as exc:  # Keep the formal app usable even if optional cloud deps are absent locally.
     GOOGLE_SHEETS_IMPORT_ERROR = f"{type(exc).__name__}: {exc}"
     append_trade_to_google_sheets = None
+    delete_trade_from_google_sheets = None
     load_google_sheets_trades = None
     test_append_trade_directly = None
+    update_trade_in_google_sheets = None
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -259,9 +265,18 @@ def parse_date(value: str | None) -> date | None:
 
 
 def normalize_trade(row: dict) -> dict:
+    action_raw = str(row.get("action") or row.get("買 / 賣") or row.get("買賣") or "buy").strip().lower()
+    action = "sell" if action_raw in {"sell", "s", "賣", "賣出"} else "buy"
+    try:
+        sheet_row_number = int(float(row.get("sheet_row_number") or row.get("_sheet_row_number") or 0))
+    except Exception:
+        sheet_row_number = 0
     return {
+        "id": str(row.get("id") or ""),
+        "sheet_row_number": sheet_row_number,
+        "_sheet_row_number": sheet_row_number,
         "trade_date": str(row.get("trade_date") or row.get("交易日期") or "").replace("/", "-"),
-        "action": str(row.get("action") or row.get("買 / 賣") or row.get("買賣") or "buy").strip(),
+        "action": action,
         "shares": int(float(row.get("shares") or row.get("交易股數") or 0)),
         "price": float(row.get("price") or row.get("成交價位") or row.get("買入 / 賣出價位") or 0),
         "fee": float(row.get("fee") or row.get("手續費") or 0),
@@ -420,18 +435,61 @@ def calc_total_signal(data: dict, position: dict, total_return: float) -> tuple[
 
 
 def run_update() -> tuple[bool, str]:
+    """Run fetch_data.py with live Streamlit Cloud log output.
+
+    UI75b still used capture_output=True, so Streamlit Cloud logs could only show
+    app-level reruns and deprecation warnings while the child process was stuck.
+    UI75c runs fetch_data.py unbuffered and mirrors every line to the parent log.
+    If a source blocks, the last visible [START] line in Manage app -> Logs points
+    directly to the source that is hanging.
+    """
+    command = [sys.executable, "-u", "fetch_data.py"]
+    output_lines: list[str] = []
+    started = time.perf_counter()
+
     try:
-        result = subprocess.run(
-            [sys.executable, "fetch_data.py"],
+        proc = subprocess.Popen(
+            command,
             cwd=BASE_DIR,
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             text=True,
-            timeout=180,
+            bufsize=1,
         )
     except Exception as exc:
-        return False, str(exc)
-    output = "\n".join([result.stdout.strip(), result.stderr.strip()]).strip()
-    return result.returncode == 0, output or "更新完成"
+        return False, f"無法啟動 fetch_data.py：{type(exc).__name__}: {exc}"
+
+    def _reader() -> None:
+        assert proc.stdout is not None
+        for line in proc.stdout:
+            line = line.rstrip("\n")
+            output_lines.append(line)
+            print(f"[fetch_data] {line}", flush=True)
+
+    reader = threading.Thread(target=_reader, daemon=True)
+    reader.start()
+
+    timeout_seconds = 260
+    while proc.poll() is None:
+        if time.perf_counter() - started > timeout_seconds:
+            proc.kill()
+            reader.join(timeout=2)
+            tail = "\n".join(output_lines[-80:]).strip()
+            message = (
+                f"資料抓取逾時：fetch_data.py 超過 {timeout_seconds} 秒仍未完成。\n"
+                "請看 Streamlit Cloud / Manage app / Logs 裡最後一行 [fetch_data] [START]，"
+                "那一個來源就是目前卡住的來源。"
+            )
+            if tail:
+                message += "\n\n最後抓取紀錄：\n" + tail
+            return False, message
+        time.sleep(0.2)
+
+    reader.join(timeout=2)
+    output = "\n".join(output_lines).strip()
+    if proc.returncode == 0:
+        return True, output or "更新完成"
+    return False, output or f"fetch_data.py 執行失敗，return code={proc.returncode}"
 
 
 def sync_static_files() -> None:
@@ -2630,6 +2688,23 @@ def render_trade_entry_page() -> None:
     """
     data = load_dashboard()
     trades, trades_source = load_trades_with_source()
+
+    # UI73d: Google Sheets 偶發讀取失敗時，不要讓最近交易預覽退回
+    # data/trades.json 的少量 fallback 資料。只要本頁本次 session 曾成功讀過
+    # Google Sheets，就先保留該份快取供編輯/刪除選取使用；實際新增、更新、
+    # 刪除仍會呼叫 Google Sheets API。
+    if trades_source.get("ok") and trades_source.get("source") == "google_sheets":
+        st.session_state["trade_last_good_google_rows"] = trades
+        st.session_state["trade_last_good_google_message"] = trades_source.get("message", "")
+    elif st.session_state.get("trade_last_good_google_rows"):
+        original_message = trades_source.get("message", "")
+        trades = st.session_state.get("trade_last_good_google_rows", [])
+        trades_source = {
+            "source": "google_sheets_cache",
+            "ok": True,
+            "message": "Google Sheets 暫時讀取失敗，暫用本頁上次成功讀取快取；寫入/更新/刪除仍會直接送 Google Sheets" + (f"（原訊息：{original_message}）" if original_message else ""),
+        }
+
     status_message = st.session_state.pop("last_update_message", None)
     latest = data.get("latest_daily", {})
     dividends = data.get("dividends", [])
@@ -2875,8 +2950,8 @@ def render_trade_entry_page() -> None:
         <section class="entry-hero">
           <div>
             <p>Google Sheets Trade Entry</p>
-            <h1>00919 新增交易 / 匯入資料</h1>
-            <small>這一頁是獨立 Streamlit 原生表單，專門處理 Google Sheets 寫入；完成後回 Dashboard 按「更新資料」同步。</small>
+            <h1>00919 新增 / 編輯 / 刪除交易</h1>
+            <small>這一頁是獨立 Streamlit 原生表單，專門處理 Google Sheets 新增、編輯、刪除與匯入；完成後回 Dashboard 按「更新資料」同步。</small>
           </div>
           <div class="entry-hero__cards">
             <div class="entry-hero-card"><span>目前股數</span><strong>{money(position['shares'])} 股</strong></div>
@@ -2910,51 +2985,276 @@ def render_trade_entry_page() -> None:
     if status_message:
         st.markdown(f"<div class='entry-success'>{html.escape(status_message)}。可以關閉此分頁，回 Dashboard 按更新資料。</div>", unsafe_allow_html=True)
 
-    st.markdown("<div class='entry-panel'><h3>新增單筆交易</h3><p>送出後會直接 append 到 Google Sheets Trades 工作表。</p></div>", unsafe_allow_html=True)
+    st.markdown(
+        "<div class='entry-panel'><h3>新增 / 編輯 / 刪除交易紀錄</h3>"
+        "<p>共用同一組欄位：新增時直接填寫；編輯或刪除時先按模式按鈕，再點選下方最近交易預覽。</p></div>",
+        unsafe_allow_html=True,
+    )
     if append_trade_to_google_sheets is None:
         st.warning("Google Sheets 寫入模組尚未啟用；表單仍顯示，但送出時會提示設定錯誤。" + (f"目前錯誤：{GOOGLE_SHEETS_IMPORT_ERROR}" if GOOGLE_SHEETS_IMPORT_ERROR else ""))
 
-    with st.form("standalone_google_sheets_trade_entry_form", clear_on_submit=True):
-        row1 = st.columns([1.0, 1.25, 1.1, 1.1])
-        action_label = row1[0].radio("買 / 賣", ["買入", "賣出"], horizontal=True)
-        trade_date_value = row1[1].date_input("交易日期", value=date.today())
-        shares = row1[2].number_input("交易股數（股）", min_value=1, step=1, value=1)
-        price = row1[3].number_input("平均成本 / 成交價", min_value=0.0, step=0.01, value=0.0, format="%.2f")
-        row2 = st.columns([1.25, 2.75])
-        note_type = row2[0].selectbox(
-            "資金來源 / 備註分類",
-            ["股息再投入", "薪資投入", "年終投入", "定期投入", "閒置資金投入", "再平衡調整", "部位調整", "其他"],
-        )
-        note = row2[1].text_input("備註", placeholder="可留空或補充說明，例如：定期投入、加碼原因")
-        submitted = st.form_submit_button("新增交易並寫入 Google Sheets", use_container_width=True)
+    note_type_options = ["股息再投入", "薪資投入", "年終投入", "定期投入", "閒置資金投入", "再平衡調整", "部位調整", "其他", "測試", "手動修正"]
 
-    if submitted:
-        action = "BUY" if action_label == "買入" else "SELL"
+    editable_trades = [normalize_trade(row) for row in trades]
+    editable_trades = [row for row in editable_trades if int(row.get("sheet_row_number") or 0) >= 2]
+    editable_trades = sorted(editable_trades, key=lambda item: (item.get("trade_date", ""), int(item.get("sheet_row_number") or 0)), reverse=True)
+
+    if "trade_workflow_mode" not in st.session_state:
+        st.session_state["trade_workflow_mode"] = "add"
+    if "trade_selected_row_number" not in st.session_state:
+        st.session_state["trade_selected_row_number"] = None
+
+    def _set_trade_form_defaults() -> None:
+        st.session_state["trade_form_action"] = "買入"
+        st.session_state["trade_form_date"] = date.today()
+        st.session_state["trade_form_shares"] = 1
+        st.session_state["trade_form_price"] = 0.0
+        st.session_state["trade_form_note_type"] = "股息再投入"
+        st.session_state["trade_form_note"] = ""
+
+    for key, value in {
+        "trade_form_action": "買入",
+        "trade_form_date": date.today(),
+        "trade_form_shares": 1,
+        "trade_form_price": 0.0,
+        "trade_form_note_type": "股息再投入",
+        "trade_form_note": "",
+    }.items():
+        st.session_state.setdefault(key, value)
+
+    # UI73b: Streamlit 不允許在同一次 rerun 中，於 widget 建立後再直接改它的 key。
+    # 新增 / 編輯 / 刪除完成後只先設定 reset flag，下一次 rerun 在 widget 建立前再清空表單。
+    if st.session_state.pop("trade_reset_form_defaults", False):
+        _set_trade_form_defaults()
+
+    pending_row_number = st.session_state.pop("trade_pending_load_row_number", None)
+    if pending_row_number:
+        picked = next((row for row in editable_trades if int(row.get("sheet_row_number") or 0) == int(pending_row_number)), None)
+        if picked:
+            st.session_state["trade_selected_row_number"] = int(picked.get("sheet_row_number") or 0)
+            st.session_state["trade_form_action"] = "賣出" if picked.get("action") == "sell" else "買入"
+            st.session_state["trade_form_date"] = parse_date(picked.get("trade_date")) or date.today()
+            st.session_state["trade_form_shares"] = max(1, int(picked.get("shares") or 1))
+            st.session_state["trade_form_price"] = max(0.0, float(picked.get("price") or 0))
+            current_note_type = str(picked.get("note_type") or "其他")
+            if current_note_type not in note_type_options:
+                note_type_options.append(current_note_type)
+            st.session_state["trade_form_note_type"] = current_note_type
+            st.session_state["trade_form_note"] = str(picked.get("note") or "")
+            if st.session_state.get("trade_workflow_mode") == "edit_select":
+                st.session_state["trade_workflow_mode"] = "edit_ready"
+            elif st.session_state.get("trade_workflow_mode") == "delete_select":
+                st.session_state["trade_workflow_mode"] = "delete_ready"
+
+    current_note_type = str(st.session_state.get("trade_form_note_type") or "股息再投入")
+    if current_note_type not in note_type_options:
+        note_type_options.append(current_note_type)
+
+    mode = st.session_state.get("trade_workflow_mode", "add")
+    selected_row_number = st.session_state.get("trade_selected_row_number")
+    selected_trade_for_message = next((row for row in editable_trades if int(row.get("sheet_row_number") or 0) == int(selected_row_number or 0)), None)
+    is_google_trade_source = trades_source.get("source") in {"google_sheets", "google_sheets_cache"}
+
+    if mode == "add":
+        st.info("目前模式：新增交易。填好欄位後按「新增交易」會直接寫入 Google Sheets。")
+    elif mode.startswith("edit"):
+        if selected_trade_for_message:
+            st.warning(f"目前模式：編輯交易。已選取第 {selected_row_number} 列，修改上方欄位後按「編輯完成」。其他按鈕已互鎖停用；若誤按可按「取消動作」回到新增模式。")
+        else:
+            st.warning("目前模式：編輯交易。請先從下方最近交易預覽點選一筆交易；其他按鈕已互鎖停用。若誤按可按「取消動作」回到新增模式。")
+    elif mode.startswith("delete"):
+        if selected_trade_for_message:
+            st.error(f"目前模式：刪除交易。已選取第 {selected_row_number} 列，確認無誤後按「確認刪除」。其他按鈕已互鎖停用；若誤按可按「取消動作」回到新增模式。")
+        else:
+            st.error("目前模式：刪除交易。請先從下方最近交易預覽點選一筆交易；其他按鈕已互鎖停用。若誤按可按「取消動作」回到新增模式。")
+
+    form_disabled = mode.startswith("delete")
+    entry_row1 = st.columns([1.0, 1.25, 1.1, 1.1])
+    action_label = entry_row1[0].radio("買 / 賣", ["買入", "賣出"], horizontal=True, key="trade_form_action", disabled=form_disabled)
+    trade_date_value = entry_row1[1].date_input("交易日期", key="trade_form_date", disabled=form_disabled)
+    shares = entry_row1[2].number_input("交易股數（股）", min_value=1, step=1, key="trade_form_shares", disabled=form_disabled)
+    price = entry_row1[3].number_input("平均成本 / 成交價", min_value=0.0, step=0.01, format="%.2f", key="trade_form_price", disabled=form_disabled)
+    entry_row2 = st.columns([1.25, 2.75])
+    note_type = entry_row2[0].selectbox(
+        "資金來源 / 備註分類",
+        note_type_options,
+        index=note_type_options.index(current_note_type),
+        key="trade_form_note_type",
+        disabled=form_disabled,
+    )
+    note = entry_row2[1].text_input("備註", placeholder="可留空或補充說明，例如：定期投入、加碼原因", key="trade_form_note", disabled=form_disabled)
+
+    action_cols = st.columns([1.0, 1.0, 1.0, 1.0, 2.0])
+    add_clicked = action_cols[0].button("新增交易", type="primary", use_container_width=True, disabled=mode != "add")
+    edit_button_label = "編輯完成" if mode.startswith("edit") else "編輯交易"
+    edit_clicked = action_cols[1].button(edit_button_label, use_container_width=True, disabled=mode.startswith("delete"))
+    delete_button_label = "確認刪除" if mode.startswith("delete") else "刪除交易"
+    delete_clicked = action_cols[2].button(delete_button_label, use_container_width=True, disabled=mode.startswith("edit"))
+    cancel_clicked = action_cols[3].button("取消動作", use_container_width=True, disabled=mode == "add")
+
+    def _current_trade_payload(source: str) -> dict:
+        return {
+            "trade_date": trade_date_value.strftime("%Y-%m-%d"),
+            "action": "BUY" if action_label == "買入" else "SELL",
+            "shares": int(shares),
+            "price": float(price),
+            "note_type": note_type,
+            "note": str(note or "").strip(),
+            "source": source,
+            "created_at": datetime.now().isoformat(timespec="seconds"),
+        }
+
+    if cancel_clicked:
+        st.session_state["trade_reset_form_defaults"] = True
+        st.session_state["trade_workflow_mode"] = "add"
+        st.session_state["trade_selected_row_number"] = None
+        st.session_state["last_update_message"] = "已取消目前交易動作"
+        st.rerun()
+
+    if add_clicked:
         if not trade_date_value or int(shares) <= 0 or float(price) <= 0:
             st.error("請確認日期、股數與成交價都已正確填寫。")
         elif append_trade_to_google_sheets is None:
             st.error("寫入 Google Sheets 失敗：Google Sheets 寫入模組尚未啟用。")
             st.info("請確認 requirements.txt 已安裝 gspread / google-auth，並確認 .streamlit/secrets.toml 已設定。" + (f"目前錯誤：{GOOGLE_SHEETS_IMPORT_ERROR}" if GOOGLE_SHEETS_IMPORT_ERROR else ""))
         else:
-            trade = {
-                "trade_date": trade_date_value.strftime("%Y-%m-%d"),
-                "action": action,
-                "shares": int(shares),
-                "price": float(price),
-                "note_type": note_type,
-                "note": note.strip(),
-                "source": "standalone_streamlit_form",
-                "created_at": datetime.now().isoformat(timespec="seconds"),
-            }
             try:
-                append_trade_to_google_sheets(trade)
+                append_trade_to_google_sheets(_current_trade_payload("standalone_streamlit_form"))
             except Exception as exc:
                 st.error("寫入 Google Sheets 失敗")
                 st.info(google_sheets_write_help())
                 st.code(f"{type(exc).__name__}: {exc}")
             else:
+                st.session_state["trade_reset_form_defaults"] = True
+                st.session_state["trade_workflow_mode"] = "add"
+                st.session_state["trade_selected_row_number"] = None
                 st.session_state["last_update_message"] = "新增交易已寫入 Google Sheets"
                 st.rerun()
+
+    if edit_clicked:
+        if mode == "add":
+            if not is_google_trade_source:
+                st.warning("目前交易資料不是直接由 Google Sheets 讀取，暫不開放編輯。請確認 Google Sheets 連線正常後再操作。")
+            elif update_trade_in_google_sheets is None:
+                st.warning("Google Sheets 編輯模組尚未啟用，請確認目前部署的服務檔已更新。")
+            elif not editable_trades:
+                st.info("目前沒有可編輯的 Google Sheets 交易列。")
+            else:
+                st.session_state["trade_workflow_mode"] = "edit_select"
+                st.session_state["trade_selected_row_number"] = None
+                st.rerun()
+        elif mode.startswith("edit"):
+            if not selected_row_number:
+                st.error("請先從下方最近交易預覽點選一筆交易。")
+            elif int(shares) <= 0 or float(price) <= 0:
+                st.error("請確認股數與成交價都已正確填寫。")
+            else:
+                try:
+                    update_trade_in_google_sheets(int(selected_row_number), _current_trade_payload("standalone_streamlit_edit_form"))
+                except Exception as exc:
+                    st.error("更新 Google Sheets 失敗")
+                    st.info(google_sheets_write_help())
+                    st.code(f"{type(exc).__name__}: {exc}")
+                else:
+                    st.session_state["trade_reset_form_defaults"] = True
+                    st.session_state["trade_workflow_mode"] = "add"
+                    st.session_state["trade_selected_row_number"] = None
+                    st.session_state["last_update_message"] = "交易已更新到 Google Sheets"
+                    st.rerun()
+
+    if delete_clicked:
+        if mode == "add":
+            if not is_google_trade_source:
+                st.warning("目前交易資料不是直接由 Google Sheets 讀取，暫不開放刪除。請確認 Google Sheets 連線正常後再操作。")
+            elif delete_trade_from_google_sheets is None:
+                st.warning("Google Sheets 刪除模組尚未啟用，請確認目前部署的服務檔已更新。")
+            elif not editable_trades:
+                st.info("目前沒有可刪除的 Google Sheets 交易列。")
+            else:
+                st.session_state["trade_workflow_mode"] = "delete_select"
+                st.session_state["trade_selected_row_number"] = None
+                st.rerun()
+        elif mode.startswith("delete"):
+            if not selected_row_number:
+                st.error("請先從下方最近交易預覽點選要刪除的交易。")
+            else:
+                try:
+                    delete_trade_from_google_sheets(int(selected_row_number))
+                except Exception as exc:
+                    st.error("刪除 Google Sheets 交易失敗")
+                    st.info(google_sheets_write_help())
+                    st.code(f"{type(exc).__name__}: {exc}")
+                else:
+                    st.session_state["trade_reset_form_defaults"] = True
+                    st.session_state["trade_workflow_mode"] = "add"
+                    st.session_state["trade_selected_row_number"] = None
+                    st.session_state["last_update_message"] = "交易已從 Google Sheets 刪除"
+                    st.rerun()
+
+    recent = pd.DataFrame([normalize_trade(row) for row in trades])
+    if not recent.empty:
+        recent = recent.sort_values(["trade_date", "sheet_row_number"], ascending=[False, False]).reset_index(drop=True)
+        recent_display = pd.DataFrame([
+            {
+                "交易日期": row.get("trade_date") or "",
+                "買 / 賣": "賣出" if str(row.get("action") or "").lower() in {"sell", "s", "賣", "賣出"} else "買入",
+                "交易股數": f"{money(pd.to_numeric(row.get('shares'), errors='coerce') or 0)} 股",
+                "成交價": f"{float(pd.to_numeric(row.get('price'), errors='coerce') or 0):.2f}",
+                "分類": row.get("note_type") or "其他",
+                "備註": row.get("note") or "",
+            }
+            for _, row in recent.iterrows()
+        ])
+        source_message = html.escape(trades_source.get("message", ""))
+        st.markdown(
+            f"""
+            <section class="entry-recent-panel">
+              <div class="entry-recent-header">
+                <strong>最近交易預覽</strong>
+                <span>{source_message}</span>
+              </div>
+            </section>
+            """,
+            unsafe_allow_html=True,
+        )
+        if mode.startswith("edit") or mode.startswith("delete"):
+            st.caption("目前可點選表格列：點選一筆交易後，資料會帶入上方欄位。")
+        try:
+            recent_event = st.dataframe(
+                recent_display,
+                use_container_width=True,
+                hide_index=True,
+                on_select="rerun",
+                selection_mode="single-row",
+                key=f"recent_trade_selector_{mode}",
+            )
+            selection_obj = getattr(recent_event, "selection", None)
+            selected_rows = []
+            if selection_obj is not None:
+                selected_rows = list(getattr(selection_obj, "rows", []) or [])
+            elif isinstance(recent_event, dict):
+                selected_rows = list(recent_event.get("selection", {}).get("rows", []) or [])
+            if selected_rows and (mode.startswith("edit") or mode.startswith("delete")):
+                selected_pos = int(selected_rows[0])
+                if 0 <= selected_pos < len(recent):
+                    picked_row_number = int(recent.iloc[selected_pos].get("sheet_row_number") or 0)
+                    if picked_row_number and picked_row_number != int(st.session_state.get("trade_selected_row_number") or 0):
+                        st.session_state["trade_pending_load_row_number"] = picked_row_number
+                        st.rerun()
+        except TypeError:
+            st.dataframe(recent_display, use_container_width=True, hide_index=True)
+            if mode.startswith("edit") or mode.startswith("delete"):
+                pick_options = list(range(len(recent)))
+                picked_idx = st.selectbox(
+                    "選取交易",
+                    options=pick_options,
+                    format_func=lambda i: f"{recent_display.iloc[i]['交易日期']}｜{recent_display.iloc[i]['買 / 賣']}｜{recent_display.iloc[i]['交易股數']}｜{recent_display.iloc[i]['成交價']}｜{recent_display.iloc[i]['分類']}｜{recent_display.iloc[i]['備註']}",
+                    key=f"recent_trade_fallback_picker_{mode}",
+                )
+                picked_row_number = int(recent.iloc[int(picked_idx)].get("sheet_row_number") or 0)
+                if picked_row_number and picked_row_number != int(st.session_state.get("trade_selected_row_number") or 0):
+                    st.session_state["trade_pending_load_row_number"] = picked_row_number
+                    st.rerun()
 
     st.markdown("<div class='entry-panel'><h3>批次匯入 CSV</h3><p>可下載範本填寫後上傳；系統會略過已存在的相同交易。</p></div>", unsafe_allow_html=True)
     uploaded_trades = st.file_uploader("選擇交易 CSV 檔", type=["csv"], key="standalone_trade_csv_importer")
@@ -3039,50 +3339,6 @@ def render_trade_entry_page() -> None:
                 st.error("匯入失敗")
                 st.code(f"{type(exc).__name__}: {exc}")
 
-    recent = pd.DataFrame([normalize_trade(row) for row in trades])
-    if not recent.empty:
-        recent = recent.sort_values("trade_date", ascending=False)
-        recent_rows = []
-        for _, row in recent.iterrows():
-            action_raw = str(row.get("action") or "").lower()
-            action_label = "賣出" if action_raw in {"sell", "s", "賣", "賣出"} else "買入"
-            recent_rows.append(
-                "<tr>"
-                f"<td>{html.escape(str(row.get('trade_date') or ''))}</td>"
-                f"<td>{html.escape(action_label)}</td>"
-                f"<td>{money(pd.to_numeric(row.get('shares'), errors='coerce') or 0)} 股</td>"
-                f"<td>{float(pd.to_numeric(row.get('price'), errors='coerce') or 0):.2f}</td>"
-                f"<td>{html.escape(str(row.get('note_type') or '其他'))}</td>"
-                f"<td>{html.escape(str(row.get('note') or ''))}</td>"
-                "</tr>"
-            )
-        source_message = html.escape(trades_source.get("message", ""))
-        st.markdown(
-            f"""
-            <section class="entry-recent-panel">
-              <div class="entry-recent-header">
-                <strong>最近交易預覽</strong>
-                <span>{source_message}</span>
-              </div>
-              <div class="entry-recent-scroll">
-                <table class="entry-recent-table">
-                  <thead>
-                    <tr>
-                      <th>交易日期</th>
-                      <th>買 / 賣</th>
-                      <th>交易股數</th>
-                      <th>成交價</th>
-                      <th>分類</th>
-                      <th>備註</th>
-                    </tr>
-                  </thead>
-                  <tbody>{''.join(recent_rows)}</tbody>
-                </table>
-              </div>
-            </section>
-            """,
-            unsafe_allow_html=True,
-        )
 
 def render_embedded_html_ui(initial_hash: str = "#home") -> None:
     sync_static_files()

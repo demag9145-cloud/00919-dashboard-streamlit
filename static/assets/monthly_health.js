@@ -87,8 +87,9 @@ function calcMonthlyReturnRows(monthlyHistoryRows, dailyRows, trades, dividends)
   return monthlyPriceRows.map((daily) => {
     const position = calcPositionUntilDate(sortedTrades, daily.date);
     const cumulativeDividend = dividends.reduce((sum, dividend) => {
-      if (!dividend.ex_date || dividend.ex_date > daily.date) return sum;
-      const shares = calcSharesOnDate(sortedTrades, dividend.ex_date);
+      const entitlementDate = getDividendEntitlementDate(dividend);
+      if (!entitlementDate || entitlementDate > daily.date) return sum;
+      const shares = calcDividendQualifiedShares(dividend, sortedTrades, 0);
       return sum + shares * Number(dividend.dividend_per_share || 0);
     }, 0);
     const marketPrice = Number(daily.market_price || 0);

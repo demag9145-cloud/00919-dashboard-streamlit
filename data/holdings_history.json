@@ -454,233 +454,6 @@
     "updated_at": "2026-05-22T14:04:08"
   },
   {
-    "data_date": "2026-05-22",
-    "industry_date": "2026-03-31",
-    "top10": [
-      {
-        "rank": 1,
-        "name": "聯電",
-        "code": "2303",
-        "weight_pct": 14.58,
-        "shares": 602462000.0
-      },
-      {
-        "rank": 2,
-        "name": "中信金",
-        "code": "2891",
-        "weight_pct": 11.61,
-        "shares": 949277000.0
-      },
-      {
-        "rank": 3,
-        "name": "國泰金",
-        "code": "2882",
-        "weight_pct": 11.16,
-        "shares": 659470000.0
-      },
-      {
-        "rank": 4,
-        "name": "富邦金",
-        "code": "2881",
-        "weight_pct": 8.26,
-        "shares": 409170000.0
-      },
-      {
-        "rank": 5,
-        "name": "華碩",
-        "code": "2357",
-        "weight_pct": 5.62,
-        "shares": 38810000.0
-      },
-      {
-        "rank": 6,
-        "name": "長榮",
-        "code": "2603",
-        "weight_pct": 5.45,
-        "shares": 117153000.0
-      },
-      {
-        "rank": 7,
-        "name": "台新新光金",
-        "code": "2887",
-        "weight_pct": 5.19,
-        "shares": 1026630000.0
-      },
-      {
-        "rank": 8,
-        "name": "聯詠",
-        "code": "3034",
-        "weight_pct": 4.25,
-        "shares": 41195000.0
-      },
-      {
-        "rank": 9,
-        "name": "文曄",
-        "code": "3036",
-        "weight_pct": 3.1,
-        "shares": 50460000.0
-      },
-      {
-        "rank": 10,
-        "name": "陽明",
-        "code": "2609",
-        "weight_pct": 2.67,
-        "shares": 237710000.0
-      }
-    ],
-    "holdings": [
-      {
-        "rank": 1,
-        "name": "聯電",
-        "code": "2303",
-        "weight_pct": 14.58,
-        "shares": 602462000.0
-      },
-      {
-        "rank": 2,
-        "name": "中信金",
-        "code": "2891",
-        "weight_pct": 11.61,
-        "shares": 949277000.0
-      },
-      {
-        "rank": 3,
-        "name": "國泰金",
-        "code": "2882",
-        "weight_pct": 11.16,
-        "shares": 659470000.0
-      },
-      {
-        "rank": 4,
-        "name": "富邦金",
-        "code": "2881",
-        "weight_pct": 8.26,
-        "shares": 409170000.0
-      },
-      {
-        "rank": 5,
-        "name": "華碩",
-        "code": "2357",
-        "weight_pct": 5.62,
-        "shares": 38810000.0
-      },
-      {
-        "rank": 6,
-        "name": "長榮",
-        "code": "2603",
-        "weight_pct": 5.45,
-        "shares": 117153000.0
-      },
-      {
-        "rank": 7,
-        "name": "台新新光金",
-        "code": "2887",
-        "weight_pct": 5.19,
-        "shares": 1026630000.0
-      },
-      {
-        "rank": 8,
-        "name": "聯詠",
-        "code": "3034",
-        "weight_pct": 4.25,
-        "shares": 41195000.0
-      },
-      {
-        "rank": 9,
-        "name": "文曄",
-        "code": "3036",
-        "weight_pct": 3.1,
-        "shares": 50460000.0
-      },
-      {
-        "rank": 10,
-        "name": "陽明",
-        "code": "2609",
-        "weight_pct": 2.67,
-        "shares": 237710000.0
-      }
-    ],
-    "industries": [
-      {
-        "industry": "金融業",
-        "amount_10k_twd": 18434471.6,
-        "weight_pct": 43.55
-      },
-      {
-        "industry": "半導體業",
-        "amount_10k_twd": 6789642.4,
-        "weight_pct": 16.04
-      },
-      {
-        "industry": "航運業",
-        "amount_10k_twd": 5490128.5,
-        "weight_pct": 12.97
-      },
-      {
-        "industry": "電腦及週邊",
-        "amount_10k_twd": 3335560.0,
-        "weight_pct": 7.88
-      },
-      {
-        "industry": "電子通路",
-        "amount_10k_twd": 2129170.9,
-        "weight_pct": 5.03
-      },
-      {
-        "industry": "其他電子",
-        "amount_10k_twd": 1477297.5,
-        "weight_pct": 3.49
-      },
-      {
-        "industry": "光電業",
-        "amount_10k_twd": 1316445.6,
-        "weight_pct": 3.11
-      },
-      {
-        "industry": "建材營造",
-        "amount_10k_twd": 931247.7,
-        "weight_pct": 2.2
-      },
-      {
-        "industry": "電子零組件",
-        "amount_10k_twd": 749231.1,
-        "weight_pct": 1.77
-      },
-      {
-        "industry": "鋼鐵工業",
-        "amount_10k_twd": 461390.9,
-        "weight_pct": 1.09
-      },
-      {
-        "industry": "紡織纖維",
-        "amount_10k_twd": 304772.0,
-        "weight_pct": 0.72
-      },
-      {
-        "industry": "食品工業",
-        "amount_10k_twd": 203181.3,
-        "weight_pct": 0.48
-      },
-      {
-        "industry": "運動休閒",
-        "amount_10k_twd": 194715.4,
-        "weight_pct": 0.46
-      },
-      {
-        "industry": "化學工業",
-        "amount_10k_twd": 173550.7,
-        "weight_pct": 0.41
-      },
-      {
-        "industry": "綠能環保",
-        "amount_10k_twd": 97357.7,
-        "weight_pct": 0.23
-      }
-    ],
-    "source": "MoneyDJ",
-    "updated_at": "2026-05-25T13:48:13"
-  },
-  {
     "data_date": "2026-06-03",
     "industry_date": null,
     "top10": [],
@@ -704,5 +477,32 @@
       "industry_source": null
     },
     "updated_at": "2026-06-03T16:10:56"
+  },
+  {
+    "data_date": "2026-06-11",
+    "industry_date": null,
+    "top10": [],
+    "holdings": [],
+    "industries": [],
+    "futures": [],
+    "other_assets": {},
+    "pcf": {},
+    "portfolio": {},
+    "buyback": {},
+    "fund_net_asset_value_twd": null,
+    "nav": null,
+    "issued_units": null,
+    "issued_lots": null,
+    "source": "unknown",
+    "source_details": {
+      "holdings_primary": null,
+      "portfolio_available": false,
+      "buyback_available": false,
+      "moneydj_available": false,
+      "industry_source": null
+    },
+    "top10_signature": null,
+    "top10_composition_signature": null,
+    "updated_at": "2026-06-11T15:22:49"
   }
 ]
