@@ -1600,13 +1600,25 @@ function renderMobileCoreMetrics(model) {
 
 function formatDividendFocusNote(dividend, estimatedDividendCash) {
   if (!dividend?.ex_date) return "--";
-  const entitlementDate = getDividendEntitlementDate(dividend);
-  const entitlementLabel = entitlementDate
-    ? ` / 最後申購 ${entitlementDate}`
-    : "";
-  const lines = [`除息 ${dividend.ex_date}${entitlementLabel} / 估 $${fmt.money(estimatedDividendCash)}`];
+  const lines = [];
+  if (dividend.ex_date) lines.push(`除息 ${dividend.ex_date}`);
   if (dividend.pay_date) lines.push(`發放 ${dividend.pay_date}`);
   return lines.join("\n");
+}
+
+function formatDividendEstimateValue(dividend, estimatedDividendCash) {
+  const dividendPerShare = Number(dividend?.dividend_per_share || 0);
+  if (!dividendPerShare && !estimatedDividendCash) return "--";
+  return `$${fmt.money(estimatedDividendCash || 0)}`;
+}
+
+function formatDividendPerShareNote(dividend) {
+  const dividendPerShare = Number(dividend?.dividend_per_share || 0);
+  const entitlementDate = getDividendEntitlementDate(dividend);
+  const parts = [];
+  if (dividendPerShare) parts.push(`每股 ${fmt.money(dividendPerShare, 2)} 元`);
+  if (entitlementDate) parts.push(`最後申購 ${entitlementDate}`);
+  return parts.join("｜");
 }
 
 function renderMobileFocusCards({ position, dividend, totalReturn, totalCost, freshnessModel }) {
@@ -1617,7 +1629,7 @@ function renderMobileFocusCards({ position, dividend, totalReturn, totalCost, fr
   const dividendPerShare = Number(dividend.dividend_per_share || 0);
   const dividendShares = dividend.ex_date ? calcDividendQualifiedShares(dividend, state.trades || [], position.holdingShares) : position.holdingShares;
   const estimatedDividendCash = dividendShares * dividendPerShare;
-  setText("mobileFocusDividend", dividendPerShare ? `${fmt.money(dividendPerShare, 2)} 元` : "--");
+  setText("mobileFocusDividend", formatDividendEstimateValue(dividend, estimatedDividendCash));
   setText("mobileFocusDividendNote", formatDividendFocusNote(dividend, estimatedDividendCash));
 
   const monthlySizeRows = (state.data?.monthly_history || state.data?.monthly_size || [])
@@ -1716,7 +1728,7 @@ function renderDesktopFocusCards({ position, dividend, totalReturn, totalCost, f
   const dividendPerShare = Number(dividend.dividend_per_share || 0);
   const dividendShares = dividend.ex_date ? calcDividendQualifiedShares(dividend, state.trades || [], position.holdingShares) : position.holdingShares;
   const estimatedDividendCash = dividendShares * dividendPerShare;
-  setText("desktopFocusDividend", dividendPerShare ? `${fmt.money(dividendPerShare, 2)} 元` : "--");
+  setText("desktopFocusDividend", formatDividendEstimateValue(dividend, estimatedDividendCash));
   setText("desktopFocusDividendNote", formatDividendFocusNote(dividend, estimatedDividendCash));
 
   const monthlySizeRows = (state.data?.monthly_history || state.data?.monthly_size || [])
@@ -1855,7 +1867,7 @@ function renderHomeFocus(position, latest, dividend, totalReturn, totalCost) {
   const premiumRate = Number(settings.supplementalPremiumRatePct ?? HEALTH_PREMIUM_RATE * 100) / 100;
   const healthPremium = estimated54c >= premiumThreshold ? estimated54c * premiumRate : 0;
 
-  setText("homeLatestDividend", dividendPerShare ? `${fmt.money(dividendPerShare, 2)} 元` : "--");
+  setText("homeLatestDividend", formatDividendEstimateValue(dividend, estimatedDividendCash));
   setText("homeLatestDividendDate", formatDividendFocusNote(dividend, estimatedDividendCash));
   setText("homeLatest54c", `$${fmt.money(estimated54c)}`);
   setText("homeLatest54cNote", Number(dividend.dividend_income_pct) ? `股利所得 ${fmt.pct(Number(dividend.dividend_income_pct))}` : "本次股利所得 0%");
